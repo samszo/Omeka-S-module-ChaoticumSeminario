@@ -1,0 +1,32 @@
+<?php
+
+$chaosMedias = $this->ChaoticumSeminarioFactory(['idMedia'=>7205]);
+/*
+echo $heading.' '.$params; //variable déclarer dans ChaoticumSeminario\Form\Site\BlockLayout
+echo '<video controls width="250">
+<source src="'.$chaosMedias['media']->originalUrl().'">
+Votre navigateur ne marche pas.
+</video>';
+foreach ($chaosMedias['fragments'] as $f) {
+    $m = $f->media()[0];
+    echo '<video controls width="250">
+    <source src="'.$m->originalUrl().'">
+    Votre navigateur ne marche pas.
+    </video>';
+}
+*/
+?>
+<svg version="1.1" class="center-block" xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" 
+     style="border: 1px solid black;background-color:black;min-height: 100vh;">
+  <g>
+    <g transform="translate(10,10)">
+      <rect x="-1" y="-1" width="302" height="202" stroke="white"></rect>
+      <foreignObject x="0" y="0" width="300" height="200">
+        <video width="300" height="200" controls="" style="position: fixed;">
+          <source src="<?php echo $chaosMedias['media']->originalUrl(); ?>" type="video/mp4">
+        </video>
+      </foreignObject>
+    </g>
+  </g>
+</svg>
