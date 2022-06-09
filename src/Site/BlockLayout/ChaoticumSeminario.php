@@ -68,7 +68,10 @@ class ChaoticumSeminario extends AbstractBlockLayout
     public function prepareRender(PhpRenderer $view)
     {
 
-        $view->headScript()->appendFile($view->assetUrl('js/d3.V6.min.js','ChaoticumSeminario'));
+        $view->headScript()->appendFile($view->assetUrl('js/d3.min.js','ChaoticumSeminario'));
+        $view->headScript()->appendFile($view->assetUrl('js/timelines-chart.min.js','ChaoticumSeminario'));
+        
+        $view->headLink()->prependStylesheet($view->assetUrl('css/main.css','ChaoticumSeminario'));
 
     }
 }
