@@ -520,6 +520,8 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
         $oMedia['oa:end'][] = $valueObject; 
         $oMedia['o:ingester'] = 'url';
         $oMedia['o:source'] = $data['tempPath'];
+        //ATTENTION problème de dns sur le serveur paris 8
+        $data['tempUrl'] = str_replace('https://arcanes.univ-paris8.fr','http://192.168.30.208',$data['tempUrl']);
         $oMedia['ingest_url'] = $data['tempUrl'];
 
         //mise à jour de l'item
