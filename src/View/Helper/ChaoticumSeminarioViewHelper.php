@@ -9,6 +9,7 @@ use FFMpeg\Coordinate\TimeCode;
 use FFMpeg\Format\Video\Ogg;
 use FFMpeg\Format\Audio\Flac;
 use \Datetime;
+use GuzzleHttp\Psr7\Query;
 
 class ChaoticumSeminarioViewHelper extends AbstractHelper
 {
@@ -66,7 +67,10 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
                 break;            
             case 'getMediaFragByRef':
                 $rs = $this->getMediaFragByRef($params['ref']);
-                break;            
+                break;
+            case 'getAleaFrag':
+                $rs = $this->setVideoFrag($params['media'],$params);
+                break;
             default:
                 $rs = $this->getFrags($params);
                 break;
@@ -253,7 +257,7 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
         }
 
         //extraction du fragment
-        $tDur = 6;
+        $tDur = isset($params['dure']) ? $params['dure'] : 6;
         $tDeb = random_int(0, $duration-$tDur);
         $tempFilename = 'chaosMedia-'.$media->id().'-'.$tDeb.'-'.$tDur.'.ogg';
         $tempPath = $tempPath .'/'.$tempFilename;
@@ -272,11 +276,20 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
         $tempUrl = str_replace($media->filename(),$tempFilename,$tempUrl);
 
         //création du média chaotique
-        $mediaFrag = $this->ajouteMedia($media, ['tempPath'=>$tempUrl,'tDeb'=>$tDeb,'tDur'=>$tDur]);        
+        $params['tempUrl']=$tempUrl;
+        $params['debFrag']=$tDeb;
+        $params['endFrag']=$tDeb+$tDur;
+        $params['tempPath']= $tempPath;
+        $params['oa:start']=$tDeb;
+        $params['oa:end']=$tDeb+$tDur;
+        $params['ref']=$media->displayTitle();
+        $mediaFrag = $this->ajouteMediaFrag($media, $params);        
         if($mediaFrag){
+            //extraction de l'audio
+            $arrFrag = $this->setAudioFrag($media,$params);
             $this->logger->info(
                 'Media #{media_id}: chaoticum media created ({filename}).', // @translate
-                ['media_id' => $mediaFrag->id(), 'filename' => $mediaFrag->filename()]
+                ['media_id' => $mediaFrag->id(), 'filename' => $mediaFrag->displayTitle()]
             );    
         }else{
             $this->logger->err(
@@ -289,7 +302,7 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
         //suprime le fichier temporaire
 
 
-        return $mediaFrag;
+        return $arrFrag;
 
     }
 
