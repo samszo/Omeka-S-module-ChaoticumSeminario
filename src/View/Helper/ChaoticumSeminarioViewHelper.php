@@ -7,9 +7,11 @@ use FFMpeg\FFMpeg;
 use FFMpeg\FFProbe;
 use FFMpeg\Coordinate\TimeCode;
 use FFMpeg\Format\Video\Ogg;
+use FFMpeg\Format\Video\X264;
 use FFMpeg\Format\Audio\Flac;
 use \Datetime;
 use GuzzleHttp\Psr7\Query;
+use Omeka\Api\Exception\RuntimeException;
 
 class ChaoticumSeminarioViewHelper extends AbstractHelper
 {
@@ -71,12 +73,42 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
             case 'getAleaFrag':
                 $rs = $this->setVideoFrag($params['media'],$params);
                 break;
+            case 'setAllFrag':
+                $rs = $this->setAllFrag($params);
+                break;
             default:
                 $rs = $this->getFrags($params);
                 break;
+    
         }
         return $rs;
     }
+
+    /**
+     * création de tous les fragments d'un media audiovisuel
+     * 
+     * @param   array   $query
+     *
+     * @return array
+     */
+    function setAllFrag($params){
+        $params['oa:start']=0;
+        $params['oa:end']='fin';
+        $type = $params['media']->mediaType();
+        switch ($type) {
+            case 'video/mp4':
+                $frag = $this->setVideoFrag($params['media'],$params);
+                break;
+            case 'audio/mpeg':
+                $frag = $this->setAudioFrag($params['media'],$params);
+                break;                        
+            default:
+                return ['error'=>"Mauvais type de Media ",'message'=>"La fragmentation ne prend pas en compte les medias de type :"+$type];
+                break;
+        }
+        return $frag;
+    }
+
 
     /**
      * création d'un fragment à partir d'une position
@@ -146,163 +178,88 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
      * @return array
      */
     function setVideoFrag($media, $params){
-
-
-        $mainMediaType = strtok((string) $media->mediaType(), '/');
-        $filename = $media->filename();
-        $sourcePath = $this->basePath . '/original/' . $filename;
-
-        if (!file_exists($sourcePath)) {
-            $this->logger->warn(
-                'Media #{media_id}: the original file does not exist ({filename})', // @translate
-                ['media_id' => $media->id(), 'filename' => 'original/' . $filename]
-            );
-            return false;
-        }
-
-        if (!is_readable($sourcePath)) {
-            $this->logger->warn(
-                'Media #{media_id}: the original file is not readable ({filename}).', // @translate
-                ['media_id' => $media->id(), 'filename' => 'original/' . $filename]
-            );
-            return false;
-        }
-
-
-        $realpath = new RealPath(false);
-
-        $storageId = $media->storageId();
-        $pattern = "mp4/{filename}.mp4";
-        $folder = mb_substr($pattern, 0, mb_strpos($pattern, '/{filename}.'));
-        $basename = str_replace('{filename}', $storageId, mb_substr($pattern, mb_strpos($pattern, '/{filename}.') + 1));
-        $storageName = $folder . '/' . $basename;
-        $chaoticumPath = $this->basePath . '/' . $storageName;
-
-        // Another security check.
-        if ($chaoticumPath !== $realpath->filter($chaoticumPath)) {
-            $this->logger->err(
-                'Media #{media_id}: the chaoticum pattern "{pattern}" does not create a real path.', // @translate
-                ['media_id' => $media->id(), 'pattern' => $pattern]
-            );
-            return false;
-        }
-
-        if (file_exists($chaoticumPath) && !is_writeable($chaoticumPath)) {
-            $this->logger->warn(
-                'Media #{media_id}: chaoticum media is not writeable ({filename}).', // @translate
-                ['media_id' => $media->id(), 'filename' => $storageName]
-            );
-            return false;
-        }
-
-        // The path can contain a directory (module Archive repertory).
-        // TODO To be removed: this is managed by the store anyway.
-        $dirpath = dirname($chaoticumPath);
-        if (file_exists($dirpath)) {
-            if (!is_dir($dirpath) || !is_writable($dirpath)) {
-                $this->logger->warn(
-                    'Media #{media_id}: chaoticum media is not writeable ({filename}).', // @translate
-                    ['media_id' => $media->id(), 'filename' => $storageName]
-                );
-                return false;
-            }
-        } else {
-            $result = @mkdir($dirpath, 0755, true);
-            if (!$result) {
-                $this->logger->err(
-                    'Media #{media_id}: chaoticum media is not writeable ({filename}).', // @translate
-                    ['media_id' => $media->id(), 'filename' => $storageName]
-                );
-                return false;
-            }
-        }
+        $videoFormat = ['ext'=>'mp4','codec'=>'X264'];
+        $paths = $this->getFragmentPaths($media, $videoFormat['ext']);
 
         //paramètrage de ffmpeg
-        $video = $this->ffmpeg->open($sourcePath);
+        $video = $this->ffmpeg->open($paths['source']);
         $format = $this->ffprobe
-            ->format($sourcePath); // extracts file informations
+            ->format($paths['source']); // extracts file informations
         $stream = $this->ffprobe
-            ->streams($sourcePath) // extracts streams informations
+            ->streams($paths['source']) // extracts streams informations
             ->videos()                      // filters video streams
             ->first(); 
         $width = $stream->get('width');              
         $height = $stream->get('height');              
-        $duration = $format->get('duration');             // returns the duration property
+        $duration = (float)$format->get('duration');             // returns the duration property
         
         $this->logger->info(
             'Media #{media_id}: creating chaoticum media "{filename}".', // @translate
-            ['media_id' => $media->id(), 'filename' => $storageName]
+            ['media_id' => $media->id(), 'filename' => $paths['filename']]
         );
 
 
-        // vérifie l'existence du dossier temporaire
-        $tempPath = $this->basePath . '/tmp';
-        if (file_exists($tempPath)) {
-            if (!is_dir($tempPath) || !is_writable($tempPath)) {
-                $this->logger->warn(
-                    'Media #{media_id}: chaoticum media is not writeable ({filename}).', // @translate
-                    ['media_id' => $media->id(), 'filename' => $storageName]
-                );
-                return false;
+        //extraction des fragments de 60 secondes
+        $deb = intval($params['oa:start']);
+        $fin = $params['oa:end']=='fin' ? $duration : intval($params['oa:end']);
+        for ($d=$deb; $d < $fin; $d+=60) {            
+            $e = $fin > 60 ? $d+60 : $fin;
+            $e = $e > $fin  ? $fin : $e;
+
+            //vérifie l'existence du media
+            $tempFilename = 'chaosMedia-'.$media->id().'-'.$d.'-'.$e.'.'.$videoFormat['ext'];
+            $existe = $this->getMediaByRef($tempFilename);
+            //mis à jour des paaramètres 
+            $params['debFrag']=$d;
+            $params['endFrag']=$e;
+            $params['oa:start']=$d;
+            $params['oa:end']=$e;
+            $params['ref']="Fragment vidéo de : ".$media->id();
+            $params['refId']=$tempFilename;
+
+            if(count($existe)==0){
+                //extraction du fragment
+                $dur = $e-$d;
+                $params['tempPath']= $paths['temp'] .'/'.$tempFilename;
+                //execute en ligne de commande directe pour plus de rapidité
+                $cmd ="ffmpeg -i ".$paths['source']
+                ." -ss ".TimeCode::fromSeconds($d)
+                ." -to ".TimeCode::fromSeconds($e)
+                ." -c:v copy -c:a copy ".$params['tempPath'];
+                $output = shell_exec($cmd);
+                /*
+                $clip = $video->clip(TimeCode::fromSeconds($d), TimeCode::fromSeconds($dur));
+                $clip->save(new X264(), $params['tempPath']);
+                */
+                if (!file_exists($params['tempPath']) || !filesize($params['tempPath'])) {
+                    $this->logger->err(
+                        'Media #{media_id}: chaoticum media is empty ({filename}).', // @translate
+                        ['media_id' => $media->id(), 'filename' => $paths['filename']]
+                    );
+                    throw new RuntimeException("Impossible de créer le fichier vidéo : '".$params['tempPath']."' (media:".$media->id().").");			
+                }
+                //réécriture de l'url
+                $tempUrl = str_replace('original','tmp',$media->originalUrl());
+                $tempUrl = str_replace($media->filename(),$tempFilename,$tempUrl);
+                $params['tempUrl']=$tempUrl;
+
+                //création du média chaotique
+                $mediaFrag = $this->ajouteMediaFrag($media, $params);        
+                $medias = $mediaFrag->media();
+                $m = $medias[count($medias)-1];
+            }else{
+                $m = $existe[0];
+                $mediaFrag = $m->item();        
             }
-        } else {
-            $result = @mkdir($tempPath, 0755, true);
-            if (!$result) {
-                $this->logger->err(
-                    'Media #{media_id}: chaoticum media is not writeable ({filename}).', // @translate
-                    ['media_id' => $media->id(), 'filename' => $storageName]
-                );
-                return false;
-            }
-        }
-
-        //extraction du fragment
-        $tDur = isset($params['dure']) ? $params['dure'] : 6;
-        $tDeb = random_int(0, $duration-$tDur);
-        $tempFilename = 'chaosMedia-'.$media->id().'-'.$tDeb.'-'.$tDur.'.ogg';
-        $tempPath = $tempPath .'/'.$tempFilename;
-        $clip = $video->clip(TimeCode::fromSeconds($tDeb), TimeCode::fromSeconds($tDur));
-        $clip->save(new Ogg(), $tempPath);
-
-        if (!file_exists($tempPath) || !filesize($tempPath)) {
-            $this->logger->err(
-                'Media #{media_id}: chaoticum media is empty ({filename}).', // @translate
-                ['media_id' => $media->id(), 'filename' => $storageName]
-            );
-            return false;
-        }
-        //réécriture de l'url
-        $tempUrl = str_replace('original','tmp',$media->originalUrl());
-        $tempUrl = str_replace($media->filename(),$tempFilename,$tempUrl);
-
-        //création du média chaotique
-        $params['tempUrl']=$tempUrl;
-        $params['debFrag']=$tDeb;
-        $params['endFrag']=$tDeb+$tDur;
-        $params['tempPath']= $tempPath;
-        $params['oa:start']=$tDeb;
-        $params['oa:end']=$tDeb+$tDur;
-        $params['ref']=$media->displayTitle();
-        $mediaFrag = $this->ajouteMediaFrag($media, $params);        
-        if($mediaFrag){
-            //extraction de l'audio
-            $arrFrag = $this->setAudioFrag($media,$params);
+            //extraction de l'audio du fragment pour le traitement du speech to text
+            $arrFrags = $this->setAudioFrag($m,$params, true);
             $this->logger->info(
                 'Media #{media_id}: chaoticum media created ({filename}).', // @translate
                 ['media_id' => $mediaFrag->id(), 'filename' => $mediaFrag->displayTitle()]
             );    
-        }else{
-            $this->logger->err(
-                'Media #{media_id}: chaoticum item is empty ({filename}).', // @translate
-                ['media_id' => $media->id(), 'filename' => $tempUrl]
-            );
-            return false;
         }
 
-        //suprime le fichier temporaire
-
-
-        return $arrFrag;
+        return $arrFrags;
 
     }
 
@@ -312,18 +269,19 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
      *
      * @param oMedia    $media média concerné par le fractionnement
      * @param array     $params paramètre de l'action
+     * @param bool      $sourceIsFrag converti le fichier en entier == extraction audio d'un fragment vidéo
      * 
      * @return array
      */
-    function setAudioFrag($media, $params){
+    function setAudioFrag($media, $params, $sourceIsFrag){
 
-        $paths = $this->getFragmentPaths($media, 'ogg');
+        $paths = $this->getFragmentPaths($media, 'flac');
 
         //paramètrage de ffmpeg
         $audio = $this->ffmpeg->open($paths['source']);
         $format = $this->ffprobe
             ->format($paths['source']); // extracts file informations
-        $duration = $format->get('duration');             // returns the duration property
+        $duration = (float)$format->get('duration');             // returns the duration property
         
         $this->logger->info(
             'Media #{media_id}: creating chaoticum media "{filename}".', // @translate
@@ -331,40 +289,56 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
         );
 
         //extraction des fragments de 60 secondes
+        $dur = 60;
         $deb = intval($params['oa:start']);
-        $fin = intval($params['oa:end']);
-        for ($d=$deb; $d < $fin; $d+=60) { 
-            $e = $fin > 60 ? $d+60 : $fin;
+        $fin = $params['oa:end']=='fin' ? $duration : intval($params['oa:end']);
+        for ($d=$deb; $d < $fin; $d+=$dur) { 
+            $e = $fin > $dur ? $d+$dur : $fin;
             $e = $e > $fin  ? $fin : $e;
             $params['debFrag']=$d;
             $params['endFrag']=$e;
             //TODO: voir si on prend une marge de 3 secondes pour éviter de découper les mots            
             $tempFilename = 'chaosMedia-'.$media->id().'-'.$d.'-'.$e.'.flac';
             $dur = $e-$d;
+
             $params['tempPath']= $paths['temp'] .'/'.$tempFilename;
-            $clip = $audio->clip(TimeCode::fromSeconds($d), TimeCode::fromSeconds($dur));
-            //spécifie le format du fragment pour diminuer la taille
-            $clip->filters()->resample(16000);
-            $format = new Flac();
-            $format
-                ->setAudioChannels(1)
-                ->setAudioKiloBitrate(8);
+            $existe = $this->getMediaByRef($tempFilename);
+            if(count($existe)==0){
+                if($sourceIsFrag){
+                    //execute en ligne de commande directe pour plus de rapidité
+                    $cmd ="ffmpeg -i ".$paths['source']
+                    ." -vn -sn -acodec flac -ar 16000 "
+                    .$params['tempPath'];
+                    $output = shell_exec($cmd);
+                }else{
+                    $clip = $audio->clip(TimeCode::fromSeconds($deb), TimeCode::fromSeconds($dur));
+                    //spécifie le format du fragment pour diminuer la taille et la rendre compatible avec le speech to text
+                    $clip->filters()->resample(16000);
+                    $format = new Flac();
+                    $format
+                        ->setAudioChannels(1)
+                        ->setAudioKiloBitrate(8);
+                    $clip->save($format, $params['tempPath']);
+                }
 
-            $clip->save($format, $params['tempPath']);
-
-            if (!file_exists($params['tempPath']) || !filesize($params['tempPath'])) {
-                $this->logger->err(
-                    'Media #{media_id}: chaoticum media is empty ({filename}).', // @translate
-                    ['media_id' => $media->id(), 'filename' => $paths['filename']]
-                );
-                return false;
-            }
-            //réécriture de l'url
-            $tempUrl = str_replace('original','tmp',$media->originalUrl());
-            $params['tempUrl']=str_replace($media->filename(),$tempFilename,$tempUrl);
-            
-            //création du média chaotique
-            $mediaFrags = $this->ajouteMediaFrag($media, $params);        
+                if (!file_exists($params['tempPath']) || !filesize($params['tempPath'])) {
+                    $this->logger->err(
+                        'Media #{media_id}: chaoticum media is empty ({filename}).', // @translate
+                        ['media_id' => $media->id(), 'filename' => $paths['filename']]
+                    );
+                    throw new RuntimeException("Impossible de créer le fichier audio : '".$params['tempPath']."' (media:".$media->id().").");			
+                }
+                //réécriture de l'url
+                $tempUrl = str_replace('original','tmp',$media->originalUrl());
+                $params['tempUrl']=str_replace($media->filename(),$tempFilename,$tempUrl);
+                
+                //création du média dans l'item
+                $params['ref']="Fragment audio de : ".$media->id();
+                $params['refId']=$tempFilename;
+                $mediaFrags = $this->ajouteMediaFrag($media, $params);
+            }else{
+                $mediaFrags = $existe[0]->item();        
+            }        
         }
 
         return $mediaFrags;
@@ -475,7 +449,7 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
-     * Vérfie l'existence d'un média
+     * récupère un item média par sa référence
      *
      * @param oMedia    $media
      * @param array     $data
@@ -488,7 +462,21 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
         $param['property'][0]['type']='eq';
         $param['property'][0]['text']=$ref; 
         return $this->api->search('items',$param)->getContent();
+    }
 
+    /**
+     * récupère un media par sa référence
+     *
+     * @param string    $ref
+     * @return array
+     */
+    protected function getMediaByRef($ref){
+        //vérifie la présence de l'item chaotique pour ne pas la récréer inutilement
+        $param = array();
+        $param['property'][0]['property']= $this->getProp('dcterms:isReferencedBy')->id()."";
+        $param['property'][0]['type']='eq';
+        $param['property'][0]['text']=$ref; 
+        return $this->api->search('media',$param)->getContent();
     }
 
     /**
@@ -513,9 +501,17 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
         //$oMedia['o:resource_templates'] = ['o:id' => $this->resourceTemplate['Cartographie des expressions']->id()];
         $valueObject = [];
         $valueObject['property_id'] = $this->getProp('dcterms:title')->id();
-        $valueObject['@value'] = $data['ref'].'_'.$data['debFrag'].'_'.$data['endFrag'];
+        $valueObject['@value'] = $data['ref'].' : '.$data['debFrag'].'_'.$data['endFrag'];
         $valueObject['type'] = 'literal';
         $oMedia['dcterms:title'][] = $valueObject;    
+
+        if(isset($data['refId'])){
+            $valueObject = [];
+            $valueObject['property_id'] = $this->getProp('dcterms:isReferencedBy')->id();
+            $valueObject['@value'] = $data['refId'];
+            $valueObject['type'] = 'literal';
+            $oMedia['dcterms:title'][] = $valueObject;        
+        }
         $valueObject = [];
         $valueObject['property_id'] = $this->getProp('ma:isFragmentOf')->id();
         $valueObject['value_resource_id']=$media->id();        
@@ -523,12 +519,12 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
         $oMedia['ma:isFragmentOf'][] = $valueObject;    
         $valueObject = [];
         $valueObject['property_id'] = $this->getProp('oa:start')->id();
-        $valueObject['@value'] = $data['debFrag'];
+        $valueObject['@value'] = $data['debFrag']."";
         $valueObject['type'] = 'literal';
         $oMedia['oa:start'][] = $valueObject;    
         $valueObject = [];
         $valueObject['property_id'] = $this->getProp('oa:end')->id();
-        $valueObject['@value'] = $data['endFrag'];
+        $valueObject['@value'] = $data['endFrag']."";
         $valueObject['type'] = 'literal';
         $oMedia['oa:end'][] = $valueObject; 
         $oMedia['o:ingester'] = 'url';
