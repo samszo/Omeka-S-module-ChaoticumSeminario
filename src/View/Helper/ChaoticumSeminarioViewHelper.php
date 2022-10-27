@@ -12,6 +12,7 @@ use FFMpeg\Format\Audio\Flac;
 use \Datetime;
 use GuzzleHttp\Psr7\Query;
 use Omeka\Api\Exception\RuntimeException;
+use \Web64\Nlp\NlpClient;
 
 class ChaoticumSeminarioViewHelper extends AbstractHelper
 {
@@ -76,6 +77,9 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
             case 'setAllFrag':
                 $rs = $this->setAllFrag($params);
                 break;
+            case 'getEntities':
+                $rs = $this->getEntities($params);
+                break;
             default:
                 $rs = $this->getFrags($params);
                 break;
@@ -85,9 +89,36 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
+     * récupère les entités nommées d'un texte
+     * 
+     * @param   array   $params
+     *
+     * @return array
+     */
+    function getEntities($params){
+        $item = !is_object($params['item']) ? $this->api->read('items',$params['item'])->getContent() : $params['item']; 
+        $text = $item->displayTitle();
+        
+        $nlpserver_config = [
+            'hosts'     => [
+                'http://localhost:6400/'
+            ],
+            'debug'     => true,
+        ];
+        
+        $nlp = new NlpClient( $nlpserver_config['hosts'], $nlpserver_config['debug'] );
+
+        $detected_lang = $nlp->language( $text );
+
+        $polyglot = $nlp->polyglot_entities($text, $detected_lang);
+        $result = $polyglot->getEntities(); 
+        return $result;
+    }
+
+    /**
      * création de tous les fragments d'un media audiovisuel
      * 
-     * @param   array   $query
+     * @param   array   $params
      *
      * @return array
      */
