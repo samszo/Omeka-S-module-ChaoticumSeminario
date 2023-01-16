@@ -4,11 +4,8 @@ namespace ChaoticumSeminario;
 
 return [
     'view_helpers' => [
-        'invokables' => [
-            'ChaoticumSeminarioViewHelper' => View\Helper\ChaoticumSeminarioViewHelper::class,
-        ],
         'factories' => [
-            'chaoticumSeminarioFactory' => Service\ViewHelper\ChaoticumSeminarioFactory::class,
+            'chaoticumSeminario' => Service\ViewHelper\ChaoticumSeminarioFactory::class,
         ],
 
     ],
