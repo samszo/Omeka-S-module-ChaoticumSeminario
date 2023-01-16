@@ -8,7 +8,7 @@ return [
             'ChaoticumSeminarioViewHelper' => View\Helper\ChaoticumSeminarioViewHelper::class,
         ],
         'factories' => [
-            'ChaoticumSeminarioFactory' => Service\ViewHelper\ChaoticumSeminarioFactory::class,
+            'chaoticumSeminarioFactory' => Service\ViewHelper\ChaoticumSeminarioFactory::class,
         ],
 
     ],
@@ -19,7 +19,7 @@ return [
     ],
     'block_layouts' => [
         'invokables' => [
-            'ChaoticumSeminario' => Site\BlockLayout\ChaoticumSeminario::class,
+            'chaoticumSeminario' => Site\BlockLayout\ChaoticumSeminario::class,
         ],
     ],
     'form_elements' => [
@@ -37,11 +37,11 @@ return [
             ],
         ],
     ],
-    'ChaoticumSeminario' => [
+    'chaoticumseminario' => [
         'block_settings' => [
-            'ChaoticumSeminario' => [
+            'chaoticumSeminario' => [
                 'heading' => '',
-                'params' => '',
+                'media_id' => null,
             ],
         ],
     ],

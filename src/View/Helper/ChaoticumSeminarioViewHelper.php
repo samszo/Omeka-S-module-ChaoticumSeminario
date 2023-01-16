@@ -163,18 +163,21 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
      */
     public function getFrags($params)
     {
-        //récupère les propriétés
+        // Récupère les propriétés
         if (!isset($params['nom'])) {
             $date = new DateTime('NOW');
             $params['nom'] = "Séminaire " . $date->format('Y-m-d H:i:s');
         }
 
-        $oMedia = $this->api->read('media', $params['idMedia'])->getContent();
+        $oMedia = $params['media'] ?? null;
 
         $fragments = $this->getMediaFrag($oMedia);
         //$fragments = $this->setVideoFrag($oMedia, $params);
 
-        return ['media' => $oMedia,'fragments' => $fragments];
+        return [
+            'media' => $oMedia,
+            'fragments' => $fragments,
+        ];
     }
 
     /**
