@@ -1,14 +1,14 @@
-<?php
+<?php declare(strict_types=1);
 namespace ChaoticumSeminario;
 
 return [
 
     'view_helpers' => [
-        
+
         'invokables' => [
             'ChaoticumSeminarioViewHelper' => View\Helper\ChaoticumSeminarioViewHelper::class,
-        ],                
-        'factories'  => [
+        ],
+        'factories' => [
             'ChaoticumSeminarioFactory' => Service\ViewHelper\ChaoticumSeminarioFactory::class,
         ],
 
@@ -17,7 +17,7 @@ return [
         'template_path_stack' => [
             dirname(__DIR__) . '/view',
         ],
-    ],    
+    ],
     'block_layouts' => [
         'invokables' => [
             'ChaoticumSeminario' => Site\BlockLayout\ChaoticumSeminario::class,
@@ -42,7 +42,7 @@ return [
         'block_settings' => [
             'ChaoticumSeminario' => [
                 'heading' => '',
-                'params'  =>'',
+                'params' => '',
             ],
         ],
     ],

@@ -1,4 +1,5 @@
-<?php 
+<?php declare(strict_types=1);
+
 namespace ChaoticumSeminario\Site\BlockLayout;
 
 use Laminas\View\Renderer\PhpRenderer;
@@ -65,13 +66,11 @@ class ChaoticumSeminario extends AbstractBlockLayout
         return strip_tags($this->render($view, $block));
     }
 
-    public function prepareRender(PhpRenderer $view)
+    public function prepareRender(PhpRenderer $view): void
     {
+        $view->headScript()->appendFile($view->assetUrl('js/d3.min.js', 'ChaoticumSeminario'));
+        $view->headScript()->appendFile($view->assetUrl('js/timelines-chart.min.js', 'ChaoticumSeminario'));
 
-        $view->headScript()->appendFile($view->assetUrl('js/d3.min.js','ChaoticumSeminario'));
-        $view->headScript()->appendFile($view->assetUrl('js/timelines-chart.min.js','ChaoticumSeminario'));
-        
-        $view->headLink()->prependStylesheet($view->assetUrl('css/main.css','ChaoticumSeminario'));
-
+        $view->headLink()->prependStylesheet($view->assetUrl('css/main.css', 'ChaoticumSeminario'));
     }
 }
