@@ -1,6 +1,6 @@
 <?php
 
-$chaosMedias = $this->ChaoticumSeminarioFactory(['idMedia'=>7205]);
+$chaosMedias = $this->ChaoticumSeminarioFactory(['idMedia' => 7205]);
 /*
 echo $heading.' '.$params; //variable déclarer dans ChaoticumSeminario\Form\Site\BlockLayout
 echo '<video controls width="250">
@@ -18,7 +18,7 @@ foreach ($chaosMedias['fragments'] as $f) {
 ?>
 <div id='timeline' ></div>
 <svg version="1.1" class="center-block" xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" 
+     xmlns:xlink="http://www.w3.org/1999/xlink" width="100%"
      style="border: 1px solid black;background-color:black;min-height: 100vh;">
   <g id='svgConteneurMain'>
     <g transform="translate(10,10)">
@@ -59,7 +59,7 @@ d3.select(svg)
   .attr("fill", "red")
   .attr("cx", dst(new Date("2019-03-31 02:30:00")))
   .attr("cy", 5);
-/*  
+/*
     const scale = d3.scaleTime();
   do {
     const t = Date.now();

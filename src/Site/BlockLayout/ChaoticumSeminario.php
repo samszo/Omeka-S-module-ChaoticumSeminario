@@ -17,7 +17,7 @@ class ChaoticumSeminario extends AbstractBlockLayout
 
     public function getLabel()
     {
-        return 'ChaoticumSeminario'; // @translate
+        return 'Chaoticum Seminario'; // @translate
     }
 
     public function form(
@@ -68,9 +68,12 @@ class ChaoticumSeminario extends AbstractBlockLayout
 
     public function prepareRender(PhpRenderer $view): void
     {
-        $view->headScript()->appendFile($view->assetUrl('js/d3.min.js', 'ChaoticumSeminario'));
-        $view->headScript()->appendFile($view->assetUrl('js/timelines-chart.min.js', 'ChaoticumSeminario'));
+        $assetUrl = $view->plugin('assetUrl');
+        $view->headScript()
+            ->appendFile($assetUrl('js/d3.min.js', 'ChaoticumSeminario'))
+            ->appendFile($assetUrl('js/timelines-chart.min.js', 'ChaoticumSeminario'));
 
-        $view->headLink()->prependStylesheet($view->assetUrl('css/main.css', 'ChaoticumSeminario'));
+        $view->headLink()
+            ->prependStylesheet($assetUrl('css/main.css', 'ChaoticumSeminario'));
     }
 }

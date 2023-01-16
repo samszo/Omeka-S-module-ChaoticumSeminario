@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace ChaoticumSeminario\View\Helper;
 
 use Datetime;
@@ -45,11 +46,11 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
-     * Initialisation du séminaire
+     * Initialisation du séminaire.
      *
-     * @param array     $params paramètres du séminaire
+     * @param array $params paramètres du séminaire
      *
-     * @return array
+     * @return array|false
      */
     public function __invoke($params = [])
     {
@@ -85,9 +86,9 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
-     * récupère les entités nommées d'un texte
+     * Récupère les entités nommées d'un texte.
      *
-     * @param   array   $params
+     * @param array $params
      *
      * @return array
      */
@@ -113,9 +114,9 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
-     * création de tous les fragments d'un media audiovisuel
+     * Création de tous les fragments d'un media audiovisuel.
      *
-     * @param   array   $params
+     * @param array $params
      *
      * @return array
      */
@@ -139,9 +140,9 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
-     * création d'un fragment à partir d'une position
+     * Création d'un fragment à partir d'une position.
      *
-     * @param array    $params
+     * @param array $params
      *
      * @return array
      */
@@ -154,7 +155,7 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
-     * récupère les fragments d'un média
+     * Récupère les fragments d'un média.
      *
      * @param array    $params
      *
@@ -177,10 +178,10 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
-     * récupère les fragments d'un média'
+     * Récupère les fragments d'un média.
      *
-     * @param oMedia    $media média concerné par le fractionnement
-     * @param array     $params paramètres supplémentaires
+     * @param \Omeka\Api\Representation\MediaRepresentation $media média concerné par le fractionnement
+     * @param array $params paramètres supplémentaires
      *
      * @return array
      */
@@ -198,11 +199,10 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
-     * fragmente une vidéo
-     * merci à Daniel Berthereau pour le module DeritativeMedia
+     * Fragmente une vidéo
      *
-     * @param oMedia    $media média concerné par le fractionnement
-     * @param array     $params paramètre de l'action
+     * @param \Omeka\Api\Representation\MediaRepresentation $media média concerné par le fractionnement
+     * @param array $params Paramètre de l'action
      *
      * @return array
      */
@@ -211,7 +211,7 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
         $videoFormat = ['ext' => 'mp4','codec' => 'X264'];
         $paths = $this->getFragmentPaths($media, $videoFormat['ext']);
 
-        //paramètrage de ffmpeg
+        // Paramètrage de ffmpeg
         $video = $this->ffmpeg->open($paths['source']);
         $format = $this->ffprobe
             ->format($paths['source']); // extracts file informations
@@ -228,7 +228,7 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
             ['media_id' => $media->id(), 'filename' => $paths['filename']]
         );
 
-        //extraction des fragments de 60 secondes
+        // Extraction des fragments de 60 secondes
         $deb = intval($params['oa:start']);
         $fin = $params['oa:end'] == 'fin' ? $duration : intval($params['oa:end']);
         for ($d = $deb; $d < $fin; $d += 60) {
@@ -247,14 +247,14 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
             $params['refId'] = $tempFilename;
 
             if (count($existe) == 0) {
-                //extraction du fragment
+                // Extraction du fragment
                 $dur = $e - $d;
                 $params['tempPath'] = $paths['temp'] . '/' . $tempFilename;
-                //execute en ligne de commande directe pour plus de rapidité
+                // Execute en ligne de commande directe pour plus de rapidité
                 $cmd = "ffmpeg -i " . $paths['source']
-                . " -ss " . TimeCode::fromSeconds($d)
-                . " -to " . TimeCode::fromSeconds($e)
-                . " -c:v copy -c:a copy " . $params['tempPath'];
+                    . " -ss " . TimeCode::fromSeconds($d)
+                    . " -to " . TimeCode::fromSeconds($e)
+                    . " -c:v copy -c:a copy " . $params['tempPath'];
                 $output = shell_exec($cmd);
                 /*
                 $clip = $video->clip(TimeCode::fromSeconds($d), TimeCode::fromSeconds($dur));
@@ -267,12 +267,12 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
                     );
                     throw new RuntimeException("Impossible de créer le fichier vidéo : '" . $params['tempPath'] . "' (media:" . $media->id() . ").");
                 }
-                //réécriture de l'url
+                // Réécriture de l'url
                 $tempUrl = str_replace('original', 'tmp', $media->originalUrl());
                 $tempUrl = str_replace($media->filename(), $tempFilename, $tempUrl);
                 $params['tempUrl'] = $tempUrl;
 
-                //création du média chaotique
+                // Création du média chaotique
                 $mediaFrag = $this->ajouteMediaFrag($media, $params);
                 $medias = $mediaFrag->media();
                 $m = $medias[count($medias) - 1];
@@ -280,7 +280,7 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
                 $m = $existe[0];
                 $mediaFrag = $m->item();
             }
-            //extraction de l'audio du fragment pour le traitement du speech to text
+            // Extraction de l'audio du fragment pour le traitement du speech to text
             $arrFrags = $this->setAudioFrag($m, $params, true);
             $this->logger->info(
                 'Media #{media_id}: chaoticum media created ({filename}).', // @translate
@@ -292,12 +292,11 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
-     * fragmente un audio
-     * merci à Daniel Berthereau pour le module DeritativeMedia
+     * Fragmente un audio.
      *
-     * @param oMedia    $media média concerné par le fractionnement
-     * @param array     $params paramètre de l'action
-     * @param bool      $sourceIsFrag converti le fichier en entier == extraction audio d'un fragment vidéo
+     * @param \Omeka\Api\Representation\MediaRepresentation $media média concerné par le fractionnement
+     * @param array $params paramètre de l'action
+     * @param bool $sourceIsFrag converti le fichier en entier == extraction audio d'un fragment vidéo
      *
      * @return array
      */
@@ -373,10 +372,10 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
-     * récupère le path du fragment
+     * Récupère le path du fragment.
      *
-     * @param oMedia    $media
-     * @param string    $ext
+     * @param \Omeka\Api\Representation\MediaRepresentation $media
+     * @param string $ext
      *
      * @return array
      */
@@ -475,10 +474,10 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
-     * récupère un item média par sa référence
+     * Récupère un item média par sa référence.
      *
-     * @param oMedia    $media
-     * @param array     $data
+     * @param \Omeka\Api\Representation\MediaRepresentation $media
+     * @param array $data
      * @return array
      */
     protected function getMediaFragByRef($ref)
@@ -492,9 +491,9 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     }
 
     /**
-     * récupère un media par sa référence
+     * Récupère un media par sa référence.
      *
-     * @param string    $ref
+     * @param string $ref
      * @return array
      */
     protected function getMediaByRef($ref)
@@ -510,23 +509,23 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
     /**
      * Création du média chaotique
      *
-     * @param oMedia    $media
-     * @param array     $data
-     * @return oMedia
+     * @param \Omeka\Api\Representation\MediaRepresentation $media
+     * @param array $data
+     * @param \Omeka\Api\Representation\MediaRepresentation
      */
     protected function ajouteMediaFrag($media, $data)
     {
         $this->logger->info('Media ' . $media->id() . ' : chaoticum ajouteMedia.', $data);
 
-        //récupère l'item du média
+        // Récupère l'item du média
         $itemOri = isset($data['oItem']) ? $data['oItem'] : $media->item();
 
-        //ajoute le fragment de media et la référence à l'item de base
+        // Ajoute le fragment de media et la référence à l'item de base
         $dataItem = json_decode(json_encode($itemOri), true);
 
         $oMedia = [];
         $oMedia['o:resource_class'] = ['o:id' => $this->getRc('ma:MediaFragment')->id()];
-        //$oMedia['o:resource_templates'] = ['o:id' => $this->resourceTemplate['Cartographie des expressions']->id()];
+        // $oMedia['o:resource_templates'] = ['o:id' => $this->resourceTemplate['Cartographie des expressions']->id()];
         $valueObject = [];
         $valueObject['property_id'] = $this->getProp('dcterms:title')->id();
         $valueObject['@value'] = $data['ref'] . ' : ' . $data['debFrag'] . '_' . $data['endFrag'];
@@ -557,11 +556,11 @@ class ChaoticumSeminarioViewHelper extends AbstractHelper
         $oMedia['oa:end'][] = $valueObject;
         $oMedia['o:ingester'] = 'url';
         $oMedia['o:source'] = $data['tempPath'];
-        //ATTENTION problème de dns sur le serveur paris 8
+        // ATTENTION problème de dns sur le serveur paris 8
         $data['tempUrl'] = str_replace('https://arcanes.univ-paris8.fr', 'http://192.168.30.208', $data['tempUrl']);
         $oMedia['ingest_url'] = $data['tempUrl'];
 
-        //mise à jour de l'item
+        // Mise à jour de l'item.
         $dataItem['o:media'][] = $oMedia;
         /*
         $dataItem['dcterms:isReferencedBy'][]=[

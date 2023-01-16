@@ -1,10 +1,9 @@
 <?php declare(strict_types=1);
+
 namespace ChaoticumSeminario;
 
 return [
-
     'view_helpers' => [
-
         'invokables' => [
             'ChaoticumSeminarioViewHelper' => View\Helper\ChaoticumSeminarioViewHelper::class,
         ],
