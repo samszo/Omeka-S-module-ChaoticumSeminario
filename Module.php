@@ -1,8 +1,4 @@
-<?php
-
-/*
-
- */
+<?php declare(strict_types=1);
 
 namespace ChaoticumSeminario;
 
@@ -13,10 +9,6 @@ if (!class_exists(\Generic\AbstractModule::class)) {
 }
 
 use Generic\AbstractModule;
-use Omeka\Module\Exception\ModuleCannotInstallException;
-use Omeka\Module\Manager as ModuleManager;
-use Laminas\EventManager\Event;
-use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\MvcEvent;
 
 class Module extends AbstractModule
@@ -27,10 +19,6 @@ class Module extends AbstractModule
     {
         parent::onBootstrap($event);
 
-        // The autoload doesn’t work with GetId3.
-        // @see \IiifServer\Service\ControllerPlugin\MediaDimensionFactory
         require_once __DIR__ . '/vendor/autoload.php';
-
     }
-
 }

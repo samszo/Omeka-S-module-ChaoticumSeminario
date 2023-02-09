@@ -1,4 +1,5 @@
-<?php 
+<?php declare(strict_types=1);
+
 namespace ChaoticumSeminario\Form;
 
 use Laminas\Form\Element;
@@ -18,11 +19,13 @@ class ChaoticumSeminarioFieldset extends Fieldset
                 ],
             ])
             ->add([
-                'name' => 'o:block[__blockIndex__][o:data][params]',
-                'type' => Element\Textarea::class,
+                'name' => 'o:block[__blockIndex__][o:data][media_id]',
+                'type' => Element\Number::class,
                 'options' => [
-                    'label' => 'Params', // @translate
-                    'info' => 'The params are passed directly to the block layout.', // @translate
+                    'label' => 'Media id', // @translate
+                ],
+                'attributes' => [
+                    'required' => 'required',
                 ],
             ]);
     }
