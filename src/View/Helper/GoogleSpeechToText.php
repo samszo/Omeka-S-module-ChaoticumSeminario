@@ -189,7 +189,7 @@ class GoogleSpeechToText extends AbstractHelper
                             ->setSampleRateHertz($sampleRateHertz)
                             ->setDiarizationConfig(
                                 new SpeakerDiarizationConfig(['enable_speaker_diarization'=>true,'min_speaker_count'=>1,'max_speaker_count'=>10])
-                                )
+                            )
                             */
                             ->setLanguageCode($languageCode);
 
@@ -244,33 +244,50 @@ class GoogleSpeechToText extends AbstractHelper
             'value_resource_id' => $item->id(),
             'type' => 'resource',
         ];
+
+        $curationDataId = $this->getProp('curation:data')->id();
+        $mediaId = $media->id();
+        $mediaTitle = $media->value('dcterms:isReferencedBy');
+        $baseIndexTitle = pathinfo((string) $mediaTitle ?: $media->source(), PATHINFO_FILENAME);
+
         $words = $alt->getWords();
         foreach ($words as $w) {
-            $t = $this->getTag($w->getWord());
-            $oItem['jdc:hasConcept'][] = [
+            $concept = $this->getTag($w->getWord());
+            $start = $w->getStartTime()->getSeconds() . '.' . $w->getStartTime()->getNanos();
+            $end = $w->getEndTime()->getSeconds() . '.' . $w->getEndTime()->getNanos();
+
+            $annotation = [];
+            $annotation['jdc:hasConcept'][] = [
                 'property_id' => $this->getProp('jdc:hasConcept')->id(),
-                'value_resource_id' => $t->id(),
+                'value_resource_id' => $concept->id(),
                 'type' => 'resource',
             ];
-            $oItem['oa:start'][] = [
+            $annotation['oa:start'][] = [
                 'property_id' => $this->getProp('oa:start')->id(),
-                '@value' => $w->getStartTime()->getSeconds() . ":" . $w->getStartTime()->getNanos(),
+                '@value' => $start,
                 'type' => 'literal',
             ];
-            $oItem['oa:end'][] = [
+            $annotation['oa:end'][] = [
                 'property_id' => $this->getProp('oa:end')->id(),
-                '@value' => $w->getEndTime()->getSeconds() . ":" . $w->getEndTime()->getNanos(),
+                '@value' => $end,
                 'type' => 'literal',
             ];
-            $oItem['lexinfo:confidence'][] = [
+            $annotation['lexinfo:confidence'][] = [
                 'property_id' => $this->getProp('lexinfo:confidence')->id(),
-                '@value' => $w->getConfidence() . "",
+                '@value' => (string) $w->getConfidence(),
                 'type' => 'literal',
             ];
-            $oItem['dbo:speaker'][] = [
+            $annotation['dbo:speaker'][] = [
                 'property_id' => $this->getProp('dbo:speaker')->id(),
-                '@value' => $w->getSpeakerTag() . "",
+                '@value' => (string) $w->getSpeakerTag(),
                 'type' => 'literal',
+            ];
+
+            $oItem['curation:data'][] = [
+                'property_id' => $curationDataId,
+                'type' => 'literal',
+                '@value' => 'm' . $mediaId . '/' . $start . '/' . $concept->id() . ' [' . $baseIndexTitle . '] (' . $concept->displayTitle() . ')',
+                '@annotation' => $annotation,
             ];
         }
         /*NON car trop gourmant
