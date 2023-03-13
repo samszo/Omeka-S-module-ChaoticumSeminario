@@ -149,6 +149,7 @@ class ChaoticumSeminario extends AbstractHelper
      *   - media
      *   - nom : Nom du séminaire (sinon nom créé)
      * Retourne un array avec le media et les fragments.
+     * Les fragments sont liés via ma:isFragmentOf.
      *
      * @return mixed
      */
