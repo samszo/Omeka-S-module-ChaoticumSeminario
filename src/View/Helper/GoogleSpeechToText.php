@@ -12,7 +12,6 @@ use Laminas\Log\Logger;
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Api\Manager as ApiManager;
 use Omeka\Permissions\Acl;
-use Omeka\Settings\UserSettings;
 
 class GoogleSpeechToText extends AbstractHelper
 {
@@ -32,16 +31,15 @@ class GoogleSpeechToText extends AbstractHelper
     protected $logger;
 
     /**
-     * @var UserSettings
+     *
+     * @var GoogleSpeechToTextCredentials
      */
-    protected $userSettings;
+    protected $googleSpeechToTextCredentials;
 
     /**
      * @var array
      */
     protected $config;
-
-    protected $credentials;
 
     protected $props;
 
@@ -53,13 +51,13 @@ class GoogleSpeechToText extends AbstractHelper
         ApiManager $api,
         Acl $acl,
         Logger $logger,
-        UserSettings $userSettings,
+        GoogleSpeechToTextCredentials $googleSpeechToTextCredentials,
         array $config
     ) {
         $this->api = $api;
         $this->acl = $acl;
         $this->logger = $logger;
-        $this->userSettings = $userSettings;
+        $this->googleSpeechToTextCredentials = $googleSpeechToTextCredentials;
         $this->config = $config;
     }
 
@@ -150,14 +148,33 @@ class GoogleSpeechToText extends AbstractHelper
      */
     public function speechToText($params)
     {
+        static $credentials;
+
         $rs = $this->acl->userIsAllowed(null, 'create');
         if ($rs) {
-            if (!$this->getCredentials()) {
+
+            // Prépare le compte une seule fois.
+            if (!isset($credentials)) {
+                $credentials = $this->googleSpeechToTextCredentials->__invoke();
+            }
+
+            if (empty($credentials)) {
                 return [
                     'error' => 'droits insuffisants',
                     'message' => 'Vous n’avez pas définis les droits.',
                 ];
             }
+
+            try {
+                $speechClient = new SpeechClient(['credentials' => $credentials]);
+            } catch (\Exception $e) {
+                $credentials = [];
+                return [
+                    'error' => 'droits insuffisants',
+                    'message' => 'Vous n’avez pas définis les droits.',
+                ];
+            }
+
             $urlBaseFrom = $this->getView()->setting('chaoticumseminario_url_base_from');
             $urlBaseTo = $this->getView()->setting('chaoticumseminario_url_base_to');
 
@@ -184,11 +201,25 @@ class GoogleSpeechToText extends AbstractHelper
                         } else {
                             $oriUrl = $media->originalUrl();
                         }
-                        $this->logger->info("speechToText : originalUrl = " . $oriUrl);
+                        $this->logger->info('Speech to text : original url = ' . $oriUrl);
 
-                        $audioResource = file_get_contents($oriUrl);
+                        /** // Le test peut ne pas fonctionner dans certaines configurations.
+                        if (!file_exists($oriUrl)) {
+                            return [
+                                'error' => 'fichier absent',
+                                'message' => sprintf('Fichier du media #%d indisponible ou inaccessible.', $media->id()),
+                            ];
+                        }
+                        */
 
-                        $speechClient = new SpeechClient(['credentials' => $this->getCredentials()]);
+                        $audioResource = @file_get_contents($oriUrl);
+                        if (!$audioResource) {
+                            return [
+                                'error' => 'fichier absent',
+                                'message' => sprintf('Fichier du media #%d vide, indisponible ou inaccessible.', $media->id()),
+                            ];
+                        }
+
                         //$encoding = AudioEncoding::OGG_OPUS;
                         //$sampleRateHertz = 24000;
                         //$sampleRateHertz = 44100;
@@ -220,7 +251,7 @@ class GoogleSpeechToText extends AbstractHelper
                     }
                 }
             }
-            if ($speechClient) {
+            if (isset($speechClient)) {
                 $speechClient->close();
             }
             return $result;
@@ -377,28 +408,5 @@ class GoogleSpeechToText extends AbstractHelper
             $this->rts[$l] = $this->api->read('resource_templates', ['label' => $l])->getContent();
         }
         return $this->rts[$l];
-    }
-
-    protected function getCredentials()
-    {
-        if (isset($this->credentials)) {
-            return $this->credentials;
-        }
-
-        $user = $this->acl->getAuthenticationService()->getIdentity();
-        if (!$user) {
-            $this->credentials = [];
-            return;
-        }
-
-        $this->userSettings->setTargetId($user->getId());
-        $credentials = $this->userSettings->get('chaoticumseminario_google_credentials');
-        $credentials = $credentials ? json_decode($credentials, true) : [];
-        if (!is_array($credentials)) {
-            $credentials = [];
-        }
-
-        $this->credentials = $credentials;
-        return $this->credentials;
     }
 }

@@ -7,6 +7,7 @@ return [
         'factories' => [
             'chaoticumSeminario' => Service\ViewHelper\ChaoticumSeminarioFactory::class,
             'googleSpeechToText' => Service\ViewHelper\GoogleSpeechToTextFactory::class,
+            'googleSpeechToTextCredentials' => Service\ViewHelper\GoogleSpeechToTextCredentialsFactory::class,
         ],
 
     ],
@@ -39,6 +40,7 @@ return [
     ],
     'chaoticumseminario' => [
         'config' => [
+            'chaoticumseminario_google_credentials_default' => 0,
             'chaoticumseminario_url_base_from' => '',
             'chaoticumseminario_url_base_to' => '',
         ],

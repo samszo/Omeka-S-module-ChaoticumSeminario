@@ -26,6 +26,15 @@ class GoogleSpeechToText extends AbstractJob
         $api = $services->get('Omeka\ApiManager');
         $entityManager = $services->get('Omeka\EntityManager');
 
+        // Vérification amont des droits.
+        $googleSpeechToTextCredentials = $services->get('ViewHelperManager')->get('googleSpeechToTextCredentials');
+        if (!$googleSpeechToTextCredentials()) {
+            $logger->err(
+                'Google Speech to Text credentials are not set.' // @translate
+            );
+            return;
+        }
+
         $ids = $this->getArg('ids');
         if (!$ids) {
             $logger->warn(
@@ -47,19 +56,6 @@ class GoogleSpeechToText extends AbstractJob
             return;
         }
 
-        // Vérification des droits.
-        $owner = $this->job->getOwner();
-        $userSettings = $services->get('Omeka\Settings\User');
-        $userSettings->setTargetId($owner->getId());
-        $credentials = $userSettings->get('chaoticumseminario_google_credentials');
-        $credentials = $credentials ? json_decode($credentials, true) : null;
-        if (!$credentials) {
-            $logger->err(new Message(
-                'Rigths to use the Google Speech To Text api are not set.' // @translate
-            ));
-            return;
-        }
-
         $totalToProcess = count($itemIds);
 
         $logger->info(new Message(
@@ -67,6 +63,7 @@ class GoogleSpeechToText extends AbstractJob
             $totalToProcess
         ));
 
+        /** @var \ChaoticumSeminario\View\Helper\GoogleSpeechToText $googleSpeechToText */
         $googleSpeechToText = $services->get('ViewHelperManager')->get('googleSpeechToText');
 
         $totalProcessed = 0;
