@@ -6,6 +6,7 @@ return [
     'view_helpers' => [
         'factories' => [
             'chaoticumSeminario' => Service\ViewHelper\ChaoticumSeminarioFactory::class,
+            'googleSpeechToText' => Service\ViewHelper\GoogleSpeechToTextFactory::class,
         ],
 
     ],
