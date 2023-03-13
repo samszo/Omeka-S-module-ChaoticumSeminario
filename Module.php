@@ -13,6 +13,7 @@ use Generic\AbstractModule;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\MvcEvent;
+use Omeka\Settings\SettingsInterface;
 
 class Module extends AbstractModule
 {
@@ -125,5 +126,28 @@ class Module extends AbstractModule
         );
         $message->setEscapeHtml(false);
         $messenger->addSuccess($message);
+    }
+
+    /**
+     * Empèche les utilisateurs de voir le compte Google d'un autre utilisateur,
+     * y compris l'admin.
+     */
+    public function handleUserSettings(Event $event): void
+    {
+        $services = $this->getServiceLocator();
+        /** @var \Omeka\Mvc\Status $status */
+        $status = $services->get('Omeka\Status');
+        if ($status->isAdminRequest()) {
+            /** @var \Laminas\Router\Http\RouteMatch $routeMatch */
+            $routeMatch = $status->getRouteMatch();
+            if (!in_array($routeMatch->getParam('controller'), ['Omeka\Controller\Admin\User', 'user'])) {
+                return;
+            }
+            $managedUserId = (int) $routeMatch->getParam('id');
+            $userId = (int) $services->get('Omeka\AuthenticationService')->getIdentity()->getId();
+            if ($managedUserId === $userId) {
+                $this->handleAnySettings($event, 'user_settings');
+            }
+        }
     }
 }
