@@ -47,6 +47,18 @@ class GoogleSpeechToText extends AbstractJob
             return;
         }
 
+        // Vérification des droits.
+        $filename = OMEKA_PATH . '/modules/ChaoticumSeminario/config/code_secret_client.json';
+        $credentials = file_exists($filename) && is_readable($filename) && filesize($filename)
+            ? json_decode(file_get_contents($filename), true)
+            : [];
+        if (!$credentials) {
+            $logger->err(new Message(
+                'Rigths to use the Google Speech To Text api are not set.' // @translate
+            ));
+            return;
+        }
+
         $totalToProcess = count($itemIds);
 
         $logger->info(new Message(
@@ -83,6 +95,13 @@ class GoogleSpeechToText extends AbstractJob
                 ]);
 
                 ++$totalProcessed;
+
+                if (!empty($result['error'])) {
+                    $logger->warn(new Message(
+                        'Item #%1$s: An error occurred: %2$s', // @translate
+                        $resource->id(), $result['message']
+                    ));
+                }
 
                 // Avoid memory issue.
                 unset($resource);

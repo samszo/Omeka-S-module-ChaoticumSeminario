@@ -2,6 +2,8 @@
 
 namespace ChaoticumSeminario\View\Helper;
 
+require_once OMEKA_PATH . '/modules/ChaoticumSeminario/vendor/autoload.php';
+
 use Google\Cloud\Speech\V1\RecognitionAudio;
 use Google\Cloud\Speech\V1\RecognitionConfig;
 use Google\Cloud\Speech\V1\RecognitionConfig\AudioEncoding;
@@ -45,16 +47,14 @@ class GoogleSpeechToText extends AbstractHelper
         ApiManager $api,
         Acl $acl,
         Logger $logger,
-        array $config
+        array $config,
+        array $credentials
     ) {
         $this->api = $api;
         $this->acl = $acl;
         $this->logger = $logger;
         $this->config = $config;
-
-        $this->credentials = json_decode(file_get_contents(OMEKA_PATH . '/modules/ChaoticumSeminario/config/code_secret_client.json'), true);
-
-        require_once OMEKA_PATH . '/modules/ChaoticumSeminario/vendor/autoload.php';
+        $this->credentials = $credentials;
     }
 
     /**
