@@ -61,7 +61,7 @@ class GoogleSpeechToText extends AbstractHelper
     /**
      * gestion des appels aux API de Google
      *
-     * @param \Omeka\View\Helper\Params     $params
+     * @param \Omeka\View\Helper\Params $params
      */
     public function __invoke($params): array
     {
@@ -69,11 +69,11 @@ class GoogleSpeechToText extends AbstractHelper
             $query = $params;
         } else {
             $query = $params->fromQuery();
-            $post = $params->fromPost();
+            // $post = $params->fromPost();
         }
         switch ($query['service']) {
-            case 'speachToText':
-                $result = $this->speachToText($query);
+            case 'speechToText':
+                $result = $this->speechToText($query);
                 break;
             case 'getHistoTags':
                 $result = $this->getHistoTags($query);
@@ -140,33 +140,34 @@ class GoogleSpeechToText extends AbstractHelper
     /**
      * extraction du text à partir d'un fichier audio
      *
-     * @param   array   $params
-     *
+     * @param array $params
      * @return array
      */
-    public function speachToText($params)
+    public function speechToText($params)
     {
         $rs = $this->acl->userIsAllowed(null, 'create');
         if ($rs) {
             set_time_limit(0);
             $result = [];
-            $item = !is_object($params['frag']) ? $this->api->read('items', $params['frag'])->getContent() : $params['frag'];
+            $item = is_object($params['frag'])
+                ? $params['frag']
+                : $this->api->read('items', $params['frag'])->getContent();
             $medias = $item->media();
             foreach ($medias as $media) {
-                if ($media->mediaType() == "audio/flac") {
+                if ($media->mediaType() === 'audio/flac') {
                     // Vérifie si le part of speech est présent
                     $param = [];
-                    $param['resource_classe_id'] = $this->getRc('lexinfo:PartOfSpeech');
-                    $param['property'][0]['property'] = $this->getProp("oa:hasSource")->id() . "";
+                    $param['resource_class_id'] = $this->getRc('lexinfo:PartOfSpeech');
+                    $param['property'][0]['property'] = 'oa:hasSource';
                     $param['property'][0]['type'] = 'res';
-                    $param['property'][0]['text'] = $media->id() . "";
+                    $param['property'][0]['text'] = (string) $media->id();
                     $exist = $this->api->search('items', $param)->getContent();
                     if (count($exist)) {
                         $result[] = $exist[0];
                     } else {
                         // ATTENTION problème de dns sur le serveur paris 8
                         $oriUrl = str_replace('https://arcanes.univ-paris8.fr', 'http://192.168.30.208', $media->originalUrl());
-                        $this->logger->info("speachToText : originalUrl = " . $oriUrl);
+                        $this->logger->info("speechToText : originalUrl = " . $oriUrl);
 
                         $audioResource = file_get_contents($oriUrl);
 
@@ -215,13 +216,13 @@ class GoogleSpeechToText extends AbstractHelper
     }
 
     /**
-     * ajoute une transcription
+     * Ajoute une transcription.
      *
-     * @param   SpeechRecognitionAlternative    $alt
-     * @param   o:Item                          $item
-     * @param   o:Media                         $media
+     * @param \Google\Cloud\Speech\V2\SpeechRecognitionAlternative $alt
+     * @param \Omeka\Api\Representation\ItemRepresentation $item
+     * @param \Omeka\Api\Representation\MediaRepresentation $media
      *
-     * @return o:Item
+     * @return \Omeka\Api\Representation\ItemRepresentation
      */
     public function addTranscription($alt, $item, $media)
     {
