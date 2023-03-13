@@ -147,6 +147,9 @@ class GoogleSpeechToText extends AbstractHelper
     {
         $rs = $this->acl->userIsAllowed(null, 'create');
         if ($rs) {
+            $urlBaseFrom = $this->getView()->setting('chaoticumseminario_url_base_from');
+            $urlBaseTo = $this->getView()->setting('chaoticumseminario_url_base_to');
+
             set_time_limit(0);
             $result = [];
             $item = is_object($params['frag'])
@@ -165,8 +168,11 @@ class GoogleSpeechToText extends AbstractHelper
                     if (count($exist)) {
                         $result[] = $exist[0];
                     } else {
-                        // ATTENTION problème de dns sur le serveur paris 8
-                        $oriUrl = str_replace('https://arcanes.univ-paris8.fr', 'http://192.168.30.208', $media->originalUrl());
+                        if ($urlBaseFrom) {
+                            $oriUrl = str_replace($urlBaseFrom, $urlBaseTo, $media->originalUrl());
+                        } else {
+                            $oriUrl = $media->originalUrl();
+                        }
                         $this->logger->info("speechToText : originalUrl = " . $oriUrl);
 
                         $audioResource = file_get_contents($oriUrl);

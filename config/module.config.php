@@ -22,6 +22,7 @@ return [
     ],
     'form_elements' => [
         'invokables' => [
+            Form\ConfigForm::class => Form\ConfigForm::class,
             Form\ChaoticumSeminarioFieldset::class => Form\ChaoticumSeminarioFieldset::class,
         ],
     ],
@@ -36,6 +37,10 @@ return [
         ],
     ],
     'chaoticumseminario' => [
+        'config' => [
+            'chaoticumseminario_url_base_from' => '',
+            'chaoticumseminario_url_base_to' => '',
+        ],
         'block_settings' => [
             'chaoticumSeminario' => [
                 'heading' => '',
