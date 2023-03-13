@@ -22,6 +22,7 @@ return [
     ],
     'form_elements' => [
         'invokables' => [
+            Form\BatchEditFieldset::class => Form\BatchEditFieldset::class,
             Form\ConfigForm::class => Form\ConfigForm::class,
             Form\ChaoticumSeminarioFieldset::class => Form\ChaoticumSeminarioFieldset::class,
         ],

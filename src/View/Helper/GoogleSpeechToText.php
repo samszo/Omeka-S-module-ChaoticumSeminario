@@ -5,7 +5,6 @@ namespace ChaoticumSeminario\View\Helper;
 use Google\Cloud\Speech\V1\RecognitionAudio;
 use Google\Cloud\Speech\V1\RecognitionConfig;
 use Google\Cloud\Speech\V1\RecognitionConfig\AudioEncoding;
-use Google\Cloud\Speech\V1\SpeakerDiarizationConfig;
 use Google\Cloud\Speech\V1\SpeechClient;
 use Laminas\Log\Logger;
 use Laminas\View\Helper\AbstractHelper;
@@ -71,7 +70,7 @@ class GoogleSpeechToText extends AbstractHelper
             $query = $params->fromQuery();
             // $post = $params->fromPost();
         }
-        switch ($query['service']) {
+        switch ($query['service'] ?? null) {
             case 'speechToText':
                 $result = $this->speechToText($query);
                 break;
