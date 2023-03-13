@@ -12,6 +12,7 @@ use Laminas\Log\Logger;
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Api\Manager as ApiManager;
 use Omeka\Permissions\Acl;
+use Omeka\Settings\UserSettings;
 
 class GoogleSpeechToText extends AbstractHelper
 {
@@ -31,6 +32,11 @@ class GoogleSpeechToText extends AbstractHelper
     protected $logger;
 
     /**
+     * @var UserSettings
+     */
+    protected $userSettings;
+
+    /**
      * @var array
      */
     protected $config;
@@ -47,14 +53,14 @@ class GoogleSpeechToText extends AbstractHelper
         ApiManager $api,
         Acl $acl,
         Logger $logger,
-        array $config,
-        array $credentials
+        UserSettings $userSettings,
+        array $config
     ) {
         $this->api = $api;
         $this->acl = $acl;
         $this->logger = $logger;
+        $this->userSettings = $userSettings;
         $this->config = $config;
-        $this->credentials = $credentials;
     }
 
     /**
@@ -146,6 +152,12 @@ class GoogleSpeechToText extends AbstractHelper
     {
         $rs = $this->acl->userIsAllowed(null, 'create');
         if ($rs) {
+            if (!$this->getCredentials()) {
+                return [
+                    'error' => 'droits insuffisants',
+                    'message' => 'Vous n’avez pas définis les droits.',
+                ];
+            }
             $urlBaseFrom = $this->getView()->setting('chaoticumseminario_url_base_from');
             $urlBaseTo = $this->getView()->setting('chaoticumseminario_url_base_to');
 
@@ -176,7 +188,7 @@ class GoogleSpeechToText extends AbstractHelper
 
                         $audioResource = file_get_contents($oriUrl);
 
-                        $speechClient = new SpeechClient(['credentials' => $this->credentials]);
+                        $speechClient = new SpeechClient(['credentials' => $this->getCredentials()]);
                         //$encoding = AudioEncoding::OGG_OPUS;
                         //$sampleRateHertz = 24000;
                         //$sampleRateHertz = 44100;
@@ -365,5 +377,28 @@ class GoogleSpeechToText extends AbstractHelper
             $this->rts[$l] = $this->api->read('resource_templates', ['label' => $l])->getContent();
         }
         return $this->rts[$l];
+    }
+
+    protected function getCredentials()
+    {
+        if (isset($this->credentials)) {
+            return $this->credentials;
+        }
+
+        $user = $this->acl->getAuthenticationService()->getIdentity();
+        if (!$user) {
+            $this->credentials = [];
+            return;
+        }
+
+        $this->userSettings->setTargetId($user->getId());
+        $credentials = $this->userSettings->get('chaoticumseminario_google_credentials');
+        $credentials = $credentials ? json_decode($credentials, true) : [];
+        if (!is_array($credentials)) {
+            $credentials = [];
+        }
+
+        $this->credentials = $credentials;
+        return $this->credentials;
     }
 }

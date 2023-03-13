@@ -49,6 +49,13 @@ class Module extends AbstractModule
             'form.add_elements',
             [$this, 'formAddElementsResourceBatchUpdateForm']
         );
+
+        // Ajout du paramètre utilisateur
+        $sharedEventManager->attach(
+            \Omeka\Form\UserForm::class,
+            'form.add_elements',
+            [$this, 'handleUserSettings']
+        );
     }
 
     public function addAdminResourceHeaders(Event $event): void

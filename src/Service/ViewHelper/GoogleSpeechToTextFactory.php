@@ -10,16 +10,12 @@ class GoogleSpeechToTextFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $services, $requestedName, array $options = null)
     {
-        $filename = OMEKA_PATH . '/modules/ChaoticumSeminario/config/code_secret_client.json';
-        $credentials = file_exists($filename) && is_readable($filename) && filesize($filename)
-            ? json_decode(file_get_contents($filename), true)
-            : [];
         return new GoogleSpeechToText(
             $services->get('Omeka\ApiManager'),
             $services->get('Omeka\Acl'),
-            $services->get('Config'),
             $services->get('Omeka\Logger'),
-            $credentials
+            $services->get('Omeka\Settings\User'),
+            $services->get('Config')
         );
     }
 }

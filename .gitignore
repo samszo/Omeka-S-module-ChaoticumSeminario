@@ -13,5 +13,3 @@
 .php-cs-fixer.cache
 composer.phar
 debug.log
-
-/config/code_secret_client.json

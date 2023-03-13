@@ -48,10 +48,11 @@ class GoogleSpeechToText extends AbstractJob
         }
 
         // Vérification des droits.
-        $filename = OMEKA_PATH . '/modules/ChaoticumSeminario/config/code_secret_client.json';
-        $credentials = file_exists($filename) && is_readable($filename) && filesize($filename)
-            ? json_decode(file_get_contents($filename), true)
-            : [];
+        $owner = $this->job->getOwner();
+        $userSettings = $services->get('Omeka\Settings\User');
+        $userSettings->setTargetId($owner->getId());
+        $credentials = $userSettings->get('chaoticumseminario_google_credentials');
+        $credentials = $credentials ? json_decode($credentials, true) : null;
         if (!$credentials) {
             $logger->err(new Message(
                 'Rigths to use the Google Speech To Text api are not set.' // @translate

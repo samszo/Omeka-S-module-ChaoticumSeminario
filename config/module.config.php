@@ -42,6 +42,9 @@ return [
             'chaoticumseminario_url_base_from' => '',
             'chaoticumseminario_url_base_to' => '',
         ],
+        'user_settings' => [
+            'chaoticumseminario_google_credentials' => '',
+        ],
         'block_settings' => [
             'chaoticumSeminario' => [
                 'heading' => '',
