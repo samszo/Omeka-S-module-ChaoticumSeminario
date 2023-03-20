@@ -1,24 +1,33 @@
 <?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \ChaoticumSeminario\Site\BlockLayout\ChaoticumSeminario $block
+ * @var \Omeka\Api\Representation\MediaRepresentation $media
+ */
 
-$chaosMedias = $this->ChaoticumSeminarioFactory(['idMedia'=>7205]);
+if (!$media) return;
+
+$chaosMedias = $this->chaoticumSeminario(['media' => $media]);
+
 /*
-echo $heading.' '.$params; //variable déclarer dans ChaoticumSeminario\Form\Site\BlockLayout
+echo $heading.' '.$params; // variable déclarée dans ChaoticumSeminario\Form\Site\BlockLayout
 echo '<video controls width="250">
-<source src="'.$chaosMedias['media']->originalUrl().'">
+<source src="' . $chaosMedias['media']->originalUrl() . '">
 Votre navigateur ne marche pas.
 </video>';
 foreach ($chaosMedias['fragments'] as $f) {
     $m = $f->media()[0];
     echo '<video controls width="250">
-    <source src="'.$m->originalUrl().'">
+    <source src="' . $m->originalUrl() . '">
     Votre navigateur ne marche pas.
     </video>';
 }
 */
 ?>
+
 <div id='timeline' ></div>
 <svg version="1.1" class="center-block" xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" 
+     xmlns:xlink="http://www.w3.org/1999/xlink" width="100%"
      style="border: 1px solid black;background-color:black;min-height: 100vh;">
   <g id='svgConteneurMain'>
     <g transform="translate(10,10)">
@@ -59,7 +68,7 @@ d3.select(svg)
   .attr("fill", "red")
   .attr("cx", dst(new Date("2019-03-31 02:30:00")))
   .attr("cy", 5);
-/*  
+/*
     const scale = d3.scaleTime();
   do {
     const t = Date.now();

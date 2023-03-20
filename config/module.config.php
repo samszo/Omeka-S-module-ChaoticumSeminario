@@ -1,15 +1,13 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace ChaoticumSeminario;
 
 return [
-
     'view_helpers' => [
-        
-        'invokables' => [
-            'ChaoticumSeminarioViewHelper' => View\Helper\ChaoticumSeminarioViewHelper::class,
-        ],                
-        'factories'  => [
-            'ChaoticumSeminarioFactory' => Service\ViewHelper\ChaoticumSeminarioFactory::class,
+        'factories' => [
+            'chaoticumSeminario' => Service\ViewHelper\ChaoticumSeminarioFactory::class,
+            'googleSpeechToText' => Service\ViewHelper\GoogleSpeechToTextFactory::class,
+            'googleSpeechToTextCredentials' => Service\ViewHelper\GoogleSpeechToTextCredentialsFactory::class,
         ],
 
     ],
@@ -17,14 +15,16 @@ return [
         'template_path_stack' => [
             dirname(__DIR__) . '/view',
         ],
-    ],    
+    ],
     'block_layouts' => [
         'invokables' => [
-            'ChaoticumSeminario' => Site\BlockLayout\ChaoticumSeminario::class,
+            'chaoticumSeminario' => Site\BlockLayout\ChaoticumSeminario::class,
         ],
     ],
     'form_elements' => [
         'invokables' => [
+            Form\BatchEditFieldset::class => Form\BatchEditFieldset::class,
+            Form\ConfigForm::class => Form\ConfigForm::class,
             Form\ChaoticumSeminarioFieldset::class => Form\ChaoticumSeminarioFieldset::class,
         ],
     ],
@@ -38,11 +38,19 @@ return [
             ],
         ],
     ],
-    'ChaoticumSeminario' => [
+    'chaoticumseminario' => [
+        'config' => [
+            'chaoticumseminario_google_credentials_default' => 0,
+            'chaoticumseminario_url_base_from' => '',
+            'chaoticumseminario_url_base_to' => '',
+        ],
+        'user_settings' => [
+            'chaoticumseminario_google_credentials' => '',
+        ],
         'block_settings' => [
-            'ChaoticumSeminario' => [
+            'chaoticumSeminario' => [
                 'heading' => '',
-                'params'  =>'',
+                'media_id' => null,
             ],
         ],
     ],
