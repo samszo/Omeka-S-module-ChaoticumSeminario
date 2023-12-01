@@ -1,0 +1,145 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \ChaoticumSeminario\Site\BlockLayout\ChaoticumSeminario $block
+ * @var \Omeka\Api\Representation\MediaRepresentation $media
+ */
+
+if (!$media) return;
+
+$chaosMedias = $this->chaoticumSeminario(['media' => $media]);
+
+/*
+echo $heading.' '.$params; // variable déclarée dans ChaoticumSeminario\Form\Site\BlockLayout
+echo '<video controls width="250">
+<source src="' . $chaosMedias['media']->originalUrl() . '">
+Votre navigateur ne marche pas.
+</video>';
+foreach ($chaosMedias['fragments'] as $f) {
+    $m = $f->media()[0];
+    echo '<video controls width="250">
+    <source src="' . $m->originalUrl() . '">
+    Votre navigateur ne marche pas.
+    </video>';
+}
+*/
+?>
+
+<div id='timeline' ></div>
+<svg version="1.1" class="center-block" xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink" width="100%"
+     style="border: 1px solid black;background-color:black;min-height: 100vh;">
+  <g id='svgConteneurMain'>
+    <g transform="translate(10,10)">
+      <rect x="-1" y="-1" width="302" height="202" stroke="white"></rect>
+      <foreignObject x="0" y="0" width="400" height="200">
+        <video width="300" height="200" controls="" style="position: fixed;">
+          <source src="<?php echo $chaosMedias['media']->originalUrl(); ?>" type="video/mp4">
+        </video>
+      </foreignObject>
+    </g>
+  </g>
+</svg>
+<script>
+let width = 800;
+let dst = d3
+  .scaleTime()
+  .domain([new Date("2019-03-31 00:00:00"), new Date("2019-03-31 10:00:00")])
+
+let svg = visualizeTicks(dst, [10, d3.timeFormat("%I %p")]);
+
+d3.select(svg)
+  .append("circle")
+  .attr("r", "5")
+  .attr("fill", "lightblue")
+  .attr("cx", dst(new Date("2019-03-31 01:57:00")))
+  .attr("cy", 5);
+d3.select(svg)
+  .append("circle")
+  .attr("r", "5")
+  .attr("fill", "green")
+  .attr("cx", dst(new Date("2019-03-31 03:03:00")))
+  .attr("cy", 5);
+
+// 02:30 did not exist; Javascript computes a wrong Date object for it 🌶
+d3.select(svg)
+  .append("circle")
+  .attr("r", "5")
+  .attr("fill", "red")
+  .attr("cx", dst(new Date("2019-03-31 02:30:00")))
+  .attr("cy", 5);
+/*
+    const scale = d3.scaleTime();
+  do {
+    const t = Date.now();
+    scale.domain([t - (1 * 1 * 55 * 1000) / 2, t + (1 * 1 * 55 * 1000) / 2]);
+    yield visualizeTicks(scale);
+  } while (!stop);
+  */
+function visualizeTicks(scale, tickArguments) {
+  const height = 20, m = width > 599 ? 90 : 10;
+
+  if (tickArguments === undefined) tickArguments = [];
+
+  scale.range([m, width - m]);
+
+  let tick = d3.select('#svgConteneurMain').append("g")
+    .attr('transform',"translate(10,500)")
+    .call(d3.axisBottom(scale).ticks(...tickArguments));
+
+  return tick.node();
+}
+
+const scale = d3.scaleTime();
+  do {
+    const t = Date.now();
+    scale.domain([t - (1 * 1 * 55 * 1000) / 2, t + (1 * 1 * 55 * 1000) / 2]);
+    visualizeTicks(scale);
+  } while (!stop);
+
+
+</script>
+<script>
+    TimelinesChart()(d3.select('#timeline').node())
+      .xTickFormat(n => +n)
+      .timeFormat('%Q')
+      .data(genRandomData());
+
+    //
+
+    function genRandomData() {
+      const NLINES = 25,
+        MAXSEGMENTS = 10,
+        MIN_X = 0,
+        MAX_X = 100;
+
+      return [{
+        group: '',
+        data: [...Array(NLINES).keys()].map(i => ({
+          label: `line${i+1}`,
+          data: getSegmentsData()
+        }))
+      }];
+
+      //
+
+      function getSegmentsData() {
+        const nSegments = Math.ceil(Math.random()*MAXSEGMENTS),
+          segMaxLength = Math.round((MAX_X-MIN_X)/nSegments);
+        let runLength = MIN_X;
+
+        return [...Array(nSegments).keys()].map(i => {
+          const tDivide = [Math.random(), Math.random()].sort(),
+            start = runLength + tDivide[0]*segMaxLength,
+            end = runLength + tDivide[1]*segMaxLength;
+
+          runLength = runLength + segMaxLength;
+
+          return {
+            timeRange: [start, end],
+            val: Math.random()
+          };
+        });
+      }
+    }
+  </script>

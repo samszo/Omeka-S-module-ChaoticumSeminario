@@ -1,0 +1,7 @@
+/* Chaoticum Seminario */
+
+@media screen {
+    .batch-edit .field-container > legend {
+        font-size: 16px;
+    }
+}
