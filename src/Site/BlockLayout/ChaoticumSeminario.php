@@ -1,4 +1,5 @@
-<?php 
+<?php declare(strict_types=1);
+
 namespace ChaoticumSeminario\Site\BlockLayout;
 
 use Laminas\View\Renderer\PhpRenderer;
@@ -12,11 +13,11 @@ class ChaoticumSeminario extends AbstractBlockLayout
     /**
      * The default partial view script.
      */
-    const PARTIAL_NAME = 'common/block-layout/ChaoticumSeminario';
+    const PARTIAL_NAME = 'common/block-layout/chaoticum-seminario';
 
     public function getLabel()
     {
-        return 'ChaoticumSeminario'; // @translate
+        return 'Chaoticum Seminario'; // @translate
     }
 
     public function form(
@@ -28,7 +29,7 @@ class ChaoticumSeminario extends AbstractBlockLayout
         // Factory is not used to make rendering simpler.
         $services = $site->getServiceLocator();
         $formElementManager = $services->get('FormElementManager');
-        $defaultSettings = $services->get('Config')['ChaoticumSeminario']['block_settings']['ChaoticumSeminario'];
+        $defaultSettings = $services->get('Config')['chaoticumseminario']['block_settings']['chaoticumSeminario'];
         $blockFieldset = \ChaoticumSeminario\Form\ChaoticumSeminarioFieldset::class;
 
         $data = $block ? $block->data() + $defaultSettings : $defaultSettings;
@@ -41,21 +42,21 @@ class ChaoticumSeminario extends AbstractBlockLayout
         $fieldset = $formElementManager->get($blockFieldset);
         $fieldset->populateValues($dataForm);
 
-        $html = '<p>'
-            . $view->translate('A simple block allow to display a partial from the theme.') // @translate
-            . ' ' . $view->translate('It may be used for a static html content, like a list of partners, or a complex layout, since any Omeka feature is available in a view.') // @translate
-            . '</p>';
-        $html .= $view->formCollection($fieldset, false);
-        return $html;
+        return $view->formCollection($fieldset, false);
     }
 
     public function render(PhpRenderer $view, SitePageBlockRepresentation $block)
     {
-        //$view->api()
+        try {
+            $media = $view->api()->read('media', (int) $block->dataValue('media_id'))->getContent();
+        } catch (\Exception $e) {
+            $media = null;
+        }
+
         $vars = [
             'block' => $block,
             'heading' => $block->dataValue('heading', ''),
-            'params' => $block->dataValue('params', ''),
+            'media' => $media,
         ];
         return $view->partial(self::PARTIAL_NAME, $vars);
     }
@@ -65,13 +66,14 @@ class ChaoticumSeminario extends AbstractBlockLayout
         return strip_tags($this->render($view, $block));
     }
 
-    public function prepareRender(PhpRenderer $view)
+    public function prepareRender(PhpRenderer $view): void
     {
+        $assetUrl = $view->plugin('assetUrl');
+        $view->headScript()
+            ->appendFile($assetUrl('js/d3.min.js', 'ChaoticumSeminario'))
+            ->appendFile($assetUrl('js/timelines-chart.min.js', 'ChaoticumSeminario'));
 
-        $view->headScript()->appendFile($view->assetUrl('js/d3.min.js','ChaoticumSeminario'));
-        $view->headScript()->appendFile($view->assetUrl('js/timelines-chart.min.js','ChaoticumSeminario'));
-        
-        $view->headLink()->prependStylesheet($view->assetUrl('css/main.css','ChaoticumSeminario'));
-
+        $view->headLink()
+            ->prependStylesheet($assetUrl('css/main.css', 'ChaoticumSeminario'));
     }
 }
