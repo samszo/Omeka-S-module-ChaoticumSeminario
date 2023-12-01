@@ -15,6 +15,7 @@ class GoogleSpeechToTextFactory implements FactoryInterface
             $services->get('Omeka\Acl'),
             $services->get('Omeka\Logger'),
             $services->get('ViewHelperManager')->get('googleSpeechToTextCredentials'),
+            $services->get('ViewHelperManager')->get('chaoticumSeminario'),
             $services->get('Config')
         );
     }

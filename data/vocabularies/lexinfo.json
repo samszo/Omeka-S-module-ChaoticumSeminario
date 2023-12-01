@@ -1,0 +1,13 @@
+{
+    "vocabulary": {
+        "o:namespace_uri": "http://www.lexinfo.net/ontology/3.0/lexinfo#",
+        "o:prefix": "lexinfo",
+        "o:label": "LexInfo",
+        "o:comment": "An ontology of types, values and properties to be used with the lemon model, partially derived from ISOcat."
+    },
+    "strategy": "file",
+    "options": {
+        "file": "lexinfo.rdf",
+        "format": "rdf"
+    }
+}

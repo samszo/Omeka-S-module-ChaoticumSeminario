@@ -37,6 +37,13 @@ class GoogleSpeechToText extends AbstractHelper
     protected $googleSpeechToTextCredentials;
 
     /**
+     *
+     * @var chaoticumSeminario
+     */
+    protected $chaoticumSeminario;
+    
+
+    /**
      * @var array
      */
     protected $config;
@@ -52,12 +59,14 @@ class GoogleSpeechToText extends AbstractHelper
         Acl $acl,
         Logger $logger,
         GoogleSpeechToTextCredentials $googleSpeechToTextCredentials,
+        ChaoticumSeminario $chaoticumSeminario,
         array $config
     ) {
         $this->api = $api;
         $this->acl = $acl;
         $this->logger = $logger;
         $this->googleSpeechToTextCredentials = $googleSpeechToTextCredentials;
+        $this->chaoticumSeminario = $chaoticumSeminario;
         $this->config = $config;
     }
 
@@ -185,70 +194,17 @@ class GoogleSpeechToText extends AbstractHelper
                 : $this->api->read('items', $params['frag'])->getContent();
             $medias = $item->media();
             foreach ($medias as $media) {
-                if ($media->mediaType() === 'audio/flac') {
-                    // Vérifie si le part of speech est présent
-                    $param = [];
-                    $param['resource_class_id'] = $this->getRc('lexinfo:PartOfSpeech');
-                    $param['property'][0]['property'] = 'oa:hasSource';
-                    $param['property'][0]['type'] = 'res';
-                    $param['property'][0]['text'] = (string) $media->id();
-                    $exist = $this->api->search('items', $param)->getContent();
-                    if (count($exist)) {
-                        $result[] = $exist[0];
-                    } else {
-                        if ($urlBaseFrom) {
-                            $oriUrl = str_replace($urlBaseFrom, $urlBaseTo, $media->originalUrl());
-                        } else {
-                            $oriUrl = $media->originalUrl();
+                $class = $media->displayResourceClassLabel();
+                if($class!="MediaFragment"){
+                    $frags =  $this->chaoticumSeminario->__invoke([
+                        'action' => 'setAllFrag',
+                        'media' => $media,
+                    ]);
+                    foreach ($frags['fragments'] as $f) {
+                        if($f->mediaType()==='audio/flac'){
+                            $result[] = $this->getSpeechToText($urlBaseFrom, $urlBaseTo, $item, $f, $speechClient);
                         }
-                        $this->logger->info('Speech to text : original url = ' . $oriUrl);
-
-                        /** // Le test peut ne pas fonctionner dans certaines configurations.
-                        if (!file_exists($oriUrl)) {
-                            return [
-                                'error' => 'fichier absent',
-                                'message' => sprintf('Fichier du media #%d indisponible ou inaccessible.', $media->id()),
-                            ];
-                        }
-                        */
-
-                        $audioResource = @file_get_contents($oriUrl);
-                        if (!$audioResource) {
-                            return [
-                                'error' => 'fichier absent',
-                                'message' => sprintf('Fichier du media #%d vide, indisponible ou inaccessible.', $media->id()),
-                            ];
-                        }
-
-                        //$encoding = AudioEncoding::OGG_OPUS;
-                        //$sampleRateHertz = 24000;
-                        //$sampleRateHertz = 44100;
-                        $encoding = AudioEncoding::FLAC;
-                        $languageCode = 'fr-FR';
-
-                        $audio = (new RecognitionAudio())
-                            ->setContent($audioResource);
-
-                        $config = (new RecognitionConfig())
-                            ->setEncoding($encoding)
-                            ->setEnableWordTimeOffsets(true)
-                            ->setEnableWordConfidence(true)
-                            /*différent suivant le media d'où vient le fragment
-                            ->setAudioChannelCount(2)
-                            ->setSampleRateHertz($sampleRateHertz)
-                            ->setDiarizationConfig(
-                                new SpeakerDiarizationConfig(['enable_speaker_diarization'=>true,'min_speaker_count'=>1,'max_speaker_count'=>10])
-                            )
-                            */
-                            ->setLanguageCode($languageCode);
-
-                        $response = $speechClient->recognize($config, $audio);
-                        foreach ($response->getResults() as $r) {
-                            // Ajoute la transcription
-                            $t = $this->addTranscription($r->getAlternatives()[0], $item, $media);
-                            $result[] = $t->id();
-                        }
-                    }
+                    }    
                 }
             }
             if (isset($speechClient)) {
@@ -264,6 +220,87 @@ class GoogleSpeechToText extends AbstractHelper
     }
 
     /**
+     * execute un speech_to_text google
+     *
+     * @param string $urlBaseFrom
+     * @param string $urlBaseTo
+     * @param \Omeka\Api\Representation\ItemRepresentation $item
+     * @param \Omeka\Api\Representation\MediaRepresentation $media
+     * @param Google\Cloud\Speech\V1\SpeechClient $speechClient
+     *
+     * @return array
+     */
+    public function getSpeechToText($urlBaseFrom, $urlBaseTo, $item, $media, $speechClient)
+    {
+        // Vérifie si le part of speech est présent
+        $param = [];
+        $param['resource_class_id'] = $this->getRc('lexinfo:PartOfSpeech');
+        $param['property'][0]['property'] = 'oa:hasSource';
+        $param['property'][0]['type'] = 'res';
+        $param['property'][0]['text'] = (string) $media->id();
+        $exist = $this->api->search('items', $param)->getContent();
+        if (count($exist)) {
+            $result[] = $exist[0];
+        } else {
+            if ($urlBaseFrom) {
+                $oriUrl = str_replace($urlBaseFrom, $urlBaseTo, $media->originalUrl());
+            } else {
+                $oriUrl = $media->originalUrl();
+            }
+            $this->logger->info('Speech to text : original url = ' . $oriUrl);
+
+            /** // Le test peut ne pas fonctionner dans certaines configurations.
+            if (!file_exists($oriUrl)) {
+                return [
+                    'error' => 'fichier absent',
+                    'message' => sprintf('Fichier du media #%d indisponible ou inaccessible.', $media->id()),
+                ];
+            }
+            */
+
+            $audioResource = @file_get_contents($oriUrl);
+            if (!$audioResource) {
+                return [
+                    'error' => 'fichier absent',
+                    'message' => sprintf('Fichier du media #%d vide, indisponible ou inaccessible.', $media->id()),
+                ];
+            }
+
+            //$encoding = AudioEncoding::OGG_OPUS;
+            //$sampleRateHertz = 24000;
+            //$sampleRateHertz = 44100;
+            $encoding = AudioEncoding::FLAC;
+            $languageCode = 'fr-FR';
+
+            $audio = (new RecognitionAudio())
+                ->setContent($audioResource);
+
+            $config = (new RecognitionConfig())
+                ->setEncoding($encoding)
+                ->setEnableWordTimeOffsets(true)
+                ->setEnableWordConfidence(true)
+                /*différent suivant le media d'où vient le fragment
+                ->setAudioChannelCount(2)
+                ->setSampleRateHertz($sampleRateHertz)
+                ->setDiarizationConfig(
+                    new SpeakerDiarizationConfig(['enable_speaker_diarization'=>true,'min_speaker_count'=>1,'max_speaker_count'=>10])
+                )
+                */
+                ->setLanguageCode($languageCode);
+
+            $response = $speechClient->recognize($config, $audio);
+            foreach ($response->getResults() as $r) {
+                // Ajoute la transcription
+                $t = $this->addTranscription($r->getAlternatives()[0], $item, $media);
+                $result[] = $t->id();
+            }
+        }
+        return $result;        
+    }
+
+
+
+    /**
      * Ajoute une transcription.
      *
      * @param \Google\Cloud\Speech\V2\SpeechRecognitionAlternative $alt
@@ -274,10 +311,11 @@ class GoogleSpeechToText extends AbstractHelper
      */
     public function addTranscription($alt, $item, $media)
     {
+        //TODO:ajouter la création automatique des ressources template et l'importation des vocabulaires
         $rt = $this->getRt('Transcription');
+        $oItem['o:resource_template'] = ['o:id' => $rt->id()];
         $oItem = [];
         $oItem['o:resource_class'] = ['o:id' => $rt->resourceClass()->id()];
-        $oItem['o:resource_template'] = ['o:id' => $rt->id()];
         $oItem['dcterms:title'][] = [
             'property_id' => $this->getProp('dcterms:title')->id(),
             '@value' => $alt->getTranscript(),
@@ -327,7 +365,7 @@ class GoogleSpeechToText extends AbstractHelper
                 'type' => 'literal',
             ];
             $annotation['dbo:speaker'][] = [
-                'property_id' => $this->getProp('dbo:speaker')->id(),
+                'property_id' => $this->getProp('jdc:hasActant')->id(),
                 '@value' => (string) $w->getSpeakerTag(),
                 'type' => 'literal',
             ];

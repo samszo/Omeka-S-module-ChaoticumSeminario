@@ -26,6 +26,30 @@ class Module extends AbstractModule
         require_once __DIR__ . '/vendor/autoload.php';
     }
 
+    protected function preInstall(): void
+    {
+        $services = $this->getServiceLocator();
+        $module = $services->get('Omeka\ModuleManager')->getModule('Generic');
+        if ($module && version_compare($module->getIni('version') ?? '', '3.4.41', '<')) {
+            $translator = $services->get('MvcTranslator');
+            $message = new \Omeka\Stdlib\Message(
+                $translator->translate('This module requires the module "%s", version %s or above.'), // @translate
+                'Generic', '3.4.41'
+            );
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+        }
+        $module = $services->get('Omeka\ModuleManager')->getModule('Annotate');
+        if (!$module) {
+            $translator = $services->get('MvcTranslator');
+            $message = new \Omeka\Stdlib\Message(
+                $translator->translate('This module requires the module "%s", version %s or above.'), // @translate
+                'Annotate', '3.4.3.8'
+            );
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+        }
+    }
+
+
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
         $sharedEventManager->attach(

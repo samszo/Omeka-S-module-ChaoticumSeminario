@@ -1,0 +1,13 @@
+{
+    "vocabulary": {
+        "o:namespace_uri" : "http://www.w3.org/ns/ma-ont#",
+        "o:prefix" : "ma",
+        "o:label" : "Ontology for Media Resources",
+        "o:comment" : "Pour gérer les médias"
+    },
+    "strategy": "file",
+    "options": {
+        "file" : "ma-ont.rdf",
+        "format" : "rdf"
+    }
+}

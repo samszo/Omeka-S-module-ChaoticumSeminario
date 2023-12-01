@@ -175,7 +175,8 @@ class ChaoticumSeminario extends AbstractHelper
                 $result = $this->setVideoFrag($params['media'] ?? null, $params);
                 break;
             case 'setAllFrag':
-                $result = $this->setAllFrag($params);
+                $this->setAllFrag($params);
+                $result = $this->getFrags($params);
                 break;
             case 'getEntities':
                 $result = $this->getEntities($params);
@@ -231,8 +232,9 @@ class ChaoticumSeminario extends AbstractHelper
                 $frag = $this->setVideoFrag($params['media'], $params);
                 break;
             case 'audio/mpeg':
+            case  'audio/flac':
                 $frag = $this->setAudioFrag($params['media'], $params);
-                break;
+                break;            
             default:
                 return [
                     'error' => 'Mauvais type de Media ',
@@ -267,17 +269,8 @@ class ChaoticumSeminario extends AbstractHelper
      */
     protected function getFrags(array $params = [])
     {
-        // Récupère les propriétés
-        if (!isset($params['nom'])) {
-            $date = new DateTime('NOW');
-            $params['nom'] = 'Séminaire ' . $date->format('Y-m-d H:i:s');
-        }
-
         $oMedia = $params['media'] ?? null;
-
         $fragments = $this->getMediaFrag($oMedia);
-        //$fragments = $this->setVideoFrag($oMedia, $params);
-
         return [
             'media' => $oMedia,
             'fragments' => $fragments,
@@ -360,7 +353,7 @@ class ChaoticumSeminario extends AbstractHelper
             $params['ref'] = 'Fragment vidéo de : ' . $media->id();
             $params['refId'] = $tempFilename;
 
-            if (count($existe) == 0) {
+            if ($existe == null) {
                 // Extraction du fragment
                 $dur = $e - $d;
                 $params['tempPath'] = $paths['temp'] . '/' . $tempFilename;
@@ -391,10 +384,11 @@ class ChaoticumSeminario extends AbstractHelper
                 $medias = $mediaFrag->media();
                 $m = $medias[count($medias) - 1];
             } else {
-                $m = $existe[0];
+                $m = $existe;
                 $mediaFrag = $m->item();
             }
             // Extraction de l'audio du fragment pour le traitement du speech to text
+            $params['parentMediaId']=$media->id();
             $arrFrags = $this->setAudioFrag($m, $params, true);
             $this->logger->info(
                 'Media #{media_id}: chaoticum media created ({filename}).', // @translate
@@ -445,7 +439,7 @@ class ChaoticumSeminario extends AbstractHelper
 
             $params['tempPath'] = $paths['temp'] . '/' . $tempFilename;
             $existe = $this->getMediaByRef($tempFilename);
-            if (count($existe) == 0) {
+            if ($existe == null) {
                 if ($sourceIsFrag) {
                     //execute en ligne de commande directe pour plus de rapidité
                     $cmd = 'ffmpeg -i ' . $paths['source']
@@ -453,14 +447,14 @@ class ChaoticumSeminario extends AbstractHelper
                     . $params['tempPath'];
                     $output = shell_exec($cmd);
                 } else {
-                    $clip = $audio->clip(TimeCode::fromSeconds($deb), TimeCode::fromSeconds($dur));
+                    $audio->filters()->clip(TimeCode::fromSeconds($deb), TimeCode::fromSeconds($dur));
                     //spécifie le format du fragment pour diminuer la taille et la rendre compatible avec le speech to text
-                    $clip->filters()->resample(16000);
+                    $audio->filters()->resample(16000);
                     $format = new Flac();
                     $format
                         ->setAudioChannels(1)
                         ->setAudioKiloBitrate(8);
-                    $clip->save($format, $params['tempPath']);
+                    $audio->save($format, $params['tempPath']);
                 }
 
                 if (!file_exists($params['tempPath']) || !filesize($params['tempPath'])) {
@@ -479,7 +473,7 @@ class ChaoticumSeminario extends AbstractHelper
                 $params['refId'] = $tempFilename;
                 $mediaFrags = $this->ajouteMediaFrag($media, $params);
             } else {
-                $mediaFrags = $existe[0]->item();
+                $mediaFrags = $existe->item();
             }
         }
 
@@ -660,6 +654,15 @@ class ChaoticumSeminario extends AbstractHelper
         $valueObject['value_resource_id'] = $media->id();
         $valueObject['type'] = 'resource';
         $oMedia['ma:isFragmentOf'][] = $valueObject;
+
+        if($data['parentMediaId']){
+            $valueObject = [];
+            $valueObject['property_id'] = $this->getProperty('ma:isFragmentOf')->id();
+            $valueObject['value_resource_id'] = $data['parentMediaId'];
+            $valueObject['type'] = 'resource';
+            $oMedia['ma:isFragmentOf'][] = $valueObject;    
+        }
+
         $valueObject = [];
         $valueObject['property_id'] = $this->getProperty('oa:start')->id();
         $valueObject['@value'] = (string) $data['debFrag'];
@@ -684,6 +687,7 @@ class ChaoticumSeminario extends AbstractHelper
             ,'@value' => $data['ref'] ,'type' => 'literal'
         ];
         */
+        //TODO: ajouter audio/flac dans les settings 
         $response = $this->api->update('items', $dataItem['o:id'], $dataItem, [], ['continueOnError' => true,'isPartial' => 1, 'collectionAction' => 'replace']);
         $mediaFrag = $response->getContent();
         if ($mediaFrag) {
