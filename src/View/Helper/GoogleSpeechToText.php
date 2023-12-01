@@ -279,8 +279,8 @@ class GoogleSpeechToText extends AbstractHelper
                 ->setEncoding($encoding)
                 ->setEnableWordTimeOffsets(true)
                 ->setEnableWordConfidence(true)
-                /*différent suivant le media d'où vient le fragment
                 ->setAudioChannelCount(2)
+                /*différent suivant le media d'où vient le fragment
                 ->setSampleRateHertz($sampleRateHertz)
                 ->setDiarizationConfig(
                     new SpeakerDiarizationConfig(['enable_speaker_diarization'=>true,'min_speaker_count'=>1,'max_speaker_count'=>10])

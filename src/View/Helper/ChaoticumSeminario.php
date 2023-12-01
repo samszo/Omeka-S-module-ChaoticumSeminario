@@ -87,6 +87,9 @@ class ChaoticumSeminario extends AbstractHelper
      */
     protected $resourceTemplates = [];
 
+    //réduction des fragment à 50 secondes pour éviter le plantage 60 secondes
+    protected $durFrag = 50;
+
     public function __construct(
         ApiManager $api,
         EntityManager $entityManager,
@@ -338,8 +341,8 @@ class ChaoticumSeminario extends AbstractHelper
         // Extraction des fragments de 60 secondes
         $deb = intval($params['oa:start']);
         $fin = $params['oa:end'] == 'fin' ? $duration : intval($params['oa:end']);
-        for ($d = $deb; $d < $fin; $d += 60) {
-            $e = $fin > 60 ? $d + 60 : $fin;
+        for ($d = $deb; $d < $fin; $d += $this->durFrag) {
+            $e = $fin > $this->durFrag ? $d + $this->durFrag : $fin;
             $e = $e > $fin ? $fin : $e;
 
             // Vérifie l'existence du media
@@ -424,12 +427,12 @@ class ChaoticumSeminario extends AbstractHelper
             ['media_id' => $media->id(), 'filename' => $paths['source']]
         );
 
-        //extraction des fragments de 60 secondes
-        $dur = 60;
+        //extraction des fragments
+        //réduction des fragment à $this->durFrag secondes pour éviter le plantage 60 secondes
         $deb = intval($params['oa:start']);
         $fin = $params['oa:end'] == 'fin' ? $duration : intval($params['oa:end']);
-        for ($d = $deb; $d < $fin; $d += $dur) {
-            $e = $fin > $dur ? $d + $dur : $fin;
+        for ($d = $deb; $d < $fin; $d += $this->durFrag) {
+            $e = $fin > $this->durFrag ? $d + $this->durFrag : $fin;
             $e = $e > $fin ? $fin : $e;
             $params['debFrag'] = $d;
             $params['endFrag'] = $e;
