@@ -5,6 +5,7 @@ namespace ChaoticumSeminario;
 return [
     'view_helpers' => [
         'factories' => [
+            'chaoticumSeminarioSql' => Service\ViewHelper\ChaoticumSeminarioSqlFactory::class,
             'chaoticumSeminario' => Service\ViewHelper\ChaoticumSeminarioFactory::class,
             'googleSpeechToText' => Service\ViewHelper\GoogleSpeechToTextFactory::class,
             'googleSpeechToTextCredentials' => Service\ViewHelper\GoogleSpeechToTextCredentialsFactory::class,

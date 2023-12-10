@@ -138,6 +138,7 @@ class ChaoticumSeminario extends AbstractHelper
      *   - oa:end
      * Retourne un item.
      *
+     * 
      * - setAllFrag
      *   - media
      *   - oa:start
@@ -178,8 +179,7 @@ class ChaoticumSeminario extends AbstractHelper
                 $result = $this->setVideoFrag($params['media'] ?? null, $params);
                 break;
             case 'setAllFrag':
-                $this->setAllFrag($params);
-                $result = $this->getFrags($params);
+                $result = $this->setAllFrag($params);
                 break;
             case 'getEntities':
                 $result = $this->getEntities($params);
@@ -391,7 +391,7 @@ class ChaoticumSeminario extends AbstractHelper
                 $mediaFrag = $m->item();
             }
             // Extraction de l'audio du fragment pour le traitement du speech to text
-            $params['parentMediaId']=$media->id();
+            //$params['parentMediaId']=$media->id();
             $arrFrags = $this->setAudioFrag($m, $params, true);
             $this->logger->info(
                 'Media #{media_id}: chaoticum media created ({filename}).', // @translate

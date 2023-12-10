@@ -193,19 +193,28 @@ class GoogleSpeechToText extends AbstractHelper
                 ? $params['frag']
                 : $this->api->read('items', $params['frag'])->getContent();
             $medias = $item->media();
+            //création des fragments
             foreach ($medias as $media) {
                 $class = $media->displayResourceClassLabel();
                 if($class!="MediaFragment"){
-                    $frags =  $this->chaoticumSeminario->__invoke([
+                    $this->chaoticumSeminario->__invoke([
                         'action' => 'setAllFrag',
                         'media' => $media,
                     ]);
-                    foreach ($frags['fragments'] as $f) {
-                        if($f->mediaType()==='audio/flac'){
-                            $result[] = $this->getSpeechToText($urlBaseFrom, $urlBaseTo, $item, $f, $speechClient);
-                        }
-                    }    
                 }
+            }
+            //traitement des fragments
+            $medias = $item->media();
+            foreach ($medias as $media) {
+                $frags = $this->chaoticumSeminario->__invoke([
+                    'action' => 'getMediaFrag',
+                    'media' => $media,
+                ]);
+                foreach ($frags['fragments'] as $f) {
+                    if($f->mediaType()==='audio/flac'){
+                        $result[] = $this->getSpeechToText($urlBaseFrom, $urlBaseTo, $item, $f, $speechClient);
+                    }
+                }    
             }
             if (isset($speechClient)) {
                 $speechClient->close();
@@ -326,16 +335,24 @@ class GoogleSpeechToText extends AbstractHelper
             'value_resource_id' => $media->id(),
             'type' => 'resource',
         ];
+        $oItem['dcterms:creator'][] = [
+            'property_id' => $this->getProp('dcterms:creator')->id(),
+            '@value' => 'GoogleSpeechToText',
+            'type' => 'literal',
+        ];        
+        /*
         $oItem['oa:hasSource'][] = [
             'property_id' => $this->getProp('oa:hasSource')->id(),
             'value_resource_id' => $item->id(),
             'type' => 'resource',
         ];
+        */
 
         $curationDataId = $this->getProp('curation:data')->id();
         $mediaId = $media->id();
         $mediaTitle = $media->value('dcterms:isReferencedBy');
         $baseIndexTitle = pathinfo((string) $mediaTitle ?: $media->source(), PATHINFO_FILENAME);
+        $video = $media->value('ma:isFragmentOf')->valueResource();
 
         $words = $alt->getWords();
         foreach ($words as $w) {
@@ -344,6 +361,11 @@ class GoogleSpeechToText extends AbstractHelper
             $end = $w->getEndTime()->getSeconds() . '.' . $w->getEndTime()->getNanos();
 
             $annotation = [];
+            $annotation['schema:video'][] = [
+                'property_id' => $this->getProp('schema:video')->id(),
+                'value_resource_id' => $video->id(),
+                'type' => 'resource',
+            ];
             $annotation['jdc:hasConcept'][] = [
                 'property_id' => $this->getProp('jdc:hasConcept')->id(),
                 'value_resource_id' => $concept->id(),
