@@ -248,6 +248,7 @@ class GoogleSpeechToText extends AbstractHelper
         $param['property'][0]['type'] = 'res';
         $param['property'][0]['text'] = (string) $media->id();
         $exist = $this->api->search('items', $param)->getContent();
+        $result=false;
         if (count($exist)) {
             $result[] = $exist[0];
         } else {
@@ -303,6 +304,11 @@ class GoogleSpeechToText extends AbstractHelper
                 $t = $this->addTranscription($r->getAlternatives()[0], $item, $media);
                 $result[] = $t->id();
             }
+            if($result)
+                $this->logger->info('Speech to text : nombre de transcription = ' . count($result));
+            else
+                $this->logger->info('Speech to text : AUCUNE transcription');
+
         }
         return $result;        
     }

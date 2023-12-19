@@ -386,17 +386,21 @@ class ChaoticumSeminario extends AbstractHelper
                 $mediaFrag = $this->ajouteMediaFrag($media, $params);
                 $medias = $mediaFrag->media();
                 $m = $medias[count($medias) - 1];
+                $this->logger->info(
+                    'Media #{media_id}: chaoticum media created ({filename}).', // @translate
+                    ['media_id' => $mediaFrag->id(), 'filename' => $mediaFrag->displayTitle()]
+                );    
             } else {
                 $m = $existe;
                 $mediaFrag = $m->item();
+                $this->logger->info(
+                    'Media #{media_id}: chaoticum media already create ({filename}).', // @translate
+                    ['media_id' => $mediaFrag->id(), 'filename' => $mediaFrag->displayTitle()]
+                );                
             }
             // Extraction de l'audio du fragment pour le traitement du speech to text
             //$params['parentMediaId']=$media->id();
             $arrFrags = $this->setAudioFrag($m, $params, true);
-            $this->logger->info(
-                'Media #{media_id}: chaoticum media created ({filename}).', // @translate
-                ['media_id' => $mediaFrag->id(), 'filename' => $mediaFrag->displayTitle()]
-            );
         }
 
         return $arrFrags;
