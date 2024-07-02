@@ -454,7 +454,7 @@ class ChaoticumSeminario extends AbstractHelper
                     . $params['tempPath'];
                     $output = shell_exec($cmd);
                 } else {
-                    $audio->filters()->clip(TimeCode::fromSeconds($deb), TimeCode::fromSeconds($dur));
+                    $audio->filters()->clip(TimeCode::fromSeconds($params['debFrag']), TimeCode::fromSeconds($dur));
                     //spécifie le format du fragment pour diminuer la taille et la rendre compatible avec le speech to text
                     $audio->filters()->resample(16000);
                     $format = new Flac();

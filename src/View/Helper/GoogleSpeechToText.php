@@ -289,7 +289,7 @@ class GoogleSpeechToText extends AbstractHelper
                 ->setEncoding($encoding)
                 ->setEnableWordTimeOffsets(true)
                 ->setEnableWordConfidence(true)
-                ->setAudioChannelCount(2)
+                ->setAudioChannelCount(1)
                 /*différent suivant le media d'où vient le fragment
                 ->setSampleRateHertz($sampleRateHertz)
                 ->setDiarizationConfig(
@@ -367,8 +367,8 @@ class GoogleSpeechToText extends AbstractHelper
             $end = $w->getEndTime()->getSeconds() . '.' . $w->getEndTime()->getNanos();
 
             $annotation = [];
-            $annotation['schema:video'][] = [
-                'property_id' => $this->getProp('schema:video')->id(),
+            $annotation['ma:MediaFragment'][] = [
+                'property_id' => $this->getProp('ma:hasFragment')->id(),
                 'value_resource_id' => $video->id(),
                 'type' => 'resource',
             ];
