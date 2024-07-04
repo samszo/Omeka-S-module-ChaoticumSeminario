@@ -98,6 +98,8 @@ class ChaoticumSeminarioSql extends AbstractHelper
         -- , vR.value aTitle
         , vFrag.value_resource_id idFrag
         , vSource.value_resource_id idSource
+        , vFrag.value_resource_id idFrag
+        , vSource.value_resource_id idSource
         , vStartV.value vStart
         , vEndV.value vEnd
         , rCpt.id idCpt, rCpt.title titleCpt, length(rCpt.title) nbCar
@@ -108,12 +110,17 @@ class ChaoticumSeminarioSql extends AbstractHelper
         INNER JOIN value vSource on vSource.resource_id = vFrag.value_resource_id AND vSource.property_id = ?
         INNER JOIN value vStartV on vStartV.resource_id = vSource.resource_id AND vStartV.property_id = ? 
         INNER JOIN value vEndV on vEndV.resource_id = vSource.resource_id AND vEndV.property_id = ? 
+        INNER JOIN value vFrag on vFrag.resource_id = r.id AND vFrag.property_id = ?
+        INNER JOIN value vSource on vSource.resource_id = vFrag.value_resource_id AND vSource.property_id = ?
+        INNER JOIN value vStartV on vStartV.resource_id = vSource.resource_id AND vStartV.property_id = ? 
+        INNER JOIN value vEndV on vEndV.resource_id = vSource.resource_id AND vEndV.property_id = ? 
         INNER JOIN value vR on vR.resource_id = r.id
         INNER JOIN resource rA on rA.id = vR.value_annotation_id
         INNER JOIN value vCpt on vCpt.resource_id = vR.value_annotation_id AND 	vCpt.property_id = ? 
         INNER JOIN resource rCpt on rCpt.id = vCpt.value_resource_id
         INNER JOIN value vStartW on vStartW.resource_id = vR.value_annotation_id AND vStartW.property_id = ? 
         INNER JOIN value vEndW on vEndW.resource_id = vR.value_annotation_id AND vEndW.property_id = ?            
+    WHERE length(rCpt.title) >= ?    
     WHERE length(rCpt.title) >= ?    
         ";
         $query .=" LIMIT 0, 10";
