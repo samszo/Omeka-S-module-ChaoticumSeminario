@@ -30,11 +30,32 @@ class ChaoticumSeminarioSql extends AbstractHelper
             case 'corrections':
                 $result = $this->corrections($params);
                 break;                                                        
-            }
+            case 'timelineConcept':
+                $result = $this->timelineConcept($params);
+                break;                                                        
+        }            
 
         return $result;
 
     }
+
+    /*
+    Vérifications
+     
+    Doublons mot
+    SELECT  v.value, count(*) nb, v.resource_id
+    FROM value v
+    WHERE v.property_id = 198
+    group by v.value, v.resource_id
+    order by nb desc
+
+    Doublons transcription
+    SELECT v.value_resource_id, count(*) nb
+    FROM value v
+    WHERE v.property_id = 531
+    GROUP BY v.value_resource_id
+    order by nb desc        
+    */
 
    /**
      * corrige la création des fragments
@@ -137,5 +158,69 @@ class ChaoticumSeminarioSql extends AbstractHelper
                 
         return $rs;       
     }
+
+   /**
+     * renvoie la timeline de transcription
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function timelineConcept($params){
+        $order =" ORDER BY idConf, CAST(startFrag AS DECIMAL(12,6)),  CAST(startCpt AS DECIMAL(6,2)) ";
+
+        $p=$this->api->search('properties', ['term' => 'jdc:hasConcept'])->getContent()[0];
+        $query="SELECT  mConf.item_id idConf, vConf.value titleConf
+            , vFrag.value_resource_id idFrag
+            , vFragStart.value startFrag
+            , vFragEnd.value endFrag
+            , vTransAnno.resource_id idTrans
+            , vTransCrea.value creator
+            , vAnno.resource_id idAnno
+            , vConcept.value_resource_id idCpt
+            , vConceptTitre.value titleCpt
+            , LENGTH(vConceptTitre.value) nbCar
+            , vConceptStart.value startCpt
+            , vConceptEnd.value endCpt
+            , vConceptConf.value confiance
+        FROM media mConf
+            inner join value vConf on vConf.resource_id = mConf.item_id and vConf.property_id = 1
+            
+            inner join value vAnno on vAnno.value_resource_id = mConf.id and vAnno.property_id = 425
+            
+            inner join value vTransAnno on vTransAnno.value_annotation_id = vAnno.resource_id and vTransAnno.property_id = 198
+            inner join value vTransCrea on vTransCrea.resource_id = vTransAnno.resource_id and vTransCrea.property_id = 2
+            
+            inner join value vFrag on vFrag.resource_id = vTransAnno.resource_id and vFrag.property_id = 531
+            
+            inner join value vFragStart on vFragStart.resource_id = vFrag.value_resource_id and vFragStart.property_id = 543
+            inner join value vFragEnd on vFragEnd.resource_id = vFrag.value_resource_id and vFragEnd.property_id = 524
+            
+            inner join value vConcept on vConcept.resource_id = vAnno.resource_id and vConcept.property_id = 216
+            inner join value vConceptTitre on vConceptTitre.resource_id = vConcept.value_resource_id and vConceptTitre.property_id = 1
+            inner join value vConceptStart on vConceptStart.resource_id = vAnno.resource_id and vConceptStart.property_id = 543
+            inner join value vConceptEnd on vConceptEnd.resource_id = vAnno.resource_id and vConceptEnd.property_id = 524
+            inner join value vConceptConf on vConceptConf.resource_id = vAnno.resource_id and vConceptConf.property_id = 404 ";
+        if($params['idConf']){
+            $query.=" WHERE mConf.item_id = ? ".$order;    
+            $rs = $this->conn->fetchAll($query,[
+                $params['idConf']
+            ]);    
+        }                
+        if($params['idMediaConf']){
+            $query.=" WHERE mConf.id = ? ".$order;    
+            $rs = $this->conn->fetchAll($query,[
+                $params['idMediaConf']
+            ]);    
+        }                
+        if($params['idConcept']){
+            $query.=" WHERE vConcept.value_resource_id = ? ".$order;    
+            $rs = $this->conn->fetchAll($query,[
+                $params['idConcept']
+            ]);    
+        }                
+        return $rs;       
+    }
+
+     
 
 }

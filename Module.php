@@ -127,7 +127,9 @@ class Module extends AbstractModule
         $request = $event->getParam('request');
         $data = $request->getContent();
 
-        if (empty($data['chaoticum_seminario']['chaoticumseminario_google_speech_to_text'])) {
+        if (empty($data['chaoticum_seminario']['chaoticumseminario_google_speech_to_text'])
+            && empty($data['chaoticum_seminario']['chaoticumseminario_whisper_speech_to_text'])
+        ) {
             return;
         }
 
@@ -141,16 +143,29 @@ class Module extends AbstractModule
         $plugins = $services->get('ControllerPluginManager');
         $url = $plugins->get('url');
         $messenger = $plugins->get('messenger');
+        $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
 
         $params = [
             'ids' => $ids,
         ];
 
-        $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
-        $job = $dispatcher->dispatch(\ChaoticumSeminario\Job\GoogleSpeechToText::class, $params);
 
+        if(!empty($data['chaoticum_seminario']['chaoticumseminario_google_speech_to_text'])){
+            $params['service']='Google';
+            $this->createJob(\ChaoticumSeminario\Job\GoogleSpeechToText::class, $params, $url, $dispatcher, $messenger);                
+        }
+
+        if(!empty($data['chaoticum_seminario']['chaoticumseminario_whisper_speech_to_text'])){
+            $params['service']='Whisper';
+            $this->createJob(\ChaoticumSeminario\Job\WhisperSpeechToText::class, $params, $url, $dispatcher, $messenger);                
+        }
+   }
+
+    function createJob($jobName, $params, $url, $dispatcher, $messenger): void
+    {
+        $job = $dispatcher->dispatch($jobName, $params);
         $message = new \Omeka\Stdlib\Message(
-            'Extracting speech to text via a derivated background job (%1$sjob #%2$d%3$s, %4$slogs%3$s)', // @translate,
+            'Extracting speech to text via a '.$params['service'].' derivated background job (%1$sjob #%2$d%3$s, %4$slogs%3$s)', // @translate,
             sprintf('<a href="%s">',
                 htmlspecialchars($url->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
             ),

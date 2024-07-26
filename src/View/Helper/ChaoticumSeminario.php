@@ -366,6 +366,7 @@ class ChaoticumSeminario extends AbstractHelper
                     . ' -to ' . TimeCode::fromSeconds($e)
                     . ' -c:v copy -c:a copy ' . $params['tempPath'];
                 $output = shell_exec($cmd);
+
                 /*
                 $clip = $video->clip(TimeCode::fromSeconds($d), TimeCode::fromSeconds($dur));
                 $clip->save(new X264(), $params['tempPath']);
@@ -493,7 +494,7 @@ class ChaoticumSeminario extends AbstractHelper
      * @param \Omeka\Api\Representation\MediaRepresentation $media
      * @param string $extension
      */
-    protected function getFragmentPaths(MediaRepresentation $media, string $extension): ?array
+    public function getFragmentPaths(MediaRepresentation $media, string $extension): ?array
     {
         $mainMediaType = strtok((string) $media->mediaType(), '/');
         $filename = $media->filename();

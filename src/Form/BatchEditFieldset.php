@@ -34,6 +34,20 @@ class BatchEditFieldset extends Fieldset
                     'data-collection-action' => 'replace',
                 ],
             ])
+
+            ->add([
+                'name' => 'chaoticumseminario_whisper_speech_to_text',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Convert speech to text via Whisper', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_whisper_speech_to_text',
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ])
+
          ;
     }
 }

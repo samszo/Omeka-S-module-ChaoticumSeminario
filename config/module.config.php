@@ -9,6 +9,7 @@ return [
             'chaoticumSeminario' => Service\ViewHelper\ChaoticumSeminarioFactory::class,
             'googleSpeechToText' => Service\ViewHelper\GoogleSpeechToTextFactory::class,
             'googleSpeechToTextCredentials' => Service\ViewHelper\GoogleSpeechToTextCredentialsFactory::class,
+            'whisperSpeechToText' => Service\ViewHelper\WhisperSpeechToTextFactory::class,
         ],
 
     ],
