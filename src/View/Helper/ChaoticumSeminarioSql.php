@@ -166,10 +166,12 @@ class ChaoticumSeminarioSql extends AbstractHelper
      * @return array
      */
     function timelineConcept($params){
-        $order =" ORDER BY idConf, CAST(startFrag AS DECIMAL(12,6)),  CAST(startCpt AS DECIMAL(6,2)) ";
+        $order =" ORDER BY idConf, trackMediaConf, CAST(startFrag AS DECIMAL(12,6)),  CAST(startCpt AS DECIMAL(6,2)) ";
 
         $p=$this->api->search('properties', ['term' => 'jdc:hasConcept'])->getContent()[0];
-        $query="SELECT  mConf.item_id idConf, vConf.value titleConf
+        $query="SELECT mConf.item_id idConf, vConf.value titleConf
+			, mConf.id idMediaConf
+			, vMediaConf.value trackMediaConf
             , vFrag.value_resource_id idFrag
             , vFragStart.value startFrag
             , vFragEnd.value endFrag
@@ -184,6 +186,7 @@ class ChaoticumSeminarioSql extends AbstractHelper
             , vConceptConf.value confiance
         FROM media mConf
             inner join value vConf on vConf.resource_id = mConf.item_id and vConf.property_id = 1
+            inner join value vMediaConf on vMediaConf.resource_id = mConf.id and vMediaConf.property_id = 492
             
             inner join value vAnno on vAnno.value_resource_id = mConf.id and vAnno.property_id = 425
             
@@ -200,6 +203,44 @@ class ChaoticumSeminarioSql extends AbstractHelper
             inner join value vConceptStart on vConceptStart.resource_id = vAnno.resource_id and vConceptStart.property_id = 543
             inner join value vConceptEnd on vConceptEnd.resource_id = vAnno.resource_id and vConceptEnd.property_id = 524
             inner join value vConceptConf on vConceptConf.resource_id = vAnno.resource_id and vConceptConf.property_id = 404 ";
+        if($params['search']){
+            /* on recherche uniquement dans :
+            - les transcriptions = 412
+            */
+            $ids=$this->api->search('items', 
+                ['fulltext_search' => $params['search'],'resource-type'=>"item",'resource_class_id'=>"412"],
+                ['returnScalar' => 'id'])->getContent();
+            if(count($ids)==0)return [];
+            $query.=" WHERE vTransAnno.resource_id IN (".implode(",",$ids).")";    
+            $rs = $this->conn->fetchAll($query);    
+        }                
+        if($params['searchConf']){
+            /* on recherche uniquement dans :
+            - les conférences = 47
+            */
+            $ids=$this->api->search('items', 
+                ['fulltext_search' => $params['search'],'resource-type'=>"item",'resource_class_id'=>"47"],
+                ['returnScalar' => 'id'])->getContent();
+            $query.=" WHERE mConf.item_id IN (".implode(",",$ids).")";    
+            $rs = $this->conn->fetchAll($query);    
+        }                
+        if($params['searchCpt']){
+            /* on recherche uniquement dans :
+            - concept = 381
+            */
+            $ids=$this->api->search('items', 
+                ['fulltext_search' => $params['searchCpt'],'resource-type'=>"item",'resource_class_id'=>"381"],
+                ['returnScalar' => 'id'])->getContent();
+            //on fait une recherche générale si pas de concept
+            if(count($ids)==0){
+                $params['search']=$params['searchCpt'];
+                $params['searchCpt']=false;
+                $rs = $this->timelineConcept($params);
+            }else{
+                $query.=" WHERE vConcept.value_resource_id IN (".implode(",",$ids).")";    
+                $rs = $this->conn->fetchAll($query);        
+            }
+        }                
         if($params['idConf']){
             $query.=" WHERE mConf.item_id = ? ".$order;    
             $rs = $this->conn->fetchAll($query,[

@@ -182,3 +182,8 @@ jdc:hasArchetype a rdf:Property ;
     rdfs:label "a comme archetype" ;
     rdfs:domain o:Resource ;
     vs:term_status "experimental" .
+
+jdc:Transcription a rdfs:Class ;
+    rdfs:label "Transcription" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
