@@ -3,10 +3,17 @@
         "google/cloud-speech": "^1.6",
         "php-ffmpeg/php-ffmpeg": "^0.17",
         "web64/laravel-nlp": "^0.40.0",
-        "web64/php-nlp-client": "^0.40.5"
+        "web64/php-nlp-client": "^0.40.5",
+        "mikehaertl/php-shellcommand": "^1.7",
+        "codewithkyrian/transformers": "^0.5.1"
     },
     "replace": {
         "doctrine/cache": "*",
         "symfony/polyfill-php80": "*"
+    },
+    "config": {
+        "allow-plugins": {
+            "codewithkyrian/transformers-libsloader": true
+        }
     }
 }
