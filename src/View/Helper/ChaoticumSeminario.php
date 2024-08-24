@@ -25,6 +25,10 @@ use Omeka\File\Store\StoreInterface;
 use Omeka\Stdlib\Cli;
 use Web64\Nlp\NlpClient;
 
+use Codewithkyrian\Transformers\Transformers;
+use function Codewithkyrian\Transformers\Pipelines\pipeline;
+use function Codewithkyrian\Transformers\Utils\{memoryUsage, timeUsage};
+
 class ChaoticumSeminario extends AbstractHelper
 {
     /**
@@ -114,6 +118,10 @@ class ChaoticumSeminario extends AbstractHelper
         $this->tempsReaction = 1;
         // Nombre de secondes pour la durée des magics Tracks.
         $this->tempsMagic = 5;
+        //configuration de transformer
+        Transformers::setup()
+            ->setCacheDir('/Users/hnparis8/Sites/omk_deleuze/modules/ChaoticumSeminario/vendor/codewithkyrian/transformers/cache')
+            ->apply(); 
     }
 
     /**
@@ -184,6 +192,14 @@ class ChaoticumSeminario extends AbstractHelper
             case 'getEntities':
                 $result = $this->getEntities($params);
                 break;
+            case 'sentimentAnalysis':
+                // Allocate a pipeline for sentiment-analysis
+                $pipe = pipeline('sentiment-analysis');
+                $out = $pipe('I love transformers!');
+                // [{'label': 'POSITIVE', 'score': 0.999808732}]
+                break;
+            case 'featureExtraction':
+                $result = $this->featureExtraction($params);
             case 'getFrags':
             default:
                 $result = $this->getFrags($params);
@@ -191,6 +207,27 @@ class ChaoticumSeminario extends AbstractHelper
         }
         return $result;
     }
+
+    /**
+     * Extrait les entités nommées d'un texte.
+     *
+     * @param array $params
+     */
+    protected function featureExtraction(array $params = [])
+    {
+        $classifier = pipeline('sentiment-analysis');
+        $result = $classifier("I love TransformersPHP!");
+        /*$ner = pipeline('token-classification', 'Xenova/bert-base-NER');
+        $result = $ner('My name is Kyrian and I live in Onitsha');
+        */
+        /*
+        $extractor = pipeline('embeddings', 'Xenova/all-MiniLM-L6-v2');
+        $embeddings = $extractor('The quick brown fox jumps over the lazy dog.', normalize: true, pooling: 'mean');
+        $result= [memoryUsage(), timeUsage(milliseconds: true), count($embeddings[0])];
+        */
+        return $result;
+    }
+
 
     /**
      * Récupère les entités nommées d'un texte.
