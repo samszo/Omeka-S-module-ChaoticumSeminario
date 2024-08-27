@@ -25,6 +25,7 @@ use Omeka\File\Store\StoreInterface;
 use Omeka\Stdlib\Cli;
 use Web64\Nlp\NlpClient;
 
+//https://github.com/CodeWithKyrian/transformers-php
 use Codewithkyrian\Transformers\Transformers;
 use function Codewithkyrian\Transformers\Pipelines\pipeline;
 use function Codewithkyrian\Transformers\Utils\{memoryUsage, timeUsage};
@@ -120,8 +121,9 @@ class ChaoticumSeminario extends AbstractHelper
         $this->tempsMagic = 5;
         //configuration de transformer
         Transformers::setup()
-            ->setCacheDir('/Users/hnparis8/Sites/omk_deleuze/modules/ChaoticumSeminario/vendor/codewithkyrian/transformers/cache')
+            ->setCacheDir('/var/www/html/omk_deleuze/modules/ChaoticumSeminario/vendor/codewithkyrian/transformers/cache')
             ->apply(); 
+        //
     }
 
     /**
@@ -198,8 +200,9 @@ class ChaoticumSeminario extends AbstractHelper
                 $out = $pipe('I love transformers!');
                 // [{'label': 'POSITIVE', 'score': 0.999808732}]
                 break;
-            case 'featureExtraction':
-                $result = $this->featureExtraction($params);
+            case 'tokenClassification':
+                $result = $this->tokenClassification($params);
+                break;
             case 'getFrags':
             default:
                 $result = $this->getFrags($params);
@@ -213,13 +216,20 @@ class ChaoticumSeminario extends AbstractHelper
      *
      * @param array $params
      */
-    protected function featureExtraction(array $params = [])
+    protected function tokenClassification(array $params = [])
     {
+        $item = !is_object($params['item'])
+        ? $this->api->read('items', $params['item'])->getContent()
+        : $params['item'];
+        $text = $item->displayTitle();        
+        /*
         $classifier = pipeline('sentiment-analysis');
         $result = $classifier("I love TransformersPHP!");
-        /*$ner = pipeline('token-classification', 'Xenova/bert-base-NER');
-        $result = $ner('My name is Kyrian and I live in Onitsha');
         */
+        //
+        $ner = pipeline('token-classification', 'Xenova/bert-base-NER');
+        $result = $ner($text);
+        //
         /*
         $extractor = pipeline('embeddings', 'Xenova/all-MiniLM-L6-v2');
         $embeddings = $extractor('The quick brown fox jumps over the lazy dog.', normalize: true, pooling: 'mean');
@@ -749,7 +759,7 @@ class ChaoticumSeminario extends AbstractHelper
         return $mediaFrag;
     }
 
-    protected function getProperty($term): PropertyRepresentation
+    public function getProperty($term): PropertyRepresentation
     {
         if (!isset($this->properties[$term])) {
             $this->properties[$term] = $this->api->search('properties', ['term' => $term])->getContent()[0];
@@ -757,7 +767,7 @@ class ChaoticumSeminario extends AbstractHelper
         return $this->properties[$term];
     }
 
-    protected function getResourceClass($term): ResourceClassRepresentation
+    public function getResourceClass($term): ResourceClassRepresentation
     {
         if (!isset($this->resourceClasses[$term])) {
             $this->resourceClasses[$term] = $this->api->search('resource_classes', ['term' => $term])->getContent()[0];
@@ -765,7 +775,7 @@ class ChaoticumSeminario extends AbstractHelper
         return $this->resourceClasses[$term];
     }
 
-    protected function getResourceTemplate($label): ResourceTemplateRepresentation
+    public function getResourceTemplate($label): ResourceTemplateRepresentation
     {
         if (!isset($this->resourceTemplates[$label])) {
             $this->resourceTemplates[$label] = $this->api->read('resource_templates', ['label' => $label])->getContent();

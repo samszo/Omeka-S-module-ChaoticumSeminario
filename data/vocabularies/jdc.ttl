@@ -187,3 +187,13 @@ jdc:Transcription a rdfs:Class ;
     rdfs:label "Transcription" ;
     rdfs:domain o:Resource ;
     vs:term_status "experimental" .
+
+jdc:iaModel a rdf:Property ;
+    rdfs:label "IA modèle" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+jdc:pipeline a rdf:Property ;
+    rdfs:label "pipeline" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .

@@ -416,7 +416,7 @@ class GoogleSpeechToText extends AbstractHelper
             ];
         }
         /*NON car trop gourmant
-        le lien se fais avec les mart of speech liéé
+        le lien se fais avec les part of speech liéé
         //modifie la source
         $dataUpdate = json_decode(json_encode($item), true);
         foreach ($oItem['jdc:hasConcept'] as $c) {

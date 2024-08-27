@@ -47,6 +47,18 @@ class BatchEditFieldset extends Fieldset
                     'data-collection-action' => 'replace',
                 ],
             ])
+            ->add([
+                'name' => 'chaoticumseminario_transformer_token_classification',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Extract token classification from title', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_transformer_token_classification',
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ])
 
          ;
     }

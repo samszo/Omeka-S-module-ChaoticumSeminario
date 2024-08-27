@@ -10,6 +10,7 @@ return [
             'googleSpeechToText' => Service\ViewHelper\GoogleSpeechToTextFactory::class,
             'googleSpeechToTextCredentials' => Service\ViewHelper\GoogleSpeechToTextCredentialsFactory::class,
             'whisperSpeechToText' => Service\ViewHelper\WhisperSpeechToTextFactory::class,
+            'transformersPipeline' => Service\ViewHelper\TransformersPipelineFactory::class,
         ],
 
     ],

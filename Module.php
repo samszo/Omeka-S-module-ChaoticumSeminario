@@ -129,6 +129,7 @@ class Module extends AbstractModule
 
         if (empty($data['chaoticum_seminario']['chaoticumseminario_google_speech_to_text'])
             && empty($data['chaoticum_seminario']['chaoticumseminario_whisper_speech_to_text'])
+            && empty($data['chaoticum_seminario']['chaoticumseminario_transformer_token_classification'])
         ) {
             return;
         }
@@ -147,6 +148,8 @@ class Module extends AbstractModule
 
         $params = [
             'ids' => $ids,
+            'idFirst' => $ids[0],
+            'idLast' => $ids[count($ids)-1],
         ];
 
 
@@ -159,13 +162,26 @@ class Module extends AbstractModule
             $params['service']='Whisper';
             $this->createJob(\ChaoticumSeminario\Job\WhisperSpeechToText::class, $params, $url, $dispatcher, $messenger);                
         }
+
+        if(!empty($data['chaoticum_seminario']['chaoticumseminario_transformer_token_classification'])){
+            $params['service']='Transformers';
+            $params['pipeline']='tokenClassification';
+            $this->createJob(\ChaoticumSeminario\Job\TransformersPipeline::class, $params, $url, $dispatcher, $messenger);                
+        }
+        
    }
 
     function createJob($jobName, $params, $url, $dispatcher, $messenger): void
     {
-        $job = $dispatcher->dispatch($jobName, $params);
+        $action = $params['pipeline'] ? $params['pipeline'] : "speech to text";
         $message = new \Omeka\Stdlib\Message(
-            'Extracting speech to text via a '.$params['service'].' derivated background job (%1$sjob #%2$d%3$s, %4$slogs%3$s)', // @translate,
+            'Extracting '.$action.' via a '.$params['service'].' derivated background job='.$job->getId()
+            . ' ids='.$params['idFirst'].' -> '.$params['idLast']
+        );
+        $job = $dispatcher->dispatch($jobName, $params);
+        /*TODO: corriger erreur url
+        $message = new \Omeka\Stdlib\Message(
+            'Extracting '.$action.' via a '.$params['service'].' derivated background job (%1$sjob #%2$d%3$s, %4$slogs%3$s)', // @translate,
             sprintf('<a href="%s">',
                 htmlspecialchars($url->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
             ),
@@ -173,6 +189,7 @@ class Module extends AbstractModule
             '</a>',
             sprintf('<a href="%1$s">', $this->isModuleActive('Log') ? $url->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]]) :  $url->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
         );
+        */
         $message->setEscapeHtml(false);
         $messenger->addSuccess($message);
     }

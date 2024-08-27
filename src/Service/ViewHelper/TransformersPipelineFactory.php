@@ -2,15 +2,15 @@
 
 namespace ChaoticumSeminario\Service\ViewHelper;
 
-use ChaoticumSeminario\View\Helper\WhisperSpeechToText;
+use ChaoticumSeminario\View\Helper\TransformersPipeline;
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
-class WhisperSpeechToTextFactory implements FactoryInterface
+class TransformersPipelineFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $services, $requestedName, array $options = null)
     {
-        return new WhisperSpeechToText(
+        return new TransformersPipeline(
             $services->get('Omeka\ApiManager'),
             $services->get('Omeka\Acl'),
             $services->get('Omeka\Logger'),

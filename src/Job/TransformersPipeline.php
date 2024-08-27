@@ -5,7 +5,7 @@ namespace ChaoticumSeminario\Job;
 use Omeka\Job\AbstractJob;
 use Omeka\Stdlib\Message;
 
-class WhisperSpeechToText extends AbstractJob
+class TransformersPipeline extends AbstractJob
 {
     /**
      * Limit for the loop to avoid heavy sql requests.
@@ -30,13 +30,13 @@ class WhisperSpeechToText extends AbstractJob
         $ids = $this->getArg('ids');
         if (!$ids) {
             $logger->warn(
-                'No item set to extract speech to text.' // @translate
+                'No item set to Transformers pipeline.' // @translate
             );
             return;
         }
 
         // Check existence and rights.
-        $itemIds = $api->search('items', ['id' => $ids], ['returnScalar' => 'id'])->getContent();
+        $itemIds = $api->search('items', ['id' => $ids], ['returnScalar' => 'id', 'per_page' => 10000])->getContent();
         if (count($itemIds) < count($ids)) {
             $logger->warn(new Message(
                 'These items are not available: #%s', // @translate
@@ -55,12 +55,16 @@ class WhisperSpeechToText extends AbstractJob
             $totalToProcess
         ));
 
-        /** @var \ChaoticumSeminario\View\Helper\WhisperSpeechToText $WhisperSpeechToText */
-        $WhisperSpeechToText = $services->get('ViewHelperManager')->get('whisperSpeechToText');
+        /** @var \ChaoticumSeminario\View\Helper\TransformersPipeline $TransformersPipeline */
+        $TransformersPipeline = $services->get('ViewHelperManager')->get('transformersPipeline');
+
+        /*TODO:pour optimiser les traitements charge le modèle une fois 
+        $TransformersPipeline->initPipeline($this->getArg('pipeline'));
+        */
 
         $totalProcessed = 0;
         foreach (array_chunk($itemIds, self::BULK_LIMIT) as $listItemIds) {
-            /** @var \Omeka\Api\Representation\AbstractRepresentation[] $resources */
+                /** @var \Omeka\Api\Representation\AbstractRepresentation[] $resources */
             $resources = $api
                 ->search('items', [
                     'id' => $listItemIds,
@@ -74,14 +78,14 @@ class WhisperSpeechToText extends AbstractJob
                 if ($this->shouldStop()) {
                     $logger->warn(new Message(
                         'The job "%s" was stopped.', // @translate
-                        'Whisper Speech to Text'
+                        'Transformers Pipeline'
                     ));
                     break 2;
                 }
 
-                $result = $WhisperSpeechToText([
-                    'service' => 'speechToText',
-                    'frag' => $resource,
+                $result = $TransformersPipeline([
+                    'pipeline' => $this->getArg('pipeline'),
+                    'item' => $resource,
                 ]);
 
                 ++$totalProcessed;
