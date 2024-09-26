@@ -32,7 +32,10 @@ class ChaoticumSeminarioSql extends AbstractHelper
                 break;                                                        
             case 'timelineConcept':
                 $result = $this->timelineConcept($params);
-                break;                                                        
+                break;    
+            case 'getConferenceTexte':                                                    
+                $result = $this->getConferenceTexte($params);
+                break;    
         }            
 
         return $result;
@@ -113,6 +116,31 @@ class ChaoticumSeminarioSql extends AbstractHelper
         echo 'corrections terminées';
 
     }
+    
+    /**
+     * renvoie la transcription complète d'une conférence
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function getConferenceTexte($params){
+        $query="SELECT vFrag.resource_id idTrans, vFragTitle.value txt
+        FROM item i
+            inner join value vFrag on vFrag.property_id = ? and vFrag.value_resource_id = i.id
+            inner join value vFragTitle on vFragTitle.property_id = ? and vFragTitle.resource_id = vFrag.resource_id
+        WHERE i.id = ?
+        ORDER BY vFrag.resource_id
+        ";
+        //$query .=" LIMIT 0, 10";
+        $rs = $this->conn->fetchAll($query,[
+            $this->api->search('properties', ['term' => 'ma:isFragmentOf'])->getContent()[0]->id(), 
+            $this->api->search('properties', ['term' => 'dcterms:title'])->getContent()[0]->id(),
+            $params['id']
+        ]);
+                
+        return $rs;       
+    }
+
 
    /**
      * renvoie la liste des concepts et leur nombre
@@ -174,12 +202,16 @@ class ChaoticumSeminarioSql extends AbstractHelper
      * @return array
      */
     function timelineConcept($params){
-        $order =" ORDER BY idConf, trackMediaConf, CAST(startFrag AS DECIMAL(12,6)),  CAST(startCpt AS DECIMAL(6,2)) ";
+
+        //TODO:recherche les identifiants de propriété par le term
+
+        $order =" ORDER BY idConf, mediaConfTrack, mediaConfTrackNum, CAST(startFrag AS DECIMAL(12,6)),  CAST(startCpt AS DECIMAL(6,2)) ";
 
         $p=$this->api->search('properties', ['term' => 'jdc:hasConcept'])->getContent()[0];
         $query="SELECT mConf.item_id idConf, vConf.value titleConf
 			, mConf.id idMediaConf
-			, vMediaConf.value trackMediaConf
+			, vMediaTrack.value mediaConfTrack
+            , vMediaTrackNum.value mediaConfTrackNum
             , vFrag.value_resource_id idFrag
             , vFragStart.value startFrag
             , vFragEnd.value endFrag
@@ -194,7 +226,8 @@ class ChaoticumSeminarioSql extends AbstractHelper
             , vConceptConf.value confiance
         FROM media mConf
             inner join value vConf on vConf.resource_id = mConf.item_id and vConf.property_id = 1
-            inner join value vMediaConf on vMediaConf.resource_id = mConf.id and vMediaConf.property_id = 492
+            inner join value vMediaTrack on vMediaTrack.resource_id = mConf.id and vMediaTrack.property_id = 492
+            inner join value vMediaTrackNum on vMediaTrackNum.resource_id = mConf.id and vMediaTrackNum.property_id = 484
             
             inner join value vAnno on vAnno.value_resource_id = mConf.id and vAnno.property_id = 425
             
@@ -221,7 +254,18 @@ class ChaoticumSeminarioSql extends AbstractHelper
             if(count($ids)==0)return [];
             $query.=" WHERE vTransAnno.resource_id IN (".implode(",",$ids).")";    
             $rs = $this->conn->fetchAll($query);    
-        }                
+        }  
+        if($params['searchValueAnno']){
+            /* on recherche uniquement dans :
+            - les transcriptions = 412
+            */
+            $ids=$this->api->search('value_annotations', 
+                ['fulltext_search' => $params['search']],
+                ['returnScalar' => 'id'])->getContent();
+            if(count($ids)==0)return [];
+            $query.=" WHERE vTransAnno.resource_id IN (".implode(",",$ids).")";    
+            $rs = $this->conn->fetchAll($query);    
+        }          
         if($params['searchConf']){
             /* on recherche uniquement dans :
             - les conférences = 47

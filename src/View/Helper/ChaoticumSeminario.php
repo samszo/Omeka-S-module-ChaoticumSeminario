@@ -120,8 +120,9 @@ class ChaoticumSeminario extends AbstractHelper
         // Nombre de secondes pour la durée des magics Tracks.
         $this->tempsMagic = 5;
         //configuration de transformer
+        //->setCacheDir('/var/www/html/omk_deleuze/modules/ChaoticumSeminario/vendor/codewithkyrian/transformers/cache')            
         Transformers::setup()
-            ->setCacheDir('/var/www/html/omk_deleuze/modules/ChaoticumSeminario/vendor/codewithkyrian/transformers/cache')
+            ->setCacheDir('/Users/hnparis8/Sites/omk_deleuze/modules/ChaoticumSeminario/vendor/codewithkyrian/transformers/cache')
             ->apply(); 
         //
     }
@@ -203,12 +204,48 @@ class ChaoticumSeminario extends AbstractHelper
             case 'tokenClassification':
                 $result = $this->tokenClassification($params);
                 break;
+            case 'saveNoteBox':
+                $result = $this->saveNoteBox($params);
+                break;
             case 'getFrags':
             default:
                 $result = $this->getFrags($params);
                 break;
         }
         return $result;
+    }
+
+    /**
+     * Enregistre une noteBox de Timeline
+     * 
+     * @param array $params
+     * 
+     */
+    protected function saveNoteBox($params){
+
+        function getOmkRef(r){
+            let query = "property[0][joiner]=and&property[0][property]=35"
+                +"&property[0][type]=eq&property[0][text]="+r[4]
+                +"&resource_class_id[]=94&resource_template_id[]=7",
+            rs = me.a.omk.searchItems(query); 
+            if(!rs.length){
+                //enregistre dans omk
+                let data = {
+                    'o:resource_template':'ref Personne',
+                    "dcterms:title":r[0], 
+                    "dcterms:isReferencedBy":{'u':r[3],'l':'dataBnF'},
+                    "bio:birth":r[1],
+                    "bio:death":r[2],
+                    "foaf:familyName":r[4],
+                    "foaf:givenName":r[5]
+                };-    
+                me.a.omk.createItem(data,i=>{
+                    console.log(i);
+                });    
+            }            
+        }
+
+
     }
 
     /**

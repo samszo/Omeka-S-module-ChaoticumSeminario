@@ -173,12 +173,12 @@ class Module extends AbstractModule
 
     function createJob($jobName, $params, $url, $dispatcher, $messenger): void
     {
-        $action = $params['pipeline'] ? $params['pipeline'] : "speech to text";
+        $action = isset($params['pipeline']) ? $params['pipeline'] : "speech to text";
+        $job = $dispatcher->dispatch($jobName, $params);
         $message = new \Omeka\Stdlib\Message(
             'Extracting '.$action.' via a '.$params['service'].' derivated background job='.$job->getId()
             . ' ids='.$params['idFirst'].' -> '.$params['idLast']
         );
-        $job = $dispatcher->dispatch($jobName, $params);
         /*TODO: corriger erreur url
         $message = new \Omeka\Stdlib\Message(
             'Extracting '.$action.' via a '.$params['service'].' derivated background job (%1$sjob #%2$d%3$s, %4$slogs%3$s)', // @translate,
