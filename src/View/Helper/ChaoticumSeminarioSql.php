@@ -55,6 +55,14 @@ class ChaoticumSeminarioSql extends AbstractHelper
     WHERE v.property_id = 531
     GROUP BY v.value_resource_id
     order by nb desc        
+    
+    nombre de transcription par heure
+    SELECT count(*) nb, DATE_FORMAT(r.created, "%D %b %Y %HH") grDate
+    FROM resource r
+    WHERE r.resource_class_id = 412
+    GROUP BY grDate
+    ORDER BY nb DESC;    
+    
     */
 
    /**
