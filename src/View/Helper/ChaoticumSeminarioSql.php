@@ -65,6 +65,19 @@ class ChaoticumSeminarioSql extends AbstractHelper
     WHERE r.resource_class_id = 412
     GROUP BY grDate
     ORDER BY nb DESC;    
+
+    tempsde transcription et de création de l'item
+    SELECT 
+    l0.id, l0.created paramWhisper, 
+    l.id, l.created whisper,
+    l1.id, l1.created creaItem,
+    TIMEDIFF (l.created, l0.created) tempsWhisper,
+    TIMEDIFF (l1.created, l.created) tempsSql
+    FROM log l 
+    inner join log l0 on l0.id = (l.id-1)
+    inner join log l1 on l1.id = (l.id+1)
+    WHERE l.context LIKE '{"output":"%'
+    ORDER BY l.created DESC;    
     
     */
 
