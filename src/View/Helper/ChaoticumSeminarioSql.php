@@ -36,6 +36,9 @@ class ChaoticumSeminarioSql extends AbstractHelper
             case 'getConferenceTexte':                                                    
                 $result = $this->getConferenceTexte($params);
                 break;    
+            case 'getMarkdownTranscription':                                                    
+                $result = $this->getMarkdownTranscription($params);
+                break;                        
         }            
 
         return $result;
@@ -80,6 +83,19 @@ class ChaoticumSeminarioSql extends AbstractHelper
     ORDER BY l.created DESC;    
     
     */
+
+   /**
+     * calcul le markdown d'une transcription
+     * utile pour le RAG
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function getMarkdownTranscription($params){
+        $trans = $this->api->read('items', $params['id'])->getContent();
+        $txt = $trans->displayTitle();
+        return [['txt'=>$txt]];
+    }
 
    /**
      * corrige la création des fragments
