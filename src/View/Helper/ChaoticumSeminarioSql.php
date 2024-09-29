@@ -69,18 +69,22 @@ class ChaoticumSeminarioSql extends AbstractHelper
     GROUP BY grDate
     ORDER BY nb DESC;    
 
-    tempsde transcription et de création de l'item
+    temps de transcription et de création de l'item
     SELECT 
-    l0.id, l0.created paramWhisper, 
-    l.id, l.created whisper,
-    l1.id, l1.created creaItem,
+    MAX(calc.tempsWhisper) maxWhisper, MIN(calc.tempsWhisper)minWhisper, 
+    MAX(calc.tempsSql) maxSql, MIN(calc.tempsSql) minSql
+    FROM (
+    SELECT 
+    l0.id idParam, l0.created paramWhisper, 
+    l.id idWhisper, l.created whisper,
+    l1.id idItem, l1.created creaItem,
     TIMEDIFF (l.created, l0.created) tempsWhisper,
     TIMEDIFF (l1.created, l.created) tempsSql
     FROM log l 
     inner join log l0 on l0.id = (l.id-1)
     inner join log l1 on l1.id = (l.id+1)
     WHERE l.context LIKE '{"output":"%'
-    ORDER BY l.created DESC;    
+    ) calc;    
     
     */
 
