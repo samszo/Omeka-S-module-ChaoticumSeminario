@@ -15,7 +15,8 @@ class WhisperSpeechToTextFactory implements FactoryInterface
             $services->get('Omeka\Acl'),
             $services->get('Omeka\Logger'),
             $services->get('ViewHelperManager')->get('chaoticumSeminario'),
-            $services->get('Config')
+            $services->get('Config'),
+            $services->get('ViewHelperManager')->get('chaoticumSeminarioSql'),
         );
     }
 }

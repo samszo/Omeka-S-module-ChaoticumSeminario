@@ -38,56 +38,80 @@ class ChaoticumSeminarioSql extends AbstractHelper
                 break;    
             case 'getMarkdownTranscription':                                                    
                 $result = $this->getMarkdownTranscription($params);
-                break;                        
-        }            
+                break; 
+            case 'getConcept':                       
+                $result = $this->getConcept($params);
+                break; 
+            case 'addConcept':                       
+                $result = $this->addConcept($params);
+                break; 
+            case 'getConferences':                       
+                $result = $this->getConferences($params);
+                break; 
+            }            
 
         return $result;
 
     }
 
-    /*
-    Vérifications
-     
-    Doublons mot
-    SELECT  v.value, count(*) nb, v.resource_id
-    FROM value v
-    WHERE v.property_id = 198
-    group by v.value, v.resource_id
-    order by nb desc
+    /**
+     * récupère les conférences et leur stats
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function getConferences($params){
+        $query="SELECT 
+            c.*,
+            COUNT(DISTINCT (d.id)) nbDisque,
+            COUNT(DISTINCT (t.agent)) nbAgent,
+            COUNT(DISTINCT (idFrag)) nbFrag,
+            COUNT(DISTINCT (t.id)) nbTrans,
+            COUNT(DISTINCT (tc.idConcept)) nbConcept
+        FROM
+            conferences c
+                INNER JOIN
+            transcriptions t ON t.idConf = c.id
+                INNER JOIN
+            disques d ON d.idConf = c.id
+                INNER JOIN
+            timeline_concept tc ON tc.idTrans = t.id
+        GROUP BY c.id";
+        $rs = $this->conn->fetchAll($query);                
+        return $rs;      
+    } 
 
-    Doublons transcription
-    SELECT v.value_resource_id, count(*) nb
-    FROM value v
-    WHERE v.property_id = 531
-    GROUP BY v.value_resource_id
-    order by nb desc        
-    
-    nombre de transcription par heure
-    SELECT count(*) nb, DATE_FORMAT(r.created, "%D %b %Y %HH") grDate
-    FROM resource r
-    WHERE r.resource_class_id = 412
-    GROUP BY grDate
-    ORDER BY nb DESC;    
+    /**
+     * ajoute un concept
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function addConcept($params){
+        $query="INSERT INTO `concepts` (`id`, `label`) VALUES (?, ?)";
+        $rs = $this->conn->fetchAll($query,[
+            $params['id'],
+            $params['label']
+        ]);                
+        return $rs;      
+    }
 
-    temps de transcription et de création de l'item
-    SELECT 
-    MAX(calc.tempsWhisper) maxWhisper, MIN(calc.tempsWhisper)minWhisper, 
-    MAX(calc.tempsSql) maxSql, MIN(calc.tempsSql) minSql
-    FROM (
-    SELECT 
-    l0.id idParam, l0.created paramWhisper, 
-    l.id idWhisper, l.created whisper,
-    l1.id idItem, l1.created creaItem,
-    TIMEDIFF (l.created, l0.created) tempsWhisper,
-    TIMEDIFF (l1.created, l.created) tempsSql
-    FROM log l 
-    inner join log l0 on l0.id = (l.id-1)
-    inner join log l1 on l1.id = (l.id+1)
-    WHERE l.context LIKE '{"output":"%'
-    ) calc;    
-    
-    */
-
+    /**
+     * renvoie un concept
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function getConcept($params){
+        $query="SELECT id, label
+        FROM concepts
+        WHERE label = ?
+        ";
+        $rs = $this->conn->fetchAll($query,[
+            $params['label']
+        ]);                
+        return $rs;        
+    }    
    /**
      * calcul le markdown d'une transcription
      * utile pour le RAG
@@ -96,8 +120,16 @@ class ChaoticumSeminarioSql extends AbstractHelper
      * @return array
      */
     function getMarkdownTranscription($params){
-        $trans = $this->api->read('items', $params['id'])->getContent();
-        $txt = $trans->displayTitle();
+        //TODO : tester avec cette syntaxe : (graphDB, has description, “A triple-store platform, built on rdf4j. Links diverse data, indexes it for semantic search and enriches it via text analysis to build big knowledge graphs.”)
+
+        $t = $this->api->read('items', $params['id'])->getContent();
+        $txt = "#Transcription ".$params['id']."\n";
+        $d = json_decode(json_encode($t), true);
+        $txt .= "A comme cours : ".$d['ma:isFragmentOf'][0]['display_title']."\n";
+        $txt .= "Est une transcription du fragment de cours :".$d['oa:hasSource'][0]['display_title']."\n";
+        foreach ($d['lexinfo:segmentation'] as $k => $v) {
+            $txt .= "A comme phrase ".$k." : ".$v["@annotation"]["lexinfo:partOfSpeech"][0]["@value"]."\n";
+        }
         return [['txt'=>$txt]];
     }
 
@@ -288,6 +320,12 @@ class ChaoticumSeminarioSql extends AbstractHelper
             $query.=" WHERE vTransAnno.resource_id IN (".implode(",",$ids).")";    
             $rs = $this->conn->fetchAll($query);    
         }  
+        if($params['getTrans']){
+            /* on récupère les identifiants de transcription
+            */
+            $query.=" WHERE vTransAnno.resource_id IN (".$params['getTrans'].") ";    
+            $rs = $this->conn->fetchAll($query);    
+        }          
         if($params['searchValueAnno']){
             /* on recherche uniquement dans :
             - les transcriptions = 412
@@ -350,3 +388,128 @@ class ChaoticumSeminarioSql extends AbstractHelper
      
 
 }
+   /*
+    Vérifications
+     
+    -- Doublons mot
+    SELECT  v.value, count(*) nb, v.resource_id
+    FROM value v
+    WHERE v.property_id = 198
+    group by v.value, v.resource_id
+    order by nb desc
+
+    -- Doublons transcription
+    SELECT v.value_resource_id, count(*) nb
+    FROM value v
+    WHERE v.property_id = 531
+    GROUP BY v.value_resource_id
+    order by nb desc        
+    
+    -- nombre de transcription par heure
+    SELECT count(*) nb, DATE_FORMAT(r.created, "%D %b %Y %HH") grDate
+    FROM resource r
+    WHERE r.resource_class_id = 412
+    GROUP BY grDate
+    ORDER BY nb DESC;    
+
+    -- temps de transcription et de création de l'item
+    SELECT idConf, titreConf, COUNT(*) nbFrag, SEC_TO_TIME(SUM(tempsTotal)) duree,
+MIN(tempsWhisper) minWhisper, MAX(tempsWhisper) maxWhisper, MIN(tempsSql) minSql, MAX(tempsSql) maxSql
+FROM (SELECT 
+    l0.id idParam, l0.created paramWhisper, 
+    l.id idWhisper, l.created whisper,
+    l1.id idItem, l1.created creaItem,
+    SUBSTRING(l1.message,48, LENGTH(l1.message)-47) idTrans,
+    TIMEDIFF (l.created, l0.created) tempsWhisper,
+    TIMEDIFF (l1.created, l.created) tempsSql,
+    TIMEDIFF (l1.created, l0.created) tempsTotal,
+    vTrans.value_resource_id idConf,
+    vConf.value titreConf
+    FROM log l 
+    inner join log l0 on l0.id = (l.id-1)
+    inner join log l1 on l1.id = (l.id+1)
+    inner join value vTrans on vTrans.resource_id = SUBSTRING(l1.message,48, LENGTH(l1.message)-47) AND vTrans.property_id = 451
+    inner join value vConf on vConf.resource_id = vTrans.value_resource_id AND vConf.property_id = 1
+    WHERE l.context LIKE '{"output":"%'
+     ) calc
+ GROUP BY idConf; 
+
+    -- temps de création des fragments
+    SELECT conf, MIN(tempsCrea), MAX(tempsCrea), COUNT(*) nb, SUM(tempsCrea) total 
+    FROM ( 
+        SELECT SUBSTRING(l.context, POSITION(":" IN l.context)+1, POSITION("," IN l.context)-POSITION(":" IN l.context)-1) conf, 
+            l.id idCrea, l.created crea, 
+            l1.id idFin, l1.created finCrea, 
+            TIMEDIFF (l1.created, l.created) tempsCrea 
+        FROM log l inner join log l1 on l1.id = (l.id+1) 
+        WHERE l.message LIKE '%chaoticum media created%' 
+    ) calc GROUP BY conf;
+
+    -- create transcription annexe
+ INSERT INTO transcriptions (idConf, idFrag, start, end, file, id, texte, agent, idDisque)
+SELECT i.id confId, 
+vFrag.value_resource_id fragId,  vFragDeb.value deb, vFragEnd.value end, CONCAT("files/original/",vFragMedia.storage_id,".",vFragMedia.extension) file,
+vTrans.resource_id transId, vTransTitle.value transText, vTransAgent.value agent,
+vFragSource.value_resource_id idPiste
+
+--  , LENGTH(vTransTitle.value) nbCar
+FROM item i
+inner join value vTrans on vTrans.property_id = 451 and vTrans.value_resource_id = i.id
+inner join value vTransTitle on vTransTitle.property_id = 1 and vTransTitle.resource_id = vTrans.resource_id
+inner join value vTransAgent on vTransAgent.property_id = 2 and vTransAgent.resource_id = vTrans.resource_id
+inner join value vFrag on vFrag.property_id = 531 and vFrag.resource_id = vTrans.resource_id
+inner join value vFragDeb on vFragDeb.property_id = 543 and vFragDeb.resource_id = vFrag.value_resource_id
+inner join value vFragEnd on vFragEnd.property_id = 524 and vFragEnd.resource_id = vFrag.value_resource_id
+inner join media vFragMedia on vFragMedia.id = vFrag.value_resource_id
+inner join value vFragSource on vFragSource.property_id = 451 and vFragSource.resource_id = vFrag.value_resource_id
+--  WHERE vTrans.resource_id = 2059
+-- ORDER BY nbCar DESC
+
+-- create disque annexe
+INSERT INTO disques (id, idConf, uri, face, plage)
+SELECT m.id
+ , m.item_id confId  
+ , vUri.value uri, vFace.value face, vPlage.value plage
+FROM media m
+inner join value vUri on vUri.property_id = 11 and vUri.resource_id = m.id
+inner join value vFace on vFace.property_id = 492 and vFace.resource_id = m.id
+inner join value vPlage on vPlage.property_id = 484 and vPlage.resource_id = m.id
+WHERE m.extension = "mp3" and vUri.value <> ''
+
+
+    -- create conference annexe
+INSERT INTO exploDeleuze.conferences (id, titre, created, ref, source)
+SELECT r.id confId, vTitle.value titre, vDate.value dt, vRef.value ref, vSrc.value src 
+-- , LENGTH(vTitle.value) nbCar
+FROM resource r
+inner join value vTitle on vTitle.property_id = 1 and vTitle.resource_id = r.id
+inner join value vDate on vDate.property_id = 7 and vDate.resource_id = r.id
+inner join value vSrc on vSrc.property_id = 11 and vSrc.resource_id = r.id
+inner join value vRef on vRef.property_id = 35 and vRef.resource_id = r.id
+ WHERE r.resource_class_id = 47 AND r.id > 70000
+-- ORDER BY nbCar DESC
+
+
+    -- create concepts annexe
+INSERT INTO concepts (id, label)
+SELECT v.resource_id, v.value
+FROM value v 
+INNER JOIN resource r ON r.id = v.resource_id AND r.resource_class_id = 381
+WHERE v.property_id = 1
+
+    -- create timeline_concept annexe
+ INSERT INTO exploDeleuze.timeline_concept (idTrans, idConcept, start, end, confidence)
+select 
+-- vAnnoCpt.*
+ t.id idTrans, vAnnoCpt.value_resource_id idConcept,
+ vAnnoStart.value start, vAnnoEnd.value end, vAnnoConfi.value confi
+from resource r
+inner join exploDeleuze.transcriptions t on r.id = t.id
+inner join value v on v.resource_id = r.id
+inner join value vAnnoCpt on vAnnoCpt.resource_id = v.value_annotation_id and vAnnoCpt.property_id = 216
+ inner join value vAnnoStart on vAnnoStart.resource_id = v.value_annotation_id and vAnnoStart.property_id = 543
+ inner join value vAnnoEnd on vAnnoEnd.resource_id = v.value_annotation_id and vAnnoEnd.property_id = 524
+ inner join value vAnnoConfi on vAnnoConfi.resource_id = v.value_annotation_id and vAnnoConfi.property_id = 404
+
+
+    */

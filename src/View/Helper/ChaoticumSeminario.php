@@ -207,13 +207,48 @@ class ChaoticumSeminario extends AbstractHelper
             case 'saveNoteBox':
                 $result = $this->saveNoteBox($params);
                 break;
-            case 'getFrags':
+            case 'addMediaFragment':
+                $result = $this->addMediaFragment($params);
+                break;
+                case 'getFrags':
             default:
                 $result = $this->getFrags($params);
                 break;
         }
         return $result;
     }
+
+    /**
+     * ajoute les fragmentMedia manquant à partir d'une autre base omeka s
+     * 
+     * @param array $params
+     * 
+     */
+    protected function addMediaFragment($params){
+        $rs=[];
+        //récupére la liste des medias
+        $query = [];
+        $query['datetime'][0]['field'] = 'created';
+        $query['property'][0]['type'] = 'gt';
+        $query['property'][0]['value'] = '2024-09-16';
+        $medias = $this->api->search('media', $query)->getContent();
+        foreach ($medias as $m) {
+            $filename = $m->filename();
+            $sourcePath = $this->basePath . '/original/' . $filename;
+            if (!file_exists($sourcePath)){
+                $url = str_replace($this->basePath,'http://127.0.0.1:8181/omk_deleuze',$sourcePath);
+                if (file_put_contents($sourcePath, file_get_contents($url))){
+                    $rs[]= $filename." downloaded successfully";
+                }else{
+                    $rs[]= $filename." downloading failed.";
+                }
+            }else{
+                $rs[]= $filename." existe";
+            }
+        }
+        return $rs;
+    }
+        
 
     /**
      * Enregistre une noteBox de Timeline
@@ -223,29 +258,7 @@ class ChaoticumSeminario extends AbstractHelper
      */
     protected function saveNoteBox($params){
 
-        function getOmkRef(r){
-            let query = "property[0][joiner]=and&property[0][property]=35"
-                +"&property[0][type]=eq&property[0][text]="+r[4]
-                +"&resource_class_id[]=94&resource_template_id[]=7",
-            rs = me.a.omk.searchItems(query); 
-            if(!rs.length){
-                //enregistre dans omk
-                let data = {
-                    'o:resource_template':'ref Personne',
-                    "dcterms:title":r[0], 
-                    "dcterms:isReferencedBy":{'u':r[3],'l':'dataBnF'},
-                    "bio:birth":r[1],
-                    "bio:death":r[2],
-                    "foaf:familyName":r[4],
-                    "foaf:givenName":r[5]
-                };-    
-                me.a.omk.createItem(data,i=>{
-                    console.log(i);
-                });    
-            }            
-        }
-
-
+                       
     }
 
     /**

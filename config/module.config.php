@@ -11,6 +11,7 @@ return [
             'googleSpeechToTextCredentials' => Service\ViewHelper\GoogleSpeechToTextCredentialsFactory::class,
             'whisperSpeechToText' => Service\ViewHelper\WhisperSpeechToTextFactory::class,
             'transformersPipeline' => Service\ViewHelper\TransformersPipelineFactory::class,
+            'anythingLLMCredentials' => Service\ViewHelper\AnythingLLMCredentialsFactory::class,    
         ],
 
     ],
@@ -49,6 +50,7 @@ return [
         ],
         'user_settings' => [
             'chaoticumseminario_google_credentials' => '',
+            'chaoticumseminario_anythingllm_login' => '',
         ],
         'block_settings' => [
             'chaoticumSeminario' => [

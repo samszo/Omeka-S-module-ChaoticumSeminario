@@ -33,6 +33,19 @@ class UserSettingsFieldset extends Fieldset
                     'rows' => 5,
                 ],
             ])
+            ->add([
+                'name' => 'chaoticumseminario_anythingllm_login',
+                'type' => Element\Textarea::class,
+                'options' => [
+                    'element_group' => 'chaoticum_seminario',
+                    'label' => 'AnythingLLM login', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_anythingllm_login',
+                    'rows' => 1,
+                ],
+            ])
+
         ;
     }
 }

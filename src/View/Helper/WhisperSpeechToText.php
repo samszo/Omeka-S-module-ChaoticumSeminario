@@ -31,6 +31,11 @@ class WhisperSpeechToText extends AbstractHelper
      */
     protected $chaoticumSeminario;
     
+    /**
+     *
+     * @var sql
+     */
+    protected $sql;
 
     /**
      * @var array
@@ -43,6 +48,7 @@ class WhisperSpeechToText extends AbstractHelper
 
     protected $rts;
 
+
     /**
      * @var string
      */
@@ -53,13 +59,15 @@ class WhisperSpeechToText extends AbstractHelper
         Acl $acl,
         Logger $logger,
         ChaoticumSeminario $chaoticumSeminario,
-        array $config
+        array $config,
+        ChaoticumSeminarioSql $sql
     ) {
         $this->api = $api;
         $this->acl = $acl;
         $this->logger = $logger;
         $this->chaoticumSeminario = $chaoticumSeminario;
         $this->config = $config;
+        $this->sql = $sql;
     }
 
     /**
@@ -206,7 +214,9 @@ class WhisperSpeechToText extends AbstractHelper
     {
         //TODO:gérer les propriétés
         $langue = "French";
-        $this->cmdParams = ' --model medium --fp16 False --word_timestamps True --output_format json --verbose True --append_punctuations True --prepend_punctuations False ';
+        $this->cmdParams = ' --model medium '
+            .'--fp16 False '
+            .'--word_timestamps True --output_format json --verbose True --append_punctuations True --prepend_punctuations False ';
         $paths = $this->chaoticumSeminario->getFragmentPaths($media, 'flac');
 
         // Vérifie si le part of speech est présent
@@ -239,7 +249,7 @@ class WhisperSpeechToText extends AbstractHelper
             . ' --output_dir '. $paths['temp']
             . $this->cmdParams;
             $this->logger->info('Speech to text : ',['cmd'=>$cmd]);
-            //positionne le path pour une bonne exécution de ffmpeg
+            //POUR MAC positionne le path pour une bonne exécution de ffmpeg
             putenv('PATH=/opt/homebrew/bin');
             $command = new Command($cmd);
             if ($command->execute()) {
@@ -318,7 +328,6 @@ class WhisperSpeechToText extends AbstractHelper
 
         $segmentId = $this->getProp('lexinfo:segmentation')->id();
         
-
         foreach ($data['segments'] as $seg) {
 
             $segment = [];
@@ -365,7 +374,6 @@ class WhisperSpeechToText extends AbstractHelper
                 $tag = trim($w['word']);
                 $pos = strpos($tag, "'");
                 $concept = $this->getTag($pos===false ? $tag : substr($tag, $pos+1));
-    
                 $annotation = [];
                 $annotation['ma:MediaFragment'][] = [
                     'property_id' => $this->getProp('ma:hasFragment')->id(),
@@ -374,7 +382,7 @@ class WhisperSpeechToText extends AbstractHelper
                 ];
                 $annotation['jdc:hasConcept'][] = [
                     'property_id' => $this->getProp('jdc:hasConcept')->id(),
-                    'value_resource_id' => $concept->id(),
+                    'value_resource_id' => $concept['id'],
                     'type' => 'resource',
                 ];
                 $annotation['oa:start'][] = [
@@ -401,7 +409,7 @@ class WhisperSpeechToText extends AbstractHelper
                 $oItem['curation:data'][] = [
                     'property_id' => $curationDataId,
                     'type' => 'literal',
-                    '@value' => 'm' . $mediaId . '/' . $w['start'] . '/' . $concept->id() . ' [' . $baseIndexTitle . '] (' . $concept->displayTitle() . ')',
+                    '@value' => 'm' . $mediaId . '/' . $w['start'] . '/' . $concept['id'] . ' [' . $baseIndexTitle . '] (' . $concept['label'] . ')',
                     '@annotation' => $annotation,
                 ];
             }            
@@ -418,11 +426,27 @@ class WhisperSpeechToText extends AbstractHelper
     protected function getTag($tag)
     {
         // Vérifie la présence de l'item pour gérer la création
+        /*TROP LONG quand trop de données
         $param = [];
         $param['property'][0]['property'] = $this->getProp("skos:prefLabel")->id() . "";
         $param['property'][0]['type'] = 'eq';
         $param['property'][0]['text'] = $tag;
         $result = $this->api->search('items', $param)->getContent();
+        */
+        /*Solution de contournement
+        1. ajoute les concepts dans une table annexe :
+        INSERT INTO concepts (id, label)
+        SELECT v.resource_id, v.value
+        FROM value v 
+        INNER JOIN resource r ON r.id = v.resource_id AND r.resource_class_id = 381
+        WHERE v.property_id = 1
+        2. requête la table annexe pour vérifier l'existance
+        3. ajoute le nouveau concept dans la table annexe
+        */
+        $result = $this->sql->__invoke([
+            'action' => 'getConcept',
+            'label' => $tag,
+        ]);
         if (count($result)) {
             return $result[0];
         } else {
@@ -440,7 +464,14 @@ class WhisperSpeechToText extends AbstractHelper
             $valueObject['type'] = 'literal';
             $oItem["skos:prefLabel"][] = $valueObject;
             // Création du tag
-            return $this->api->create('items', $oItem, [], ['continueOnError' => true])->getContent();
+            $cpt = $this->api->create('items', $oItem, [], ['continueOnError' => true])->getContent();
+            //ajout dans la table annexe
+            $this->sql->__invoke([
+                'action' => 'addConcept',
+                'id' => $cpt->id(),
+                'label' => $tag,
+            ]);            
+            return ['id'=>$cpt->id(),'label'=>$cpt->displayTitle()];
         }
     }
 
