@@ -33,6 +33,9 @@ class ChaoticumSeminarioSql extends AbstractHelper
             case 'timelineConcept':
                 $result = $this->timelineConcept($params);
                 break;    
+            case 'timelineConceptAnnexe':
+                $result = $this->timelineConceptAnnexe($params);
+                break;                        
             case 'getConferenceTexte':                                                    
                 $result = $this->getConferenceTexte($params);
                 break;    
@@ -48,10 +51,29 @@ class ChaoticumSeminarioSql extends AbstractHelper
             case 'getConferences':                       
                 $result = $this->getConferences($params);
                 break; 
+            case 'getTransNote':
+                $result = $this->getTransNote($params);
+                break;    
+            case 'getNoteExtrapolation':
+                $result = $this->getNoteExtrapolation($params);
+                break;    
             }            
 
         return $result;
 
+    }
+
+    /**
+     * récupère l'extrapolation d'une note
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function getNoteExtrapolation($params){
+        $query='SELECT DISTINCT t.id FROM transcriptions t 
+            WHERE t.texte Like "%'.$params['note'].'%"';
+        $rs = $this->conn->fetchAll($query);                
+        return $rs;        
     }
 
     /**
@@ -261,6 +283,92 @@ class ChaoticumSeminarioSql extends AbstractHelper
     }
 
    /**
+     * renvoie les notes pour une transcription
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function getTransNote($params){
+        //TODO:remplacer les id en durs
+        $query = "SELECT 
+                r.id id , vTitle.value titre,
+                vTrans.value_resource_id transId,
+                vColor.value color,
+                vStart.value start,
+                vEnd.value end
+            FROM resource r
+                inner join value vTrans on vTrans.property_id = 531 and vTrans.resource_id = r.id 
+                    and vTrans.value_resource_id = ?
+                inner join value vTitle on vTitle.property_id = 1 and vTitle.resource_id = r.id
+                inner join value vColor on vColor.property_id = 211 and vColor.resource_id = r.id
+                inner join value vStart on vStart.property_id = 543 and vStart.resource_id = r.id
+                inner join value vEnd on vEnd.property_id = 524 and vEnd.resource_id = r.id
+            WHERE r.resource_template_id = 5";
+
+        $rs = $this->conn->fetchAll($query,[
+            $params['id']
+        ]);    
+        return $rs;       
+    }
+
+   /**
+     * renvoie la timeline des transcriptions à partir des annexes
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function timelineConceptAnnexe($params){
+        $query = "SELECT 
+	c.id idConf, c.theme titleConf, c.source source1, c.created, c.num,
+	d.id idMediaConf, d.face , d.plage, d.uri source2,
+	t.id idTrans, t.idFrag, t.start startFrag, t.end endFrag, t.agent creator, t.file source3,
+	tc.id idAnno, tc.idConcept idCpt, tc.start startCpt, tc.end endCpt, tc.confidence confiance,
+	cpt.label titleCpt, LENGTH(cpt.label) nbCar
+FROM
+	conferences c
+		INNER JOIN
+	disques d ON d.idConf = c.id
+		INNER JOIN
+	transcriptions t ON t.idDisque = d.id
+		INNER JOIN
+	timeline_concept tc ON tc.idTrans = t.id
+		INNER JOIN
+            concepts cpt ON cpt.id = tc.idConcept";
+        if($params['idConf']){
+            $query.=" WHERE c.id = ? ";    
+            $rs = $this->conn->fetchAll($query,[
+                $params['idConf']
+            ]);    
+        }                        
+        if($params['cherche']){
+            $finds = $this->getTransRecherche($params);
+            $ids = array_map(function ($a) { return $a['id']; }, $finds);
+            $query.=" WHERE t.id IN (".implode(",",$ids).")";    
+            $timeline = $this->conn->fetchAll($query);
+            $rs=['scores'=>$finds,'timeline'=>$timeline];    
+        }                    
+        return $rs;       
+    }
+    /**
+     * renvoie les transcription pour une recherche
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function getTransRecherche($params){
+
+        $query = "SELECT id, MATCH (texte)
+            AGAINST (? IN NATURAL LANGUAGE MODE) AS score
+            FROM transcriptions
+            WHERE MATCH (texte) AGAINST(? IN NATURAL LANGUAGE MODE)";
+        $rs = $this->conn->fetchAll($query,[
+            $params['cherche'],
+            $params['cherche']
+        ]);    
+        return $rs;
+    }
+
+   /**
      * renvoie la timeline de transcription
      *
      * @param array    $params paramètre de la requête
@@ -413,7 +521,7 @@ class ChaoticumSeminarioSql extends AbstractHelper
     ORDER BY nb DESC;    
 
     -- temps de transcription et de création de l'item
-    SELECT idConf, titreConf, COUNT(*) nbFrag, SEC_TO_TIME(SUM(tempsTotal)) duree,
+    SELECT idConf, titreConf, COUNT(*) nbFrag, MIN(paramWhisper) deb, MAX(creaItem) fin, TIMEDIFF (MAX(creaItem), MIN(paramWhisper)) duree,
 MIN(tempsWhisper) minWhisper, MAX(tempsWhisper) maxWhisper, MIN(tempsSql) minSql, MAX(tempsSql) maxSql
 FROM (SELECT 
     l0.id idParam, l0.created paramWhisper, 
@@ -432,10 +540,11 @@ FROM (SELECT
     inner join value vConf on vConf.resource_id = vTrans.value_resource_id AND vConf.property_id = 1
     WHERE l.context LIKE '{"output":"%'
      ) calc
- GROUP BY idConf; 
+ GROUP BY idConf  
+ORDER BY `deb` DESC; 
 
     -- temps de création des fragments
-    SELECT conf, MIN(tempsCrea), MAX(tempsCrea), COUNT(*) nb, SUM(tempsCrea) total 
+    SELECT conf, MIN(crea) deb, MIN(finCrea) fin,  MIN(tempsCrea), MAX(tempsCrea), COUNT(*) nb, SEC_TO_TIME(SUM(tempsCrea)) total 
     FROM ( 
         SELECT SUBSTRING(l.context, POSITION(":" IN l.context)+1, POSITION("," IN l.context)-POSITION(":" IN l.context)-1) conf, 
             l.id idCrea, l.created crea, 
@@ -478,16 +587,31 @@ WHERE m.extension = "mp3" and vUri.value <> ''
 
 
     -- create conference annexe
-INSERT INTO exploDeleuze.conferences (id, titre, created, ref, source)
+ INSERT INTO conferences (id, titre, created, ref, source,promo,theme,num)
 SELECT r.id confId, vTitle.value titre, vDate.value dt, vRef.value ref, vSrc.value src 
+, vPromo.value promo, vTheme.value theme, vNum.value num
 -- , LENGTH(vTitle.value) nbCar
 FROM resource r
 inner join value vTitle on vTitle.property_id = 1 and vTitle.resource_id = r.id
 inner join value vDate on vDate.property_id = 7 and vDate.resource_id = r.id
 inner join value vSrc on vSrc.property_id = 11 and vSrc.resource_id = r.id
 inner join value vRef on vRef.property_id = 35 and vRef.resource_id = r.id
- WHERE r.resource_class_id = 47 AND r.id > 70000
--- ORDER BY nbCar DESC
+inner join value vTheme on vTheme.property_id = 195 and vTheme.resource_id = r.id
+inner join value vNum on vNum.property_id = 203 and vNum.resource_id = r.id
+inner join value vPromo on vPromo.property_id = 21 and vPromo.resource_id = r.id
+WHERE r.resource_class_id = 47
+
+   -- mettre à jour l'annexe des conférence avec les mots-clefs
+UPDATE conferences as cref,  
+    (
+SELECT c.id, concat('[',group_concat(JSON_OBJECT('id', v.value_resource_id, 'label', mc.value)),']') o
+FROM conferences c
+inner join value v on v.resource_id = c.id and v.property_id = 3
+inner join value mc on mc.resource_id = v.value_resource_id and mc.property_id = 1
+group by c.id) as co
+SET cref.sujets = co.o
+WHERE cref.id = co.id
+
 
 
     -- create concepts annexe
@@ -498,9 +622,8 @@ INNER JOIN resource r ON r.id = v.resource_id AND r.resource_class_id = 381
 WHERE v.property_id = 1
 
     -- create timeline_concept annexe
- INSERT INTO exploDeleuze.timeline_concept (idTrans, idConcept, start, end, confidence)
-select 
--- vAnnoCpt.*
+ INSERT INTO timeline_concept (idAnno, idTrans, idConcept, start, end, confidence)
+select v.value_annotation_id,
  t.id idTrans, vAnnoCpt.value_resource_id idConcept,
  vAnnoStart.value start, vAnnoEnd.value end, vAnnoConfi.value confi
 from resource r
@@ -510,6 +633,4 @@ inner join value vAnnoCpt on vAnnoCpt.resource_id = v.value_annotation_id and vA
  inner join value vAnnoStart on vAnnoStart.resource_id = v.value_annotation_id and vAnnoStart.property_id = 543
  inner join value vAnnoEnd on vAnnoEnd.resource_id = v.value_annotation_id and vAnnoEnd.property_id = 524
  inner join value vAnnoConfi on vAnnoConfi.resource_id = v.value_annotation_id and vAnnoConfi.property_id = 404
-
-
     */

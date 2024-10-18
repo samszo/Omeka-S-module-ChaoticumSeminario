@@ -5,8 +5,8 @@
 @prefix vs: <http://www.w3.org/2003/06/sw-vocab-status/ns#> .
 @prefix o: <http://omeka.org/s/vocabs/o#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
-@prefix jdc: <https://jardindesconnaissances.univ-paris8.fr/onto/jdc#> .
 @prefix ma: <http://www.w3.org/ns/ma-ont#>.
+@prefix jdc: <https://jardindesconnaissances.univ-paris8.fr/onto/jdc#> .
 
 <https://jardindesconnaissances.univ-paris8.fr/onto/jdc#> a owl:Ontology ;
     dcterms:title "Jardin des connaissances" .
@@ -195,5 +195,40 @@ jdc:iaModel a rdf:Property ;
 
 jdc:pipeline a rdf:Property ;
     rdfs:label "pipeline" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+jdc:hasPerson a rdf:Property ;
+    rdfs:label "a comme personne" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+jdc:hasGeo a rdf:Property ;
+    rdfs:label "a comme lieu" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+jdc:hasEpoque a rdf:Property ;
+    rdfs:label "a comme époque" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+jdc:hasBook a rdf:Property ;
+    rdfs:label "a comme livre" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+jdc:hasMovie a rdf:Property ;
+    rdfs:label "a comme film" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+jdc:hasMusic a rdf:Property ;
+    rdfs:label "a comme musique" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+jdc:hasLink a rdf:Property ;
+    rdfs:label "a comme lien" ;
     rdfs:domain o:Resource ;
     vs:term_status "experimental" .
