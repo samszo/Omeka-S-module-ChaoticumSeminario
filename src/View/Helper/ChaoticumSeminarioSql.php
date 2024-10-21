@@ -56,12 +56,99 @@ class ChaoticumSeminarioSql extends AbstractHelper
                 break;    
             case 'getNoteExtrapolation':
                 $result = $this->getNoteExtrapolation($params);
+                break;
+            case 'getFlacFromServeur':
+                $result = $this->getFlacFromServeur();
+                break;    
+            case 'getNextTrans':
+                $result = $this->getNextTrans($params);
                 break;    
             }            
 
         return $result;
 
     }
+
+
+    /**
+     * récupère la transcription suivante
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function getNextTrans($params){
+        $query='SELECT 
+            tn.idFrag
+        FROM
+            transcriptions t
+                INNER JOIN
+            transcriptions tn ON tn.idDisque = t.idDisque
+                AND tn.start = t.end
+        WHERE
+            t.idFrag = ?';
+        $rs = $this->conn->fetchAll($query,[$params['idFrag']]);
+        if(count($rs)){
+            $rs = $this->timelineConceptAnnexe(['idFrag'=>$rs[0]['idFrag']]);
+        }else{
+            //si pas de réponse on passe au cours suivant
+            $query='SELECT 
+                t.idFrag
+            FROM
+                conferences c
+                    INNER JOIN
+                conferences cn ON cn.created > c.created
+                    INNER JOIN
+                transcriptions t ON t.idConf = cn.id
+            WHERE
+                c.id = ?
+            ORDER BY cn.created , t.start
+            LIMIT 0 , 1
+            ';
+            $rs = $this->conn->fetchAll($query,[$params['idConf']]);            
+            $rs = $this->timelineConceptAnnexe(['idFrag'=>$rs[0]['idFrag']]);
+        }                
+        return $rs;        
+    }
+
+    
+    
+
+    /* pour récupérer les flacs en local
+    1. charger dans l'ancienne base dans omk_test
+    2. exporter la réquête suivante en cvs
+    select m.storage_id, m.extension, r.id
+    from media m
+    left join omk_test.resource r on r.id = m.id
+    where m.extension = 'flac' and r.id is null
+    3. créer les lignes de commandes
+    4. excuter les lignes de commandes
+    */
+    function getFlacFromServeur(){
+        $query = "SELECT 
+                m.storage_id, m.extension, r.id, m.size
+            FROM
+                media m
+                    LEFT JOIN
+                omk_test.resource r ON r.id = m.id
+            WHERE
+                m.extension = 'flac' AND r.id IS NULL
+            ORDER BY r.id";
+        $rs = $this->conn->fetchAll($query);  
+        $numReprise = 0;//count($rs)-(2270-1294);
+        foreach ($rs as $i=>$r) {
+            if($i>=$numReprise){
+                $url = "/Users/hnparis8/Sites/omk_deleuze/files/original/".$r['storage_id'].".".$r['extension'];
+                if (file_exists($url)) {
+                    echo "existe;".$r['storage_id'].".".$r['extension'].";".$r['size'].";".filesize($url)."<br>";
+                }else{
+                    echo "abscent;".$r['storage_id'].".".$r['extension']."<br>";
+                    echo "curl -o ".$r['storage_id'].".".$r['extension']
+                    ." http://127.0.0.1:8181/omk_deleuze/files/original/".$r['storage_id'].".".$r['extension']."<br>";
+                }
+            }
+        }           
+    }
+
 
     /**
      * récupère l'extrapolation d'une note
@@ -311,6 +398,11 @@ class ChaoticumSeminarioSql extends AbstractHelper
         return $rs;       
     }
 
+    function getCache($params){
+
+    }
+
+    
    /**
      * renvoie la timeline des transcriptions à partir des annexes
      *
@@ -319,21 +411,27 @@ class ChaoticumSeminarioSql extends AbstractHelper
      */
     function timelineConceptAnnexe($params){
         $query = "SELECT 
-	c.id idConf, c.theme titleConf, c.source source1, c.created, c.num,
-	d.id idMediaConf, d.face , d.plage, d.uri source2,
-	t.id idTrans, t.idFrag, t.start startFrag, t.end endFrag, t.agent creator, t.file source3,
-	tc.id idAnno, tc.idConcept idCpt, tc.start startCpt, tc.end endCpt, tc.confidence confiance,
-	cpt.label titleCpt, LENGTH(cpt.label) nbCar
-FROM
-	conferences c
-		INNER JOIN
-	disques d ON d.idConf = c.id
-		INNER JOIN
-	transcriptions t ON t.idDisque = d.id
-		INNER JOIN
-	timeline_concept tc ON tc.idTrans = t.id
-		INNER JOIN
-            concepts cpt ON cpt.id = tc.idConcept";
+            c.id idConf, c.theme titleConf, c.source source1, c.created, c.num,
+            d.id idMediaConf, d.face , d.plage, d.uri source2,
+            t.id idTrans, t.idFrag, t.start startFrag, t.end endFrag, t.agent creator, t.file source3,
+            tc.id idAnno, tc.idConcept idCpt, tc.start startCpt, tc.end endCpt, tc.confidence confiance,
+            cpt.label titleCpt, LENGTH(cpt.label) nbCar
+        FROM
+            conferences c
+                INNER JOIN
+            disques d ON d.idConf = c.id
+                INNER JOIN
+            transcriptions t ON t.idDisque = d.id
+                INNER JOIN
+            timeline_concept tc ON tc.idTrans = t.id
+                INNER JOIN
+                    concepts cpt ON cpt.id = tc.idConcept";
+        if($params['idFrag']){
+            $query.=" WHERE t.idFrag = ? ";    
+            $rs = $this->conn->fetchAll($query,[
+                $params['idFrag']
+            ]);    
+        }                        
         if($params['idConf']){
             $query.=" WHERE c.id = ? ";    
             $rs = $this->conn->fetchAll($query,[
@@ -521,6 +619,8 @@ FROM
     ORDER BY nb DESC;    
 
     -- temps de transcription et de création de l'item
+    INSERT INTO exploDeleuze.trace_transcriptions (idConf,titreConf,nbFrag,deb,fin,duree,minWhisper,maxWhisper,minSql,maxSql)
+
     SELECT idConf, titreConf, COUNT(*) nbFrag, MIN(paramWhisper) deb, MAX(creaItem) fin, TIMEDIFF (MAX(creaItem), MIN(paramWhisper)) duree,
 MIN(tempsWhisper) minWhisper, MAX(tempsWhisper) maxWhisper, MIN(tempsSql) minSql, MAX(tempsSql) maxSql
 FROM (SELECT 
@@ -544,7 +644,9 @@ FROM (SELECT
 ORDER BY `deb` DESC; 
 
     -- temps de création des fragments
-    SELECT conf, MIN(crea) deb, MIN(finCrea) fin,  MIN(tempsCrea), MAX(tempsCrea), COUNT(*) nb, SEC_TO_TIME(SUM(tempsCrea)) total 
+    INSERT INTO exploDeleuze.trace_fragments (idConf,deb,fin,minCrea,maxCrea,nb,total)
+
+    SELECT conf, MIN(crea) deb, MIN(finCrea) fin,  MIN(tempsCrea) minCrea, MAX(tempsCrea) maxCrea, COUNT(*) nb, SEC_TO_TIME(SUM(tempsCrea)) total 
     FROM ( 
         SELECT SUBSTRING(l.context, POSITION(":" IN l.context)+1, POSITION("," IN l.context)-POSITION(":" IN l.context)-1) conf, 
             l.id idCrea, l.created crea, 
@@ -557,7 +659,7 @@ ORDER BY `deb` DESC;
     -- create transcription annexe
  INSERT INTO transcriptions (idConf, idFrag, start, end, file, id, texte, agent, idDisque)
 SELECT i.id confId, 
-vFrag.value_resource_id fragId,  vFragDeb.value deb, vFragEnd.value end, CONCAT("files/original/",vFragMedia.storage_id,".",vFragMedia.extension) file,
+vFrag.value_resource_id fragId,  vFragDeb.value 'deb', vFragEnd.value 'end', CONCAT("files/original/",vFragMedia.storage_id,".",vFragMedia.extension) 'file',
 vTrans.resource_id transId, vTransTitle.value transText, vTransAgent.value agent,
 vFragSource.value_resource_id idPiste
 
@@ -610,7 +712,9 @@ inner join value v on v.resource_id = c.id and v.property_id = 3
 inner join value mc on mc.resource_id = v.value_resource_id and mc.property_id = 1
 group by c.id) as co
 SET cref.sujets = co.o
-WHERE cref.id = co.id
+WHERE cref.id = co.id;
+UPDATE conferences set sujets = "[]" where length(sujets)=4;
+
 
 
 
@@ -622,15 +726,17 @@ INNER JOIN resource r ON r.id = v.resource_id AND r.resource_class_id = 381
 WHERE v.property_id = 1
 
     -- create timeline_concept annexe
+
  INSERT INTO timeline_concept (idAnno, idTrans, idConcept, start, end, confidence)
 select v.value_annotation_id,
  t.id idTrans, vAnnoCpt.value_resource_id idConcept,
- vAnnoStart.value start, vAnnoEnd.value end, vAnnoConfi.value confi
+ vAnnoStart.value 'start', vAnnoEnd.value 'end', vAnnoConfi.value confi
 from resource r
-inner join exploDeleuze.transcriptions t on r.id = t.id
+inner join transcriptions t on r.id = t.id
 inner join value v on v.resource_id = r.id
 inner join value vAnnoCpt on vAnnoCpt.resource_id = v.value_annotation_id and vAnnoCpt.property_id = 216
  inner join value vAnnoStart on vAnnoStart.resource_id = v.value_annotation_id and vAnnoStart.property_id = 543
  inner join value vAnnoEnd on vAnnoEnd.resource_id = v.value_annotation_id and vAnnoEnd.property_id = 524
  inner join value vAnnoConfi on vAnnoConfi.resource_id = v.value_annotation_id and vAnnoConfi.property_id = 404
-    */
+
+ */

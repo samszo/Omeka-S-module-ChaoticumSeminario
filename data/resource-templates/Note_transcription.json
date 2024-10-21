@@ -23,7 +23,7 @@
             "vocabulary_namespace_uri": "https:\/\/jardindesconnaissances.univ-paris8.fr\/onto\/jdc#",
             "vocabulary_label": "Jardin des connaissances",
             "local_name": "hasEpoque",
-            "label": "A comme \u00e9poque"
+            "label": "a comme \u00e9poque"
         },
         {
             "o:alternate_label": null,
@@ -35,7 +35,7 @@
             "vocabulary_namespace_uri": "https:\/\/jardindesconnaissances.univ-paris8.fr\/onto\/jdc#",
             "vocabulary_label": "Jardin des connaissances",
             "local_name": "hasMovie",
-            "label": "A comme film"
+            "label": "a comme film"
         },
         {
             "o:alternate_label": null,
@@ -47,7 +47,7 @@
             "vocabulary_namespace_uri": "https:\/\/jardindesconnaissances.univ-paris8.fr\/onto\/jdc#",
             "vocabulary_label": "Jardin des connaissances",
             "local_name": "hasLink",
-            "label": "A comme lien"
+            "label": "a comme lien"
         },
         {
             "o:alternate_label": null,
@@ -59,7 +59,7 @@
             "vocabulary_namespace_uri": "https:\/\/jardindesconnaissances.univ-paris8.fr\/onto\/jdc#",
             "vocabulary_label": "Jardin des connaissances",
             "local_name": "hasGeo",
-            "label": "A comme lieu"
+            "label": "a comme lieu"
         },
         {
             "o:alternate_label": null,
@@ -71,7 +71,7 @@
             "vocabulary_namespace_uri": "https:\/\/jardindesconnaissances.univ-paris8.fr\/onto\/jdc#",
             "vocabulary_label": "Jardin des connaissances",
             "local_name": "hasBook",
-            "label": "A comme livre"
+            "label": "a comme livre"
         },
         {
             "o:alternate_label": null,
@@ -83,7 +83,7 @@
             "vocabulary_namespace_uri": "https:\/\/jardindesconnaissances.univ-paris8.fr\/onto\/jdc#",
             "vocabulary_label": "Jardin des connaissances",
             "local_name": "hasPerson",
-            "label": "A comme personne"
+            "label": "a comme personne"
         },
         {
             "o:alternate_label": null,
