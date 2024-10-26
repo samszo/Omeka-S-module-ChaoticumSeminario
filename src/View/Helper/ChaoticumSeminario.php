@@ -332,7 +332,8 @@ class ChaoticumSeminario extends AbstractHelper
                 $frag = $this->setVideoFrag($params['media'], $params);
                 break;
             case 'audio/mpeg':
-            case  'audio/flac':
+            case 'audio/flac':
+            case 'video/webm':
                 $frag = $this->setAudioFrag($params['media'], $params);
                 break;            
             default:
@@ -522,7 +523,11 @@ class ChaoticumSeminario extends AbstractHelper
         $audio = $this->ffmpeg->open($paths['source']);
         $format = $this->ffprobe
             ->format($paths['source']); // extracts file informations
-        $duration = (float) $format->get('duration');             // returns the duration property
+        $duration = (float) $format->get('duration');      
+        if($media->mediaType()=="video/webm"){
+            $cmd = 'ffprobe -v 0 -hide_banner -of compact=p=0:nk=1 -show_entries packet=pts_time -read_intervals 99999%+#1000 '.$paths['source'].' | tail -1';
+            $duration = (float) shell_exec($cmd);                        
+        }        
 
         $this->logger->info(
             'Media #{media_id}: creating chaoticum media "{filename}".', // @translate

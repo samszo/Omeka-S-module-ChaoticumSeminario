@@ -106,7 +106,8 @@ class Module extends AbstractModule
         /** @var \ChaoticumSeminario\\Form\BatchEditFieldset $fieldset */
         $fieldset = $formElementManager->get(BatchEditFieldset::class);
 
-        // Vérification des droits en amont.
+        /*Uniquement si on demande une conversion google
+        Vérification des droits en amont.
         $googleSpeechToTextCredentials = $services->get('ViewHelperManager')->get('googleSpeechToTextCredentials');
         if (!$googleSpeechToTextCredentials()) {
             $fieldset->get('chaoticumseminario_google_speech_to_text')
@@ -114,6 +115,7 @@ class Module extends AbstractModule
                 ->setAttribute('disabled', 'disabled')
                 ->setAttribute('value', 0);
         }
+        */
 
         $form->add($fieldset);
     }
