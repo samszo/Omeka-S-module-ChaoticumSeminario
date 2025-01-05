@@ -48,6 +48,9 @@ class ChaoticumSeminarioSql extends AbstractHelper
             case 'addConcept':                       
                 $result = $this->addConcept($params);
                 break; 
+            case 'suggestConcept':
+                $result = $this->suggestConcept($params);
+                break;
             case 'getConferences':                       
                 $result = $this->getConferences($params);
                 break; 
@@ -56,6 +59,9 @@ class ChaoticumSeminarioSql extends AbstractHelper
                 break;    
             case 'getNoteExtrapolation':
                 $result = $this->getNoteExtrapolation($params);
+                break;
+            case 'getConceptTrans':
+                $result = $this->getConceptTrans($params);
                 break;
             case 'getFlacFromServeur':
                 $result = $this->getFlacFromServeur();
@@ -149,7 +155,6 @@ class ChaoticumSeminarioSql extends AbstractHelper
         }           
     }
 
-
     /**
      * récupère l'extrapolation d'une note
      *
@@ -162,6 +167,43 @@ class ChaoticumSeminarioSql extends AbstractHelper
         $rs = $this->conn->fetchAll($query);                
         return $rs;        
     }
+
+
+    /**
+     * récupère les transcription pour un concept
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function getConceptTrans($params){
+        $query='SELECT 
+            c.titre "Cours",
+            c.theme "Theme",
+            c.source "Source",
+            c.promo "Promo",
+            t.idConf,
+            c.created "Date",
+            t.agent "Agent",
+            t.texte "Transcription",
+            t.start "Début",
+            t.end "Fin",
+            t.file "Audio",
+            tc.idTrans,
+            COUNT(tc.id) "Nb."
+        FROM
+            transcriptions t
+                INNER JOIN
+            conferences c ON c.id = t.idConf
+                INNER JOIN
+            timeline_concept tc ON tc.idTrans = t.id
+                AND tc.idConcept = ?
+        GROUP BY t.id
+        ORDER BY c.created , t.start';
+        $rs = $this->conn->fetchAll($query,[$params['idConcept']]);                
+        return $rs;        
+    }
+
+        
 
     /**
      * récupère les conférences et leur stats
@@ -221,6 +263,22 @@ class ChaoticumSeminarioSql extends AbstractHelper
         ]);                
         return $rs;        
     }    
+    /**
+     * renvoie un concept
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function suggestConcept($params){
+        $query="SELECT id, label
+        FROM concepts
+        WHERE label LIKE ?
+        LIMIT 0, 100";
+        $rs = $this->conn->fetchAll($query,[
+            "%".$params['label']."%"
+        ]);                
+        return $rs;        
+    }        
    /**
      * calcul le markdown d'une transcription
      * utile pour le RAG
@@ -370,32 +428,39 @@ class ChaoticumSeminarioSql extends AbstractHelper
     }
 
    /**
-     * renvoie les notes pour une transcription
+     * renvoie les notes
      *
      * @param array    $params paramètre de la requête
      * @return array
      */
     function getTransNote($params){
         //TODO:remplacer les id en durs
+        $inner = isset($params["idNote"]) ? "" : " and vTrans.value_resource_id = ? ";
+        $where = isset($params["idNote"]) ? " AND r.id = ? " : "";
         $query = "SELECT 
                 r.id id , vTitle.value titre,
-                vTrans.value_resource_id transId,
+                vTrans.value_resource_id idTrans,
                 vColor.value color,
                 vStart.value start,
                 vEnd.value end
             FROM resource r
                 inner join value vTrans on vTrans.property_id = 531 and vTrans.resource_id = r.id 
-                    and vTrans.value_resource_id = ?
+                    ".$inner."
                 inner join value vTitle on vTitle.property_id = 1 and vTitle.resource_id = r.id
                 inner join value vColor on vColor.property_id = 211 and vColor.resource_id = r.id
                 inner join value vStart on vStart.property_id = 543 and vStart.resource_id = r.id
                 inner join value vEnd on vEnd.property_id = 524 and vEnd.resource_id = r.id
-            WHERE r.resource_template_id = 5";
+            WHERE r.resource_template_id = 5".$where;
 
         $rs = $this->conn->fetchAll($query,[
-            $params['id']
+            isset($params["idNote"]) ? $params["idNote"] : $params['id']
         ]);    
-        return $rs;       
+        if(isset($params["idNote"])){
+            $trans = $this->timelineConceptAnnexe(['idTrans'=>$rs[0]['idTrans']]);
+            $rs[0]["idFrag"]=$trans[0]["idFrag"];
+            return ['note'=>$rs[0],"trans"=>$trans];       
+        }else
+            return $rs;       
     }
 
     function getCache($params){
@@ -437,7 +502,13 @@ class ChaoticumSeminarioSql extends AbstractHelper
             $rs = $this->conn->fetchAll($query,[
                 $params['idConf']
             ]);    
-        }                        
+        }
+        if($params['idTrans']){
+            /* on récupère les identifiants de transcription
+            */
+            $query.=" WHERE t.id =".$params['idTrans'];    
+            $rs = $this->conn->fetchAll($query);    
+        }                                  
         if($params['cherche']){
             $finds = $this->getTransRecherche($params);
             $ids = array_map(function ($a) { return $a['id']; }, $finds);

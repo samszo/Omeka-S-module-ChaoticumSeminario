@@ -59,6 +59,18 @@ class BatchEditFieldset extends Fieldset
                     'data-collection-action' => 'replace',
                 ],
             ])
+            ->add([
+                'name' => 'chaoticumseminario_anythingllm_addDoc',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Add title to AnythingLLM RAG', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_anythingllm_addDoc',
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ])
 
          ;
     }

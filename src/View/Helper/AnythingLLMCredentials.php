@@ -24,6 +24,11 @@ class AnythingLLMCredentials extends AbstractHelper
      */
     protected $userSettings;
 
+    protected $url;
+    protected $login;
+    protected $key;
+    protected $ws;
+
     /**
      * @var array
      */
@@ -57,7 +62,25 @@ class AnythingLLMCredentials extends AbstractHelper
 
         $this->userSettings->setTargetId($user->getId());
         $this->credentials = $this->userSettings->get('chaoticumseminario_anythingllm_login');
+        
+        $this->getUrl();
+        $this->getWorkspace();
+        $this->getKey();
 
-        return ['login'=>$this->credentials];
+        return ['login'=>$this->credentials,'url'=>$this->url,'key'=>$this->key,'ws'=>$this->ws];
     }
+
+    public function getUrl(){
+        $this->url =  $this->settings->get('chaoticumseminario_url_anythingllm_api');
+        return $this->url;
+    }
+    public function getWorkspace(){
+        $this->ws = $this->userSettings->get('chaoticumseminario_anythingllm_workspace');
+        return $this->ws;
+    }
+    public function getKey(){
+        $this->key = $this->userSettings->get('chaoticumseminario_anythingllm_key');
+        return $this->key;
+    }
+
 }

@@ -12,6 +12,7 @@ return [
             'whisperSpeechToText' => Service\ViewHelper\WhisperSpeechToTextFactory::class,
             'transformersPipeline' => Service\ViewHelper\TransformersPipelineFactory::class,
             'anythingLLMCredentials' => Service\ViewHelper\AnythingLLMCredentialsFactory::class,    
+            'anythingLLM' => Service\ViewHelper\AnythingLLMFactory::class,    
         ],
 
     ],
@@ -47,10 +48,13 @@ return [
             'chaoticumseminario_google_credentials_default' => 0,
             'chaoticumseminario_url_base_from' => '',
             'chaoticumseminario_url_base_to' => '',
+            'chaoticumseminario_url_anythingllm_api' => 'http://localhost:3001/api/v1/'
         ],
         'user_settings' => [
             'chaoticumseminario_google_credentials' => '',
             'chaoticumseminario_anythingllm_login' => '',
+            'chaoticumseminario_anythingllm_key' => '',
+            'chaoticumseminario_anythingllm_workspace' => '',
         ],
         'block_settings' => [
             'chaoticumSeminario' => [

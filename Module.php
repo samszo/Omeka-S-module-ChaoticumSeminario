@@ -121,7 +121,7 @@ class Module extends AbstractModule
     }
 
     /**
-     * Vérifie puis lance la tâche d'extraction du texte.
+     * Vérifie puis lance la tâche de traitement chaotique texte.
      */
     public function handleResourceBatchUpdatePost(Event $event): void
     {
@@ -132,6 +132,7 @@ class Module extends AbstractModule
         if (empty($data['chaoticum_seminario']['chaoticumseminario_google_speech_to_text'])
             && empty($data['chaoticum_seminario']['chaoticumseminario_whisper_speech_to_text'])
             && empty($data['chaoticum_seminario']['chaoticumseminario_transformer_token_classification'])
+            && empty($data['chaoticum_seminario']['chaoticumseminario_anythingllm_addDoc'])
         ) {
             return;
         }
@@ -169,6 +170,12 @@ class Module extends AbstractModule
             $params['service']='Transformers';
             $params['pipeline']='tokenClassification';
             $this->createJob(\ChaoticumSeminario\Job\TransformersPipeline::class, $params, $url, $dispatcher, $messenger);                
+        }
+
+        if(!empty($data['chaoticum_seminario']['chaoticumseminario_anythingllm_addDoc'])){
+            $params['service']='anythingllm';
+            $params['pipeline']='addDoc';
+            $this->createJob(\ChaoticumSeminario\Job\AnythinLLM::class, $params, $url, $dispatcher, $messenger);                
         }
         
    }

@@ -39,6 +39,16 @@ class ConfigForm extends Form
                 'attributes' => [
                     'id' => 'chaoticumseminario_url_base_to',
                 ],
+            ])
+            ->add([
+                'name' => 'chaoticumseminario_url_anythingllm_api',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => "Url de l'API AnythingLLM", // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_url_anythingllm_api',
+                ],
             ]);
     }
 }

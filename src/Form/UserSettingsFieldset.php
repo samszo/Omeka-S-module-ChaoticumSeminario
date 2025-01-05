@@ -45,6 +45,30 @@ class UserSettingsFieldset extends Fieldset
                     'rows' => 1,
                 ],
             ])
+            ->add([
+                'name' => 'chaoticumseminario_anythingllm_key',
+                'type' => Element\Textarea::class,
+                'options' => [
+                    'element_group' => 'chaoticum_seminario',
+                    'label' => 'AnythingLLM API key', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_anythingllm_key',
+                    'rows' => 1,
+                ],
+            ])
+            ->add([
+                'name' => 'chaoticumseminario_anythingllm_workspace',
+                'type' => Element\Textarea::class,
+                'options' => [
+                    'element_group' => 'chaoticum_seminario',
+                    'label' => 'AnythingLLM workspace', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_anythingllm_workspace',
+                    'rows' => 1,
+                ],
+            ])
 
         ;
     }

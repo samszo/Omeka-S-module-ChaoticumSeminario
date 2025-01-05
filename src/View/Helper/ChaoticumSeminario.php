@@ -363,6 +363,42 @@ class ChaoticumSeminario extends AbstractHelper
         return $arrFrag;
     }
 
+   /**
+     * Création d'un fragment.
+     *
+     * @param array $params
+     */
+    protected function addTrack(array $params = []): ?ItemRepresentation
+    {
+        // Récupère le média original
+        try {
+            $media = $this->api->read('media', ['id' => $params['oa:hasTarget']])->getContent();
+        } catch (\Exception $e) {
+            return null;
+        }
+        $arrFrag = $this->setAudioFrag($media, $params);
+        return $arrFrag;
+    }
+
+
+   /**
+     * Création d'un fragment.
+     *
+     * @param array $params
+     */
+    protected function addTrack(array $params = []): ?ItemRepresentation
+    {
+        // Récupère le média original
+        try {
+            $media = $this->api->read('media', ['id' => $params['oa:hasTarget']])->getContent();
+        } catch (\Exception $e) {
+            return null;
+        }
+        $arrFrag = $this->setAudioFrag($media, $params);
+        return $arrFrag;
+    }
+
+
     /**
      * Récupère les fragments d'un média.
      *
