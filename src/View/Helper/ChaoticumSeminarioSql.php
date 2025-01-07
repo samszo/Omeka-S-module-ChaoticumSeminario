@@ -176,6 +176,23 @@ class ChaoticumSeminarioSql extends AbstractHelper
      * @return array
      */
     function getConceptTrans($params){
+        $select = "";
+        $inner = "";
+        if($params["idsConcept"]){            
+            $concepts = explode(",",$params["idsConcept"]);
+            $select = ",";
+            foreach ($concepts as $i=>$c) {
+                $select .= " GROUP_CONCAT(CONCAT(tc".$i.".start,'-',tc".$i.".end)) se".$i.",";
+                $inner .= " INNER JOIN timeline_concept tc".$i." ON tc".$i.".idTrans = t.id
+                    AND tc".$i.".idConcept = ?";
+            }
+            $select = substr($select,0,-1);
+        }else{
+            $concepts = [$params['idConcept']];
+            $inner .= " INNER JOIN
+            timeline_concept tc0 ON tc0.idTrans = t.id
+                AND tc0.idConcept = ? ";
+        }
         $query='SELECT 
             c.titre "Cours",
             c.theme "Theme",
@@ -188,18 +205,17 @@ class ChaoticumSeminarioSql extends AbstractHelper
             t.start "Début",
             t.end "Fin",
             t.file "Audio",
-            tc.idTrans,
-            COUNT(tc.id) "Nb."
+            tc0.idTrans,
+            COUNT(tc0.id) "Nb."
+        '.$select.'
         FROM
             transcriptions t
                 INNER JOIN
             conferences c ON c.id = t.idConf
-                INNER JOIN
-            timeline_concept tc ON tc.idTrans = t.id
-                AND tc.idConcept = ?
+        '.$inner.'
         GROUP BY t.id
         ORDER BY c.created , t.start';
-        $rs = $this->conn->fetchAll($query,[$params['idConcept']]);                
+        $rs = $this->conn->fetchAll($query,$concepts);                
         return $rs;        
     }
 
