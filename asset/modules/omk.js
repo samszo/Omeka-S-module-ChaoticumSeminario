@@ -183,7 +183,7 @@ export class omk {
                 me.api.replace("/api/","/admin/item/")+(id ? id : r['o:id'])
                 : me.api.replace("/api/","/admin/media/")+(id ? id : r['o:id'])             
         }
-        this.getMediaLink = function(file){
+        this.getMediaLink = function(file,id){
             return me.api.replace("/api","")+file;
         }
 
@@ -246,7 +246,7 @@ export class omk {
             d3.json(url).then((data) => {
                 me.user = data.length ? data[0] : false;
                 //TODO: mieux gérer anythingLLM Login
-                me.user.anythingLLM = syncRequest(me.api.replace('api/','s/cours-bnf/page/ajax?json=1&helper=anythingLLMlogin'));
+                me.user.anythingLLM = syncRequest('../page/ajax?json=1&helper=anythingLLMlogin');
                 if(cb)cb(me.user);
             });
 
@@ -365,8 +365,7 @@ export class omk {
             return response.json(); // parses JSON response into native JavaScript objects
         }        
 
-        this.getSiteViewRequest = function(q,cb){
-            let url = me.api.replace('api','s')+q;
+        this.getSiteViewRequest = function(url,cb){
             me.loader.show();
             d3.json(url).then(json=>{
                 me.loader.hide(true);

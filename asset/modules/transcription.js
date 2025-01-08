@@ -92,7 +92,7 @@ export class transcription {
                             +d3.timeFormat("%M:%S")(Number.parseFloat(dt.startFrag)*1000)
                             +' -> '
                             +d3.timeFormat("%M:%S")(Number.parseFloat(dt.endFrag)*1000);
-                        d.source = dt['source'+d.depth];
+                        d.source = dt['idFrag'];
                         d.id = d.data[0];
                         d.class = 'frag_';
                         d.type = "o:Media";
@@ -164,7 +164,8 @@ export class transcription {
                     .on('click',showPrevFragment);
             toolBar.append('audio').attr('id',v=>'audio'+v.id)
                 .attr('src',v=>{
-                    return me.a.omk.getMediaLink(v.source);//v.omk["o:original_url"];
+                    let m = me.a.omk.getMedia(v.source);
+                    return m["o:original_url"];//
                 })
                 .attr("class","mx-2").attr("controls",true)
                 .style("height", "24px")
@@ -199,7 +200,7 @@ export class transcription {
                 +"&resource_template_id[]="+me.a.omk.getRtId("Note transcription")
             return me.a.omk.getAllItems(q);
             */
-            let q = "cours-bnf/page/ajax?json=1&helper=sql&action=getTransNote&id="+t.idTrans;
+            let q = "../page/ajax?json=1&helper=sql&action=getTransNote&id="+t.idTrans;
             me.a.omk.getSiteViewRequest(q,rs=>{
                 rs.forEach(r=>r.trans=t);
                 d3.select('#trans'+t.idTrans).select(".gTransNotes").selectAll('.noteBoxSave').data(rs)
@@ -650,7 +651,7 @@ export class transcription {
         function audioEnd(e,d){
             if(continuousPlaying){
                 //récupère le fragment suivant
-                let url = 'cours-bnf/page/ajax?json=1&helper=sql&action=getNextTrans&idFrag='
+                let url = '../page/ajax?json=1&helper=sql&action=getNextTrans&idFrag='
                     +d.data[1][0].idFrag+'&idConf='+d.data[1][0].idConf;
                 me.a.omk.getSiteViewRequest(url,data=>{
                     if(data.length==0){
@@ -927,6 +928,7 @@ export class transcription {
                 +' '+d3.timeFormat("%M:%S.%L")(d.endCpt-d.startCpt)
                 +' '+(d.endCpt-d.startCpt)
             );
+            /*
             //affiche le détail du concept
             mShowConcept.s.select('#modalShowConceptTitre').html(d.titleCpt);
             //affiche la liste des transcription
@@ -941,8 +943,7 @@ export class transcription {
                     src: async (query) => {
                       try {
                         // Fetch Data from external Source
-                        const url = me.a.omk.api.replace('api/','')
-                            +"s/cours-bnf/page/ajax?json=1&helper=sql&action=suggestConcept&label="+query;                                   
+                        const url = "../page/ajax?json=1&helper=sql&action=suggestConcept&label="+query;                                   
                         const source = await fetch(url);
                         // Data should be an array of `Objects` or `Strings`
                         const data = await source.json();                
@@ -990,6 +991,7 @@ export class transcription {
                 // Console log autoComplete data feedback
                 console.log(feedback);
               });
+              */
 
         }
         function getConcept(){
@@ -1002,8 +1004,7 @@ export class transcription {
         async function getTableConceptOccurence(concepts){                        
             //récupère les transcriptions liées aux concepts
             try {
-                const url = me.a.omk.api.replace('api/','')
-                    +"s/cours-bnf/page/ajax?json=1&helper=sql&action=getConceptTrans&idsConcept="
+                const url = "../page/ajax?json=1&helper=sql&action=getConceptTrans&idsConcept="
                     +concepts.map(n=>n.idCpt).join(",");
                 const conceptsLib = concepts.map(n=>n.titleCpt).join(" ");                                   
                 const source = await fetch(url);
@@ -1077,8 +1078,7 @@ export class transcription {
         async function setListeConceptTrans(concept,page=1,nb=10){                        
             //récupère les transcriptions liées au concept
             try {
-                const url = me.a.omk.api.replace('api/','')
-                    +"s/cours-bnf/page/ajax?json=1&helper=sql&action=getConceptTrans&idConcept="+concept.idCpt;                                   
+                const url = "../page/ajax?json=1&helper=sql&action=getConceptTrans&idConcept="+concept.idCpt;                                   
                 const source = await fetch(url);
                 const data = await source.json();   
                 //intialisation de la timeline

@@ -453,7 +453,14 @@ class ChaoticumSeminarioSql extends AbstractHelper
      * @return array
      */
     function getTransNote($params){
-        //TODO:remplacer les id en durs
+        $p = [
+            $this->api->search('properties', ['term' => 'oa:hasSource'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'dcterms:title'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'jdc:degradColors'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'oa:start'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'oa:end'])->getContent()[0]->id(),            
+            $this->api->search('resource_templates', ['label' => 'Note transcription'])->getContent()[0]->id(),            
+        ];
         $inner = isset($params["idNote"]) ? "" : " and vTrans.value_resource_id = ? ";
         $where = isset($params["idNote"]) ? " AND r.id = ? " : "";
         $query = "SELECT 
@@ -463,14 +470,14 @@ class ChaoticumSeminarioSql extends AbstractHelper
                 vStart.value start,
                 vEnd.value end
             FROM resource r
-                inner join value vTrans on vTrans.property_id = 531 and vTrans.resource_id = r.id 
+                inner join value vTrans on vTrans.property_id = $p[0] and vTrans.resource_id = r.id 
                     ".$inner."
-                inner join value vTitle on vTitle.property_id = 1 and vTitle.resource_id = r.id
-                inner join value vColor on vColor.property_id = 211 and vColor.resource_id = r.id
-                inner join value vStart on vStart.property_id = 543 and vStart.resource_id = r.id
-                inner join value vEnd on vEnd.property_id = 524 and vEnd.resource_id = r.id
-            WHERE r.resource_template_id = 5".$where;
-
+                inner join value vTitle on vTitle.property_id = $p[1] and vTitle.resource_id = r.id
+                inner join value vColor on vColor.property_id = $p[2] and vColor.resource_id = r.id
+                inner join value vStart on vStart.property_id = $p[3] and vStart.resource_id = r.id
+                inner join value vEnd on vEnd.property_id = $p[4] and vEnd.resource_id = r.id
+            WHERE r.resource_template_id = $p[5]".$where;
+        //echo $query;
         $rs = $this->conn->fetchAll($query,[
             isset($params["idNote"]) ? $params["idNote"] : $params['id']
         ]);    
@@ -690,8 +697,7 @@ class ChaoticumSeminarioSql extends AbstractHelper
      */
     function timelineTrans($params){
 
-        //TODO:recherche les identifiants de propriété par le term
-
+        
         $order =" ORDER BY idConf, CAST(startFrag AS DECIMAL(12,6)),  CAST(startCpt AS DECIMAL(6,2)) ";
 
         $p = [

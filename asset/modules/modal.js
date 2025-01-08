@@ -85,7 +85,7 @@ export let modalNodeBox = `
             <h4 id="inptTitreNote"></h4>
             <div class="row mb-3">
                 <div class="col-6">
-                    <audio id="audioNote" src="../omk_deleuze/files/original/c7a476293b34292e1b899828623c50d0dc862e18.flac" class="mx-2" controls="true" style="height: 24px;"></audio>
+                    <audio id="audioNote" src="" class="mx-2" controls="true" style="height: 24px;"></audio>
                 </div>              
                 <div class="col-6">
                 <label id="inptAuteurNote" class="form-label">Description</label>
@@ -110,7 +110,7 @@ export let modalNodeBox = `
                             <a id="aShareNote" class="link-danger" target="_blank" href=""><i class="fa-solid fa-share"></i></a>
                         </div>              
                         <div class="col-2">
-                            <a id="aOmkNote" target="_blank" href=""><img src="assets/img/OmekaS.png" style="height: 20px;"></a>
+                            <a id="aOmkNote" target="_blank" href=""><img src="" style="height: 20px;"></a>
                         </div>              
                     </div>              
                     <div class="row">
@@ -237,8 +237,8 @@ export let modalAddRef = `
                 <div class="collapse navbar-collapse" id="nbAddRefFind">
                 <div class="navbar-nav">
                     <div class="btn-group" role="group" aria-label="Basic example">
-                <button id="btnFindRefBnF" type="submit" class="btn"><img src="assets/img/Logo_BnF.svg"  height="32px" /></button>
-                <button id="btnFindRefWikidata" type="submit" class="btn"><img src="assets/img/Wikidata-logo.svg.png" height="40px" /></button>
+                <button id="btnFindRefBnF" type="submit" class="btn"><img src=""  height="32px" /></button>
+                <button id="btnFindRefWikidata" type="submit" class="btn"><img src="" height="40px" /></button>
                     </div>                
                 </div>
             </div>
