@@ -107,7 +107,7 @@ export let modalNodeBox = `
                             </div>              
                         </div>              
                         <div class="col-2">
-                            <a id="aShareNote" class="link-danger" target="_blank" href=""><i class="fa-light fa-share"></i></a>
+                            <a id="aShareNote" class="link-danger" target="_blank" href=""><i class="fa-solid fa-share"></i></a>
                         </div>              
                         <div class="col-2">
                             <a id="aOmkNote" target="_blank" href=""><img src="assets/img/OmekaS.png" style="height: 20px;"></a>
@@ -159,7 +159,7 @@ export let modalNodeBox = `
                             <button id="btnAddGeo" type="button" class="btn btn-warning"><i class="fa-solid fa-book-atlas"></i></button>
                         </li>     
                         <li class="nav-item">
-                            <button id="btnAddEpoque" type="button" class="btn btn-warning"><i class="fa-light fa-timeline-arrow"></i></button>
+                            <button id="btnAddEpoque" type="button" class="btn btn-warning"><i class="fa-solid fa-timeline"></i></button>
                         </li>                       
                         <li class="nav-item">
                             <button id="btnAddBook" type="button" class="btn btn-warning"><i class="fa-solid fa-book"></i></button>

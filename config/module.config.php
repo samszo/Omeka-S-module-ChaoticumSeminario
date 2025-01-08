@@ -13,6 +13,7 @@ return [
             'transformersPipeline' => Service\ViewHelper\TransformersPipelineFactory::class,
             'anythingLLMCredentials' => Service\ViewHelper\AnythingLLMCredentialsFactory::class,    
             'anythingLLM' => Service\ViewHelper\AnythingLLMFactory::class,    
+            'chaoticumSeminarioCredentials' => Service\ViewHelper\ChaoticumSeminarioCredentialsFactory::class,    
         ],
 
     ],
@@ -50,7 +51,11 @@ return [
             'chaoticumseminario_google_credentials_default' => 0,
             'chaoticumseminario_url_base_from' => '',
             'chaoticumseminario_url_base_to' => '',
-            'chaoticumseminario_url_anythingllm_api' => 'http://localhost:3001/api/v1/'
+            'chaoticumseminario_url_anythingllm_api' => 'http://localhost:3001/api/v1/',
+            'chaoticumseminario_anonymous_mail' => '',
+            'chaoticumseminario_anonymous_pwd' => '',
+            'chaoticumseminario_anonymous_key_identity' => '',
+            'chaoticumseminario_anonymous_key_credential' => '',
         ],
         'user_settings' => [
             'chaoticumseminario_google_credentials' => '',

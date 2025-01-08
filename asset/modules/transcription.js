@@ -1,5 +1,6 @@
 import {modal} from './modal.js';
 import {loader} from './loader.js';
+import {slider} from './slider.js';
 
 export class transcription {
     constructor(config={}) {
@@ -23,7 +24,7 @@ export class transcription {
             mShowConcept=new modal({'size':'modal-xl'}).add('modalShowConcept'),
             //en milliseconde
             margeBox = 100,
-            oBnf = false;//new bnf(), hotResult, hotResultHeight=400,
+            oBnf = false,//new bnf(), hotResult, hotResultHeight=400,
             typeRef = ['jdc:hasPerson','jdc:hasGeo','jdc:hasEpoque','jdc:hasBook','jdc:hasMovie','jdc:hasMusic','jdc:hasLink','jdc:hasConcept'],
             continuousPlaying;
 
@@ -57,7 +58,7 @@ export class transcription {
             })
             let hFrags = d3.hierarchy(d3.group(me.vals, 
                     d => d.idConf, 
-                    d => 'Face '+d.face+' - plage '+d.plage, 
+                    d => d.idMediaConf, 
                     d => d.idFrag, 
                     //d => d.creator, d => d.startCpt+'->'+d.endCpt
                     )),
@@ -66,25 +67,23 @@ export class transcription {
                 let dt = d.leaves()[0].data;
                 switch (d.depth) {
                     case 0:
-                        d.label = 'Cours';
+                        d.label = '';
                         d.class = 'cour_';
-                        d.id = 'Cours';
+                        d.id = 'Source';
                         break;       
                     case 1:
-                        d.label = dt.titleConf+' - cours '+dt.num+' : '+dt.created;
+                        d.label = dt.titleConf;
                         d.id = dt.idConf;
                         d.class = 'conf_';
                         d.type = "o:Item";
-                        d.bnf = true;
                         //trop gourmand d.omk = me.a.omk.getItem(dt.idConf);
                         d.source = dt['source'+d.depth];
                         break;       
                     case 2:
-                        d.label = d.data[0];
+                        d.label = d.titleMediaConf ? d.titleMediaConf : 'Media '+d.data[0];
                         d.class = 'mediaConf_';
                         d.id = dt.idMediaConf;
                         d.type = "o:Media";
-                        d.bnf = true;
                         //trop gourmand d.omk = me.a.omk.getMedia(dt.idMediaConf);
                         d.source = dt['source'+d.depth];
                         break;       
@@ -111,7 +110,7 @@ export class transcription {
                         break;                
                     default:
                         d.label = d.data[0];
-                        break;                
+                        break;                  
                 }
                 return {'label':d.label,'typeNode':d.typeNode};
             }),
@@ -145,13 +144,13 @@ export class transcription {
                     return d.source;//d.omk["dcterms:source"] ? d.omk["dcterms:source"][0]["@id"] : '';
                 }).attr('target',"_blank")
                 .style('display', d=> d.bnf ? "inline" : "none")
-                .append('img').attr('src','assets/img/Logo_BnFblanc.svg')
+                .append('img').attr('src',assetUrl+'img/Logo_BnFblanc.svg')
                     .attr('class','mx-2')
                     .style("height","20px");
             e.append('a').attr('href',d=>{
                     return me.a.omk.getAdminLink(null,d.id,d.type)
                 }).attr('target',"_blank")
-                .append('img').attr('src','assets/img/OmekaS.png')
+                .append('img').attr('src',assetUrl+'img/OmekaS.png')
                     .attr('class','mx-2')
                     .style("height","20px");
         }
@@ -272,7 +271,7 @@ export class transcription {
                 .attr('y',heightLine-20)
                 .attr('height',20)
                 .attr('width',20)
-                .attr('xlink:href',"assets/img/left-arrow.svg")
+                .attr('xlink:href',assetUrl+"img/left-arrow.svg")
                 .style('cursor','col-resize')                
                 .on('click',addBrush);    
             boxes.append('image')
@@ -281,7 +280,7 @@ export class transcription {
                 .attr('y',heightLine-20)
                 .attr('height',20)
                 .attr('width',20)
-                .attr('xlink:href',"assets/img/right-arrow.svg")
+                .attr('xlink:href',assetUrl+"img/right-arrow.svg")
                 .style('cursor','col-resize')                
                 .on('click',addBrush);
             //Affiche automatique la note passée en paramètre
@@ -293,7 +292,7 @@ export class transcription {
             if(e)e.stopImmediatePropagation();
             me.loader.show();
             //récupère la note complète si ce n'est déjà fait
-            if(!note.omk){
+            if(!note.omk && !isNaN(note.id)){
                 note.omk=me.a.omk.getItem(note.id);
                 note.omk.owner = me.a.omk.getOwner(note.omk["o:owner"]["o:id"]);
                 me.a.omk.loader.hide(true);
@@ -320,10 +319,11 @@ export class transcription {
                 .attr('href',
                     note.omk ? me.a.omk.getAdminLink(false,note.id,"o:Item") : ""
                 );
+            mNote.s.select('#aOmkNote').select("img").attr("src",assetUrl+"img/OmekaS.png");
 
             mNote.s.select('#inptAuteurNote')
                 .style('display',note.omk ? "block":"none")
-                .html("Crée par : "+note.omk.owner["o:name"]);
+                .html("Crée par : "+(note.omk ? note.omk.owner["o:name"]:""));
                         
                               
             //la description est libre 
@@ -502,7 +502,7 @@ export class transcription {
             listeBtn.append('a').attr('class',"badge rounded-pill")
                 .attr('target',"_blank")
                 .attr('href',d=>me.a.omk.getAdminLink(d))
-                .html('<img height="32px" src="assets/img/OmekaS.png"></img>');
+                .html('<img style="height:20px;" src="'+assetUrl+'img/OmekaS.png"></img>');
         }
 
         function extrapolerNote(e,d){
@@ -518,15 +518,16 @@ export class transcription {
             mRef.s.select('#inptChercheLabel').html("Nom de la personne");                        
             mRef.s.select('#inptCherche').node().value = mNote.s.select('#inptDescNote').node().value;
             d3.select("#btnAddRefClose").on('click',(e,d)=>mRef.m.hide());        
-            d3.select("#btnAddRefSave").on('click',setNoteBoxRef);        
-
+            d3.select("#btnAddRefSave").on('click',setNoteBoxRef);       
+            
             //TODO:gérer les validations https://getbootstrap.com/docs/5.3/forms/validation/
-            d3.select("#btnFindRefBnF").on('click',(e,d)=>{
-                findRef(type,"BnF")
-            })
+            d3.select("#btnFindRefBnF")
+                .on('click',(e,d)=>{
+                    findRef(type,"BnF")
+                }).select('img').attr("src",assetUrl+"img/Logo_BnF.svg");
             d3.select("#btnFindRefWikidata").on('click',(e,d)=>{
-                findRef(type,"Wikidata")
-            })
+                    findRef(type,"Wikidata")
+                }).select('img').attr("src",assetUrl+"img/Wikidata-logo.svg.png");
             mNote.m.hide();
             mRef.m.show();
             console.log(rs);
@@ -721,7 +722,7 @@ export class transcription {
                         .html(d=>{
                             return `<h6>${d[0]}
                             <a href="${me.a.omk.getAdminLink(null,d[1][0].idTrans,"o:Item")}" target="_blank">
-                            <img src="assets/img/OmekaS.png" class="mx-2" height="20px" /></a></h6>`;
+                            <img src="${assetUrl}img/OmekaS.png" class="mx-2" style="height:20px;" /></a></h6>`;
                         }).call(addConceptLine);
         }
 
@@ -1113,7 +1114,7 @@ export class transcription {
                 deb = msToTime(d["Début"]),
                 dur = deb.split(":"),
                 audio = '<audio src="'+me.a.omk.getMediaLink(d.Audio)+'" class="mx-2" controls="true" style="height: 24px;"></audio>',
-                headline = '<a href="'+d.source+'" target="_blank"><img src="assets/img/Logo_BnF.svg" class="mx-2" height="10px"></img></a> '                    
+                headline = '<a href="'+d.source+'" target="_blank"><img src="'+assetUrl+'"img/Logo_BnF.svg" class="mx-2" height="10px"></img></a> '                    
                     +d.Theme+'<br/>'
                     +' <a class="link-danger" href="?idConf='+d["idConf"]+'" target="_blank"><i class="fa-sharp fa-light fa-eye"></i></a> '
                     +' '+d.Date+' '
@@ -1165,7 +1166,8 @@ export class transcription {
                         </ul>
                     </div>
                 </div>`);
-                me.toolbar = me.contParams.select("#transNavbarToolBar"); 
+                me.toolbar = me.contParams.select("#transNavbarToolBar");
+                /* 
                 me.toolbar.append('li').attr('class',"nav-item mx-2")
                     .append("button")
                         .attr('type',"button").attr('class',"btn btn-danger")
@@ -1175,7 +1177,8 @@ export class transcription {
                     .append("button")
                         .attr('type',"button").attr('class',"btn btn-danger")
                     .on('click',loadParams)
-                    .html(`<i class="fa-solid fa-download"></i>`);    
+                    .html(`<i class="fa-solid fa-download"></i>`);
+                */    
                 me.toolbar.append('li').attr('class',"nav-item mx-2")
                     .html(`<div  class="input-group">
                         <span class="input-group-text">Nb de fragment</span>

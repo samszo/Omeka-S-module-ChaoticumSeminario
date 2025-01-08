@@ -49,6 +49,46 @@ class ConfigForm extends Form
                 'attributes' => [
                     'id' => 'chaoticumseminario_url_anythingllm_api',
                 ],
+            ])
+            ->add([
+                'name' => 'chaoticumseminario_anonymous_mail',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => "Mail de l'utilisateur annonyme", // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_anonymous_mail',
+                ],
+            ])
+            ->add([
+                'name' => 'chaoticumseminario_anonymous_pwd',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => "Mot de passe de l'utilisateur annonyme", // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_anonymous_pwd',
+                ],
+            ])
+            ->add([
+                'name' => 'chaoticumseminario_anonymous_key_identity',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => "Identité d'API de l'utilisateur annonyme", // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_anonymous_key_identity',
+                ],
+            ])
+            ->add([
+                'name' => 'chaoticumseminario_anonymous_key_credential',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => "Clef d'API de l'utilisateur annonyme", // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_anonymous_key_credential',
+                ],
             ]);
     }
 }

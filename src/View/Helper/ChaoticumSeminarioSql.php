@@ -705,8 +705,10 @@ class ChaoticumSeminarioSql extends AbstractHelper
             $this->api->search('properties', ['term' => 'jdc:hasConcept'])->getContent()[0]->id(),            
             $this->api->search('properties', ['term' => 'lexinfo:confidence'])->getContent()[0]->id(),            
         ];
-        $query="SELECT mConf.item_id idConf, vConf.value titleConf
+        $query="SELECT mConf.item_id idConf
+            , vConf.value titleConf
 			, mConf.id idMediaConf
+            , rmConf.title titleMediaConf
             , vAnno.resource_id idAnno
             , vTransAnno.resource_id idTrans
             , vTransCrea.value creator
@@ -720,6 +722,7 @@ class ChaoticumSeminarioSql extends AbstractHelper
             , vConceptEnd.value endCpt
             , vConceptConf.value confiance
         FROM media mConf
+            inner join resource rmConf ON rmConf.id = mConf.id
             inner join value vConf on vConf.resource_id = mConf.item_id and vConf.property_id = $p[0]
             inner join value vAnno on vAnno.value_resource_id = mConf.id and vAnno.property_id = $p[1]
             inner join value vTransAnno on vTransAnno.value_annotation_id = vAnno.resource_id and vTransAnno.property_id = $p[2]
@@ -728,12 +731,12 @@ class ChaoticumSeminarioSql extends AbstractHelper
             inner join value vFragStart on vFragStart.resource_id = vFrag.value_resource_id and vFragStart.property_id = $p[5]
             inner join value vFragEnd on vFragEnd.resource_id = vFrag.value_resource_id and vFragEnd.property_id = $p[6]
             inner join value vConcept on vConcept.resource_id = vAnno.resource_id and vConcept.property_id = $p[7]
-            inner join value vConceptTitre on vConceptTitre.resource_id = vConcept.value_resource_id and vConceptTitre.property_id = $p[1]
+            inner join value vConceptTitre on vConceptTitre.resource_id = vConcept.value_resource_id and vConceptTitre.property_id = $p[0]
             inner join value vConceptStart on vConceptStart.resource_id = vAnno.resource_id and vConceptStart.property_id = $p[5]
             inner join value vConceptEnd on vConceptEnd.resource_id = vAnno.resource_id and vConceptEnd.property_id = $p[6]
             inner join value vConceptConf on vConceptConf.resource_id = vAnno.resource_id and vConceptConf.property_id = $p[8] 
         ";
-        echo $query;
+        //echo $query;
         if($params['search']){
             /* on recherche uniquement dans :
             - les transcriptions = 412

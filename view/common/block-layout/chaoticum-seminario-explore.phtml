@@ -4,17 +4,33 @@
  * @var \ChaoticumSeminario\Site\BlockLayout\ChaoticumSeminarioExplore $block
  * @var \Omeka\Api\Representation\ItemRepresentation $item
  */
-
 if (!$item) return;
 
 
 ?>
 <script>
 const oItem = <?php echo json_encode($item) ?>;  
+const oUser = <?php echo json_encode($credentials) ?>;
+const assetUrl = "<?php echo $assetUrl ?>";  
 </script>
-<div class="row px-2" id="contentResourcesParams">
+<div class="row" id="contentResourcesParams">
 </div>
-<div id="contentResources" class="row g-4" style="height: 600px;overflow-y: scroll;">                                    
+<div id="contentResources" class="row g-4 text-bg-dark" style="height: 600px;overflow-y: scroll;">                                    
+</div>
+
+<div id="loading-container">
+    <div class="loadingio-spinner-double-ring-4dols36ufwg" id="ws-loading">
+        <div class="ldio-6pd26u1x99x">
+            <div></div>
+            <div></div>
+            <div>
+                <div></div>
+            </div>
+            <div>
+                <div></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 

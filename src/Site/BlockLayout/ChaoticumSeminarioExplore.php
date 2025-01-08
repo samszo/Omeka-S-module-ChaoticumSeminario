@@ -47,16 +47,22 @@ class ChaoticumSeminarioExplore extends AbstractBlockLayout
 
     public function render(PhpRenderer $view, SitePageBlockRepresentation $block)
     {
+        $assetUrl = $view->plugin('assetUrl');
+
         try {
             $item = $view->api()->read('items', (int) $block->dataValue('item_id'))->getContent();
         } catch (\Exception $e) {
             $item = null;
         }
 
+        $credentials = $view->chaoticumSeminarioCredentials();
+
         $vars = [
             'block' => $block,
             'heading' => $block->dataValue('heading', ''),
             'item' => $item,
+            'credentials'=>$credentials,
+            'assetUrl'=>$assetUrl('', 'ChaoticumSeminario',false,false)
         ];
         return $view->partial(self::PARTIAL_NAME, $vars);
     }
@@ -72,9 +78,18 @@ class ChaoticumSeminarioExplore extends AbstractBlockLayout
         $view->headScript()
             ->appendFile($assetUrl('js/d3.min.js', 'ChaoticumSeminario'));
         $view->headScript()
+            ->appendFile($assetUrl('js/bootstrap5.3.bundle.min.js', 'ChaoticumSeminario'));
+        //$view->headScript()
+        //    ->appendFile($assetUrl('js/all.min.js', 'ChaoticumSeminario'));                        
+        $view->headScript()
             ->appendFile($assetUrl('modules/main.js', 'ChaoticumSeminario'),"module");
 
         $view->headLink()
             ->prependStylesheet($assetUrl('css/main.css', 'ChaoticumSeminario'));
+        $view->headLink()
+            ->prependStylesheet($assetUrl('css/bootstrap5.3.min.css', 'ChaoticumSeminario'));
+        $view->headLink()
+            ->prependStylesheet($assetUrl('css/all.min.css', 'ChaoticumSeminario'));
+            
     }
 }
