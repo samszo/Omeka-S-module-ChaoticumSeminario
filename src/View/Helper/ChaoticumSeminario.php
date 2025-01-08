@@ -78,6 +78,11 @@ class ChaoticumSeminario extends AbstractHelper
     protected $ffmpeg;
 
     /**
+     * @var
+     */
+    protected $ffprobe;
+
+    /**
      * @var array
      */
     protected $properties = [];
@@ -94,6 +99,11 @@ class ChaoticumSeminario extends AbstractHelper
 
     //réduction des fragment à 50 secondes pour éviter le plantage 60 secondes
     protected $durFrag = 50;
+
+    // Nombre de secondes de marge pour les magics Tracks.
+    protected $tempsReaction = 1;
+    // Nombre de secondes pour la durée des magics Tracks.
+    protected $tempsMagic = 5;
 
     public function __construct(
         ApiManager $api,
@@ -115,10 +125,6 @@ class ChaoticumSeminario extends AbstractHelper
         $this->basePath = $basePath;
         $this->ffmpeg = FFMpeg::create();
         $this->ffprobe = FFProbe::create();
-        // Nombre de secondes de marge pour les magics Tracks.
-        $this->tempsReaction = 1;
-        // Nombre de secondes pour la durée des magics Tracks.
-        $this->tempsMagic = 5;
         //configuration de transformer
         //->setCacheDir('/var/www/html/omk_deleuze/modules/ChaoticumSeminario/vendor/codewithkyrian/transformers/cache')            
         Transformers::setup()
@@ -368,7 +374,7 @@ class ChaoticumSeminario extends AbstractHelper
      *
      * @param array $params
      */
-    protected function addTrack(array $params = []): ?ItemRepresentation
+    protected function addFrag(array $params = []): ?ItemRepresentation
     {
         // Récupère le média original
         try {

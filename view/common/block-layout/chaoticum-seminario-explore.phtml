@@ -1,0 +1,21 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \ChaoticumSeminario\Site\BlockLayout\ChaoticumSeminarioExplore $block
+ * @var \Omeka\Api\Representation\ItemRepresentation $item
+ */
+
+if (!$item) return;
+
+
+?>
+<script>
+const oItem = <?php echo json_encode($item) ?>;  
+</script>
+<div class="row px-2" id="contentResourcesParams">
+</div>
+<div id="contentResources" class="row g-4" style="height: 600px;overflow-y: scroll;">                                    
+</div>
+
+
+

@@ -24,6 +24,7 @@ return [
     'block_layouts' => [
         'invokables' => [
             'chaoticumSeminario' => Site\BlockLayout\ChaoticumSeminario::class,
+            'chaoticumSeminarioExplore' => Site\BlockLayout\ChaoticumSeminarioExplore::class,
         ],
     ],
     'form_elements' => [
@@ -31,6 +32,7 @@ return [
             Form\BatchEditFieldset::class => Form\BatchEditFieldset::class,
             Form\ConfigForm::class => Form\ConfigForm::class,
             Form\ChaoticumSeminarioFieldset::class => Form\ChaoticumSeminarioFieldset::class,
+            Form\ChaoticumSeminarioExploreFieldset::class => Form\ChaoticumSeminarioExploreFieldset::class,
         ],
     ],
     'translator' => [
@@ -60,6 +62,10 @@ return [
             'chaoticumSeminario' => [
                 'heading' => '',
                 'media_id' => null,
+            ],
+            'chaoticumSeminarioExplore' => [
+                'heading' => '',
+                'item_id' => null,
             ],
         ],
     ],

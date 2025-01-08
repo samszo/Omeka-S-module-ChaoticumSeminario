@@ -68,7 +68,10 @@ class ChaoticumSeminarioSql extends AbstractHelper
                 break;    
             case 'getNextTrans':
                 $result = $this->getNextTrans($params);
-                break;    
+                break; 
+            case 'timelineTrans':
+                $result = $this->timelineTrans($params);   
+                break; 
             }            
 
         return $result;
@@ -679,6 +682,134 @@ class ChaoticumSeminarioSql extends AbstractHelper
     }
 
      
+   /**
+     * renvoie la timeline d'une transcription
+     * version interne omeka s
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function timelineTrans($params){
+
+        //TODO:recherche les identifiants de propriété par le term
+
+        $order =" ORDER BY idConf, CAST(startFrag AS DECIMAL(12,6)),  CAST(startCpt AS DECIMAL(6,2)) ";
+
+        $p = [
+            $this->api->search('properties', ['term' => 'dcterms:title'])->getContent()[0]->id(),
+            $this->api->search('properties', ['term' => 'ma:hasFragment'])->getContent()[0]->id(),
+            $this->api->search('properties', ['term' => 'curation:data'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'dcterms:creator'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'oa:hasSource'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'oa:start'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'oa:end'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'jdc:hasConcept'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'lexinfo:confidence'])->getContent()[0]->id(),            
+        ];
+        $query="SELECT mConf.item_id idConf, vConf.value titleConf
+			, mConf.id idMediaConf
+            , vAnno.resource_id idAnno
+            , vTransAnno.resource_id idTrans
+            , vTransCrea.value creator
+            , vFrag.value_resource_id idFrag
+            , vFragStart.value startFrag
+            , vFragEnd.value endFrag
+            , vConcept.value_resource_id idCpt
+            , vConceptTitre.value titleCpt
+            , LENGTH(vConceptTitre.value) nbCar
+            , vConceptStart.value startCpt
+            , vConceptEnd.value endCpt
+            , vConceptConf.value confiance
+        FROM media mConf
+            inner join value vConf on vConf.resource_id = mConf.item_id and vConf.property_id = $p[0]
+            inner join value vAnno on vAnno.value_resource_id = mConf.id and vAnno.property_id = $p[1]
+            inner join value vTransAnno on vTransAnno.value_annotation_id = vAnno.resource_id and vTransAnno.property_id = $p[2]
+            inner join value vTransCrea on vTransCrea.resource_id = vTransAnno.resource_id and vTransCrea.property_id = $p[3]
+            inner join value vFrag on vFrag.resource_id = vTransAnno.resource_id and vFrag.property_id = $p[4]
+            inner join value vFragStart on vFragStart.resource_id = vFrag.value_resource_id and vFragStart.property_id = $p[5]
+            inner join value vFragEnd on vFragEnd.resource_id = vFrag.value_resource_id and vFragEnd.property_id = $p[6]
+            inner join value vConcept on vConcept.resource_id = vAnno.resource_id and vConcept.property_id = $p[7]
+            inner join value vConceptTitre on vConceptTitre.resource_id = vConcept.value_resource_id and vConceptTitre.property_id = $p[1]
+            inner join value vConceptStart on vConceptStart.resource_id = vAnno.resource_id and vConceptStart.property_id = $p[5]
+            inner join value vConceptEnd on vConceptEnd.resource_id = vAnno.resource_id and vConceptEnd.property_id = $p[6]
+            inner join value vConceptConf on vConceptConf.resource_id = vAnno.resource_id and vConceptConf.property_id = $p[8] 
+        ";
+        echo $query;
+        if($params['search']){
+            /* on recherche uniquement dans :
+            - les transcriptions = 412
+            */
+            $ids=$this->api->search('items', 
+                ['fulltext_search' => $params['search'],'resource-type'=>"item",'resource_class_id'=>"412"],
+                ['returnScalar' => 'id'])->getContent();
+            if(count($ids)==0)return [];
+            $query.=" WHERE vTransAnno.resource_id IN (".implode(",",$ids).")";    
+            $rs = $this->conn->fetchAll($query);    
+        }  
+        if($params['getTrans']){
+            /* on récupère les identifiants de transcription
+            */
+            $query.=" WHERE vTransAnno.resource_id IN (".$params['getTrans'].") ";    
+            $rs = $this->conn->fetchAll($query);    
+        }          
+        if($params['searchValueAnno']){
+            /* on recherche uniquement dans :
+            - les transcriptions = 412
+            */
+            $ids=$this->api->search('value_annotations', 
+                ['fulltext_search' => $params['search']],
+                ['returnScalar' => 'id'])->getContent();
+            if(count($ids)==0)return [];
+            $query.=" WHERE vTransAnno.resource_id IN (".implode(",",$ids).")";    
+            $rs = $this->conn->fetchAll($query);    
+        }          
+        if($params['searchConf']){
+            /* on recherche uniquement dans :
+            - les conférences = 47
+            */
+            $ids=$this->api->search('items', 
+                ['fulltext_search' => $params['search'],'resource-type'=>"item",'resource_class_id'=>"47"],
+                ['returnScalar' => 'id'])->getContent();
+            $query.=" WHERE mConf.item_id IN (".implode(",",$ids).")";    
+            $rs = $this->conn->fetchAll($query);    
+        }                
+        if($params['searchCpt']){
+            /* on recherche uniquement dans :
+            - concept = 381
+            */
+            $ids=$this->api->search('items', 
+                ['fulltext_search' => $params['searchCpt'],'resource-type'=>"item",'resource_class_id'=>"381"],
+                ['returnScalar' => 'id'])->getContent();
+            //on fait une recherche générale si pas de concept
+            if(count($ids)==0){
+                $params['search']=$params['searchCpt'];
+                $params['searchCpt']=false;
+                $rs = $this->timelineConcept($params);
+            }else{
+                $query.=" WHERE vConcept.value_resource_id IN (".implode(",",$ids).")";    
+                $rs = $this->conn->fetchAll($query);        
+            }
+        }                
+        if($params['idConf']){
+            $query.=" WHERE mConf.item_id = ? ".$order;    
+            $rs = $this->conn->fetchAll($query,[
+                $params['idConf']
+            ]);    
+        }                
+        if($params['idMediaConf']){
+            $query.=" WHERE mConf.id = ? ".$order;    
+            $rs = $this->conn->fetchAll($query,[
+                $params['idMediaConf']
+            ]);    
+        }                
+        if($params['idConcept']){
+            $query.=" WHERE vConcept.value_resource_id = ? ".$order;    
+            $rs = $this->conn->fetchAll($query,[
+                $params['idConcept']
+            ]);    
+        }                
+        return $rs;       
+    }
+
 
 }
    /*
