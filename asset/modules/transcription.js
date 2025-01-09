@@ -651,8 +651,8 @@ export class transcription {
         function audioEnd(e,d){
             if(continuousPlaying){
                 //récupère le fragment suivant
-                let url = '../page/ajax?json=1&helper=sql&action=getNextTrans&idFrag='
-                    +d.data[1][0].idFrag+'&idConf='+d.data[1][0].idConf;
+                let url = '../page/ajax?json=1&helper=sql&action=getNextTrans&idTrans='
+                    +d.data[1][0].idTrans+'&idConf='+d.data[1][0].idConf;
                 me.a.omk.getSiteViewRequest(url,data=>{
                     if(data.length==0){
                         let m=new modal({'size':'modal-sm','class':' text-bg-secondary',

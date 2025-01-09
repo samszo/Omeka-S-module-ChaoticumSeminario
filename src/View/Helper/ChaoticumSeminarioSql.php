@@ -78,7 +78,6 @@ class ChaoticumSeminarioSql extends AbstractHelper
 
     }
 
-
     /**
      * récupère la transcription suivante
      *
@@ -86,6 +85,62 @@ class ChaoticumSeminarioSql extends AbstractHelper
      * @return array
      */
     function getNextTrans($params){
+        $p = [
+            $this->api->search('properties', ['term' => 'oa:hasSource'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'oa:start'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'oa:end'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'jdc:hasConcept'])->getContent()[0]->id(),            
+            $this->api->search('properties', ['term' => 'lexinfo:confidence'])->getContent()[0]->id(),            
+        ];
+
+        $query="SELECT 
+            r.id
+            , vSource.value_resource_id idFrag
+            , vStart.value start, vEnd.value end 
+            , mSource.item_id
+            , vStartNext.value
+            , vStartNext.resource_id idFragNext
+            , vSourceNext.resource_id idTransNext
+        FROM resource r 
+            inner join value vSource on vSource.resource_id = r.id and vSource.property_id = $p[0]
+            inner join value vStart on vStart.property_id = $p[1] and vStart.resource_id = vSource.value_resource_id 
+            inner join value vEnd on vEnd.property_id = $p[2] and vEnd.resource_id = vSource.value_resource_id 
+            inner join media mSource on mSource.id = vSource.value_resource_id
+            inner join media mSourceNext on mSourceNext.item_id = mSource.item_id
+            inner join value vStartNext on vStartNext.property_id = $p[1] and vStartNext.resource_id = mSourceNext.id and vStartNext.value = vEnd.value
+            inner join value vSourceNext on vSourceNext.value_resource_id = vStartNext.resource_id and vSource.property_id = $p[0]
+            WHERE r.id = ?";
+        $rs = $this->conn->fetchAll($query,[$params['idTrans']]);
+        if(count($rs)){
+            $rs = $this->timelineTrans(['idTrans'=>$rs[0]['idTransNext']]);
+        }else{
+            //si pas de réponse on passe au cours suivant
+            $query='SELECT 
+                t.idFrag
+            FROM
+                conferences c
+                    INNER JOIN
+                conferences cn ON cn.created > c.created
+                    INNER JOIN
+                transcriptions t ON t.idConf = cn.id
+            WHERE
+                c.id = ?
+            ORDER BY cn.created , t.start
+            LIMIT 0 , 1
+            ';
+            $rs = $this->conn->fetchAll($query,[$params['idConf']]);            
+            $rs = $this->timelineConceptAnnexe(['idFrag'=>$rs[0]['idFrag']]);
+        }                
+        return $rs;        
+    }
+
+    /**
+     * récupère la transcription suivante
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function getNextTransAnnexe($params){
         $query='SELECT 
             tn.idFrag
         FROM
@@ -797,6 +852,12 @@ class ChaoticumSeminarioSql extends AbstractHelper
                 $query.=" WHERE vConcept.value_resource_id IN (".implode(",",$ids).")";    
                 $rs = $this->conn->fetchAll($query);        
             }
+        }
+        if($params['idTrans']){
+            $query.=" WHERE vTransAnno.resource_id = ? ".$order;    
+            $rs = $this->conn->fetchAll($query,[
+                $params['idTrans']
+            ]);    
         }                
         if($params['idConf']){
             $query.=" WHERE mConf.item_id = ? ".$order;    

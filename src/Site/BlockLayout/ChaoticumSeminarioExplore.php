@@ -90,6 +90,8 @@ class ChaoticumSeminarioExplore extends AbstractBlockLayout
             ->prependStylesheet($assetUrl('css/bootstrap5.3.min.css', 'ChaoticumSeminario'));
         $view->headLink()
             ->prependStylesheet($assetUrl('css/all.min.css', 'ChaoticumSeminario'));
-            
+        $view->headLink()
+            ->prependStylesheet($assetUrl('css/nouislider.min.css', 'ChaoticumSeminario'));
+                   
     }
 }
