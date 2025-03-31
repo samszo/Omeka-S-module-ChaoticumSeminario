@@ -69,14 +69,47 @@ class ChaoticumSeminarioSql extends AbstractHelper
             case 'getNextTrans':
                 $result = $this->getNextTrans($params);
                 break; 
-            case 'timelineTrans':
-                $result = $this->timelineTrans($params);   
+            case 'transcriptionsForRag':
+                $result = $this->transcriptionsForRag($params);   
                 break; 
-            }            
+        }                       
 
         return $result;
 
     }
+
+    /**
+     * récupère les transcriptions à ajouter dans le RAG
+     *
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function transcriptionsForRag($params){
+        //pour formater le RAG cf. https://docs.mistral.ai/guides/rag/
+        $nbRow = $params['nb'] ? $params['nb'] : 100;
+        $limit = $params['page'] ? $params['page']*$nbRow : 0;
+        $limit .= ",";
+        $limit .= $nbRow;
+        $query="SELECT 
+            t.id idTrans,
+            t.texte,
+            t.idConf,
+            t.idFrag,
+            c.theme,
+            c.promo,
+            c.sujets
+        FROM
+            transcriptions t
+                INNER JOIN
+            conferences c ON c.id = t.idConf
+        WHERE
+            t.ref IS NULL
+        ORDER BY t.id
+        LIMIT ".$limit;
+        $rs = $this->conn->fetchAll($query);
+        return $rs;        
+    }
+
 
     /**
      * récupère la transcription suivante

@@ -25,6 +25,14 @@ $connection = $services->get('Omeka\Connection');
 $messenger = $plugins->get('messenger');
 $entityManager = $services->get('Omeka\EntityManager');
 
+if (version_compare($oldVersion, '0.0.10', '<')) {
+    $sql = <<<'SQL'
+ALTER TABLE `transcriptions` ADD `ref` VARCHAR(200) NULL AFTER `file`, ADD INDEX `transcription_ref` (`ref`);
+SQL;
+    $connection->executeStatement($sql);
+}
+
+
 if (version_compare($oldVersion, '0.0.3', '<')) {
     $sql = <<<'SQL'
 UPDATE site_page_block

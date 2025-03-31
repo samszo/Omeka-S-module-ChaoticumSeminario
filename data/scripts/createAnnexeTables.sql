@@ -126,7 +126,8 @@ CREATE TABLE `transcriptions` (
   `texte` varchar(2000) NOT NULL,
   `start` int(11) NOT NULL,
   `end` int(11) NOT NULL,
-  `file` varchar(1000) NOT NULL
+  `file` varchar(1000) NOT NULL,
+  `ref` varchar(200) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -184,8 +185,10 @@ ALTER TABLE `transcriptions`
   ADD KEY `idConf` (`idConf`),
   ADD KEY `agent` (`agent`),
   ADD KEY `idFrag` (`idFrag`),
-  ADD KEY `idDisque` (`idDisque`);
+  ADD KEY `idDisque` (`idDisque`),
+  ADD KEY `transcription_ref` (`ref`);
 ALTER TABLE `transcriptions` ADD FULLTEXT KEY `texte` (`texte`);
+
 
 --
 -- AUTO_INCREMENT pour les tables déchargées
