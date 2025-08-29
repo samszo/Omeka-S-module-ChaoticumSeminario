@@ -33,6 +33,9 @@ class ChaoticumSeminarioSql extends AbstractHelper
             case 'timelineConcept':
                 $result = $this->timelineConcept($params);
                 break;    
+            case 'createTranscriptionAnnexe':
+                $result = $this->createTranscriptionAnnexe($params);
+                break;                        
             case 'timelineConceptAnnexe':
                 $result = $this->timelineConceptAnnexe($params);
                 break;                        
@@ -95,9 +98,12 @@ class ChaoticumSeminarioSql extends AbstractHelper
             t.texte,
             t.idConf,
             t.idFrag,
+            t.start,
+            t.end,
             c.theme,
             c.promo,
-            c.sujets
+            c.sujets,
+            c.source
         FROM
             transcriptions t
                 INNER JOIN
@@ -776,7 +782,19 @@ class ChaoticumSeminarioSql extends AbstractHelper
         return $rs;       
     }
 
-     
+
+    
+   /**
+     * création des annexes de transcription pour optimiser les requêtes
+     * @param array    $params paramètre de la requête
+     * @return array
+     */
+    function createTranscriptionAnnexe($params){
+
+        $this->conn->executeQuery($delete,[$id]);
+
+    }
+
    /**
      * renvoie la timeline d'une transcription
      * version interne omeka s
