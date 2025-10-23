@@ -169,7 +169,7 @@ class PdfToMarkdown extends AbstractHelper
      */
     protected function getGeminiMarkdown($item, $media)
     {
-        $yourApiKey = "";
+        $yourApiKey = "";//cf. https://aistudio.google.com/api-keys
         $client = Gemini::client($yourApiKey);
 
 
