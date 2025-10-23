@@ -133,6 +133,7 @@ class Module extends AbstractModule
             && empty($data['chaoticum_seminario']['chaoticumseminario_whisper_speech_to_text'])
             && empty($data['chaoticum_seminario']['chaoticumseminario_transformer_token_classification'])
             && empty($data['chaoticum_seminario']['chaoticumseminario_anythingllm_addDoc'])
+            && empty($data['chaoticum_seminario']['chaoticumseminario_pdfToMarkdown'])   
         ) {
             return;
         }
@@ -176,6 +177,12 @@ class Module extends AbstractModule
             $params['service']='anythingllm';
             $params['pipeline']='addDoc';
             $this->createJob(\ChaoticumSeminario\Job\AnythinLLM::class, $params, $url, $dispatcher, $messenger);                
+        }
+
+        if(!empty($data['chaoticum_seminario']['chaoticumseminario_pdfToMarkdown'])){
+            $params['service']='iamgerwin';
+            $params['pipeline']='pdfToMarkdown';
+            $this->createJob(\ChaoticumSeminario\Job\PdfToMarkdown::class, $params, $url, $dispatcher, $messenger);                
         }
         
    }

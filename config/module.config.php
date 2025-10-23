@@ -13,7 +13,8 @@ return [
             'transformersPipeline' => Service\ViewHelper\TransformersPipelineFactory::class,
             'anythingLLMCredentials' => Service\ViewHelper\AnythingLLMCredentialsFactory::class,    
             'anythingLLM' => Service\ViewHelper\AnythingLLMFactory::class,    
-            'chaoticumSeminarioCredentials' => Service\ViewHelper\ChaoticumSeminarioCredentialsFactory::class,    
+            'chaoticumSeminarioCredentials' => Service\ViewHelper\ChaoticumSeminarioCredentialsFactory::class,
+            'pdfToMarkdown' => Service\ViewHelper\PdfToMarkdownFactory::class  
         ],
 
     ],

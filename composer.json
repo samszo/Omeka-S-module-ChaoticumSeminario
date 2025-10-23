@@ -5,7 +5,10 @@
         "web64/laravel-nlp": "^0.40.0",
         "web64/php-nlp-client": "^0.40.5",
         "mikehaertl/php-shellcommand": "^1.7",
-        "codewithkyrian/transformers": "^0.5.1"
+        "codewithkyrian/transformers": "^0.5.1",
+        "iamgerwin/php-pdf-to-markdown-parser": "^0.0.1",
+        "google-gemini-php/client": "^2.6.0",
+        "guzzlehttp/guzzle": "^7.8.1"
     },
     "replace": {
         "doctrine/cache": "*",
@@ -13,7 +16,8 @@
     },
     "config": {
         "allow-plugins": {
-            "codewithkyrian/transformers-libsloader": true
+            "codewithkyrian/transformers-libsloader": true,
+            "php-http/discovery": true
         }
     }
 }

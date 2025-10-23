@@ -71,6 +71,18 @@ class BatchEditFieldset extends Fieldset
                     'data-collection-action' => 'replace',
                 ],
             ])
+            ->add([
+                'name' => 'chaoticumseminario_pdfToMarkdown',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Transcript PDF to mardown', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_pdfToMarkdown',
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ])
 
          ;
     }
