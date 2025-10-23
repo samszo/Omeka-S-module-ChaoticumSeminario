@@ -34,6 +34,18 @@ class UserSettingsFieldset extends Fieldset
                 ],
             ])
             ->add([
+                'name' => 'chaoticumseminario_google_gemini_key',
+                'type' => Element\Textarea::class,
+                'options' => [
+                    'element_group' => 'chaoticum_seminario',
+                    'label' => 'Key Google Gemini', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_google_gemini_key',
+                    'rows' => 1,
+                ],
+            ])
+            ->add([
                 'name' => 'chaoticumseminario_anythingllm_login',
                 'type' => Element\Textarea::class,
                 'options' => [

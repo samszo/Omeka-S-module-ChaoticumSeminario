@@ -27,14 +27,14 @@ class PdfToMarkdown extends AbstractJob
         $entityManager = $services->get('Omeka\EntityManager');
         $ids = $this->getArg('ids');
 
-        /* Vérification amont des droits.
-        if (!$ids) {
-            $logger->warn(
-                'No item set to Transformers pipeline.' // @translate
+        // Vérification amont des droits.
+        $googleGeminiCredentials = $services->get('ViewHelperManager')->get('googleGeminiCredentials');
+        if (!$googleGeminiCredentials()) {
+            $logger->err(
+                'Google Gemini Key are not set.' // @translate
             );
             return;
         }
-        */
 
         // Check existence and rights.
         $itemIds = $api->search('items', ['id' => $ids], ['returnScalar' => 'id', 'per_page' => 10000])->getContent();

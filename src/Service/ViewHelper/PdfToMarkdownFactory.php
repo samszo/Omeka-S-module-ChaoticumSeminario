@@ -18,6 +18,7 @@ class PdfToMarkdownFactory implements FactoryInterface
             $services->get('Config'),
             $services->get('ViewHelperManager')->get('chaoticumSeminarioSql'),
             $services->get('ViewHelperManager')->get('anythingLLMCredentials'),
+            $services->get('ViewHelperManager')->get('googleGeminiCredentials'),
             $services->get('Omeka\HttpClient')
 
         );

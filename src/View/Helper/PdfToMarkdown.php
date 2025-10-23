@@ -66,6 +66,19 @@ class PdfToMarkdown extends AbstractHelper
     protected $propRef;
     protected $headers;
 
+    /**
+     *
+     * @var GoogleGeminiCredentials
+     */
+    protected $googleGeminiCredentials;
+    protected $googleGeminiKey="";
+    /**
+     *
+     * @var anythingLLMcredentials
+     */
+    protected $anythingLLMcredentials;
+
+
     public function __construct(
         ApiManager $api,
         Acl $acl,
@@ -73,7 +86,8 @@ class PdfToMarkdown extends AbstractHelper
         ChaoticumSeminario $chaoticumSeminario,
         array $config,
         ChaoticumSeminarioSql $sql,
-        AnythingLLMCredentials $credentials,
+        AnythingLLMCredentials $anythingLLMcredentials,
+        GoogleGeminiCredentials $googleGeminiCredentials,
         $client
     ) {
         $this->api = $api;
@@ -82,8 +96,9 @@ class PdfToMarkdown extends AbstractHelper
         $this->chaoticumSeminario = $chaoticumSeminario;
         $this->config = $config;
         $this->sql = $sql;
-        $this->credentials = $credentials->__invoke();
+        $this->anythingLLMcredentials = $anythingLLMcredentials->__invoke();
         $this->client = $client;
+        $this->googleGeminiCredentials = $googleGeminiCredentials;
 
         $this->headers = [
             'Authorization: Bearer '.$this->credentials['key'],
@@ -169,8 +184,18 @@ class PdfToMarkdown extends AbstractHelper
      */
     protected function getGeminiMarkdown($item, $media)
     {
-        $yourApiKey = "";//cf. https://aistudio.google.com/api-keys
-        $client = Gemini::client($yourApiKey);
+        // Prépare le compte une seule fois.
+        if (!$this->googleGeminiKey) {
+            $this->googleGeminiKey = $this->googleGeminiCredentials->__invoke();
+        }
+        if (!$this->googleGeminiKey) {
+            $this->logger->err(
+                'Google Gemini Key are not set.' // @translate
+            );
+            return;}
+
+        //cf. https://aistudio.google.com/api-keys
+        $client = Gemini::client($this->googleGeminiKey);
 
 
         $files = $client->files();

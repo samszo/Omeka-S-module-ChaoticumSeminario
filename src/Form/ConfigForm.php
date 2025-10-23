@@ -11,6 +11,16 @@ class ConfigForm extends Form
     {
         $this
             ->add([
+                'name' => 'chaoticumseminario_google_gemini_key_default',
+                'type' => Element\Number::class,
+                'options' => [
+                    'label' => 'Id de l’utilisateur dont la Clef pour Google Gemini est utilisé par défaut', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_google_gemini_key_default',
+                ],
+            ])
+            ->add([
                 'name' => 'chaoticumseminario_google_credentials_default',
                 'type' => Element\Number::class,
                 'options' => [

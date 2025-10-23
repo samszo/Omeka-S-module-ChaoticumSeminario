@@ -9,6 +9,7 @@ return [
             'chaoticumSeminario' => Service\ViewHelper\ChaoticumSeminarioFactory::class,
             'googleSpeechToText' => Service\ViewHelper\GoogleSpeechToTextFactory::class,
             'googleSpeechToTextCredentials' => Service\ViewHelper\GoogleSpeechToTextCredentialsFactory::class,
+            'googleGeminiCredentials' => Service\ViewHelper\GoogleGeminiCredentialsFactory::class,
             'whisperSpeechToText' => Service\ViewHelper\WhisperSpeechToTextFactory::class,
             'transformersPipeline' => Service\ViewHelper\TransformersPipelineFactory::class,
             'anythingLLMCredentials' => Service\ViewHelper\AnythingLLMCredentialsFactory::class,    
@@ -50,6 +51,7 @@ return [
     'chaoticumseminario' => [
         'config' => [
             'chaoticumseminario_google_credentials_default' => 0,
+            'chaoticumseminario_google_gemini_key_default' => 0,
             'chaoticumseminario_url_base_from' => '',
             'chaoticumseminario_url_base_to' => '',
             'chaoticumseminario_url_anythingllm_api' => 'http://localhost:3001/api/v1/',
@@ -60,6 +62,7 @@ return [
         ],
         'user_settings' => [
             'chaoticumseminario_google_credentials' => '',
+            'chaoticumseminario_google_gemini_key' => '',
             'chaoticumseminario_anythingllm_login' => '',
             'chaoticumseminario_anythingllm_key' => '',
             'chaoticumseminario_anythingllm_workspace' => '',
