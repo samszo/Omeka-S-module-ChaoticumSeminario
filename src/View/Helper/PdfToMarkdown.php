@@ -65,6 +65,7 @@ class PdfToMarkdown extends AbstractHelper
     protected $docs;
     protected $propRef;
     protected $headers;
+    protected $pathFiles;
 
     /**
      *
@@ -88,7 +89,8 @@ class PdfToMarkdown extends AbstractHelper
         ChaoticumSeminarioSql $sql,
         AnythingLLMCredentials $anythingLLMcredentials,
         GoogleGeminiCredentials $googleGeminiCredentials,
-        $client
+        $client,
+        $pathFiles
     ) {
         $this->api = $api;
         $this->acl = $acl;
@@ -99,12 +101,8 @@ class PdfToMarkdown extends AbstractHelper
         $this->anythingLLMcredentials = $anythingLLMcredentials->__invoke();
         $this->client = $client;
         $this->googleGeminiCredentials = $googleGeminiCredentials;
+        $this->pathFiles = $pathFiles;
 
-        $this->headers = [
-            'Authorization: Bearer '.$this->credentials['key'],
-            'accept: application/json',
-        ];        
-        $this->setClientApi();   
         //récupère la propriété de référence
         $this->propRef = $this->api->search('properties', ['term' => 'dcterms:isReferencedBy'])->getContent()[0];
 
@@ -125,7 +123,7 @@ class PdfToMarkdown extends AbstractHelper
         }
         switch ($query['action'] ?? null) {
             case 'pdfToMarkdown':
-                $result = $this->getMarkdown($query['item']);
+                $result = $this->getMarkdown($query['item'],$query['moteur']);
                 break;
             default:
                 $result = [];
@@ -140,9 +138,10 @@ class PdfToMarkdown extends AbstractHelper
      * Transcription du PDF en markdown
      *
      * @param object $item
+     * @param string $moteur
      * 
      */
-    protected function getMarkdown($item){
+    protected function getMarkdown($item,$moteur){
 
         //récupère le fichier pdf
         $pdfFile = null;
@@ -155,13 +154,23 @@ class PdfToMarkdown extends AbstractHelper
                         ['media_id' => $media->id(), 'filename' => 'original/' . $pdfFile]
                     );
                 }else{
+                    switch ($moteur) {
+                        case 'PdfToMarkdownParser':
+                            $parser = new PdfToMarkdownParser();
+                            $pdfContent = file_get_contents($pdfFile);
+                            $markdown = $parser->parseContent($pdfContent);
+                            break;
+                        case 'PdfToMarkdownParser':
+                            $markdown = $this->getGeminiMarkdown($item,$media);                        
+                            break;
+                        case 'marker':
+                            $markdown = $this->getMarkerMarkdown($item,$media);                        
+                            break;
+                    }
                     /*extrait le markdown avec la lib
-                    $parser = new PdfToMarkdownParser();
-                    $pdfContent = file_get_contents($pdfFile);
-                    $markdown = $parser->parseContent($pdfContent);
                     */
+
                     //extrait le markdown avec gemini
-                    $markdown = $this->getGeminiMarkdown($item,$media);
                     if(!$markdown){
                         $this->logger->warn(
                             'Media #{media_id}: the pdf ({filename}) have no markdown', // @translate
@@ -173,6 +182,32 @@ class PdfToMarkdown extends AbstractHelper
                 }
             }
         }
+    }
+
+    /**
+     * get markdown whith marker
+     * NOTE: marker must be installed on the server cf. https://github.com/datalab-to/marker
+     *
+     * @param \Omeka\Api\Representation\ItemRepresentation $item
+     * @param \Omeka\Api\Representation\MediaRepresentation $media
+     * @param string $markdown
+     */
+    protected function getMarkerMarkdown($item, $media)
+    {
+        $outputDir = $this->pathFiles."/md";
+        //extraction des chunks
+        $cmd = 'marker_single '.$outputDir['source'].' --output_dir '.$outputDir.' --output_format chunks';
+        $chunks = shell_exec($cmd);                        
+        $this->logger->info('Item ' . $item->id() . ' : getMarkerMarkdown : '.$media->id().' : chunks extraits');
+
+        //extraction du markdown
+        $cmd = 'marker_single '.$outputDir['source'].' --output_dir '.$outputDir.' --output_format markdown';
+        $md = shell_exec($cmd);                        
+        $this->logger->info('Item ' . $item->id() . ' : getMarkerMarkdown : '.$media->id().' : markdown extraits');
+
+
+        $markdown = $md; //  The picture shows a table with a white tablecloth. On the table are two cups of coffee, a bowl of blueberries, a silver spoon, and some flowers. There are also some blueberry scones on the table.
+        return $markdown;
     }
 
     /**
@@ -364,34 +399,7 @@ class PdfToMarkdown extends AbstractHelper
         return $response->getBody()=="Not Found" ? false : true;
     }
 
-    /**
-     * Set the HTTP client to use during this import.
-     */
-    public function setClientApi()
-    {
-
-        //options pour le ssl inadéquate
-        $httpClientOptions = array(
-            'adapter' => 'Zend\Http\Client\Adapter\Socket',
-            'persistent' => false,
-            'sslverifypeer' => false,
-            'sslallowselfsigned' => false,
-            'sslusecontext' => false,
-            'ssl' => array(
-                'verify_peer' => false,
-                'allow_self_signed' => true,
-                'capture_peer_cert' => true,
-            ),
-            'timeout' => 20,
-        );
-        $this->client->setOptions($httpClientOptions);
-
-        //ajoute les headers avec la clef
-        $this->client->setHeaders($this->headers);
-
-    }
-
-
+    
     /**
      * Get a response from the AnythingLLM API.
      *

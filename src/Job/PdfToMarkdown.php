@@ -27,13 +27,18 @@ class PdfToMarkdown extends AbstractJob
         $entityManager = $services->get('Omeka\EntityManager');
         $ids = $this->getArg('ids');
 
+        //vérification du moteur par défaut
+        $moteur = $services->get('Omeka\Settings')->get("chaoticumseminario_moteur_pdf_conversion");
+
         // Vérification amont des droits.
-        $googleGeminiCredentials = $services->get('ViewHelperManager')->get('googleGeminiCredentials');
-        if (!$googleGeminiCredentials()) {
-            $logger->err(
-                'Google Gemini Key are not set.' // @translate
-            );
-            return;
+        if($moteur=="gemini") {
+            $googleGeminiCredentials = $services->get('ViewHelperManager')->get('googleGeminiCredentials');
+            if (!$googleGeminiCredentials()) {
+                $logger->err(
+                    'Google Gemini Key are not set.' // @translate
+                );
+                return;
+            }
         }
 
         // Check existence and rights.
@@ -80,6 +85,7 @@ class PdfToMarkdown extends AbstractJob
                 }
                 $result = $pdfToMarkdown([
                     'action' => $this->getArg('pipeline'),
+                    'moteur' => $moteur,
                     'item' => $resource,
                 ]);    
 

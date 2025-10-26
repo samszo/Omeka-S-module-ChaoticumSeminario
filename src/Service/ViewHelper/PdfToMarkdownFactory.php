@@ -19,8 +19,8 @@ class PdfToMarkdownFactory implements FactoryInterface
             $services->get('ViewHelperManager')->get('chaoticumSeminarioSql'),
             $services->get('ViewHelperManager')->get('anythingLLMCredentials'),
             $services->get('ViewHelperManager')->get('googleGeminiCredentials'),
-            $services->get('Omeka\HttpClient')
-
+            $services->get('Omeka\HttpClient'),
+            $services->get('Config')['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files')
         );
     }
 }

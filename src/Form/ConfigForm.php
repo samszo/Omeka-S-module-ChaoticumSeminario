@@ -106,8 +106,8 @@ class ConfigForm extends Form
                 'options' => [
                     'label' => 'Moteur pour la conversion du pdf en markdown',
                     'value_options' => [
-                        '0' => 'datalab-to marker',
-                        '1' => 'Google Gemini',
+                        'marker' => 'datalab-to marker',
+                        'gemini' => 'Google Gemini',
                     ],
                 ],
                 'attributes' => [

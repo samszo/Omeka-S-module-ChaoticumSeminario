@@ -59,6 +59,7 @@ return [
             'chaoticumseminario_anonymous_pwd' => '',
             'chaoticumseminario_anonymous_key_identity' => '',
             'chaoticumseminario_anonymous_key_credential' => '',
+            'chaoticumseminario_moteur_pdf_conversion' => '',
         ],
         'user_settings' => [
             'chaoticumseminario_google_credentials' => '',
