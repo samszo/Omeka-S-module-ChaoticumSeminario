@@ -99,6 +99,20 @@ class ConfigForm extends Form
                 'attributes' => [
                     'id' => 'chaoticumseminario_anonymous_key_credential',
                 ],
+            ])
+           ->add([
+                'type' => Element\Select::class,
+                'name' => 'chaoticumseminario_moteur_pdf_conversion',
+                'options' => [
+                    'label' => 'Moteur pour la conversion du pdf en markdown',
+                    'value_options' => [
+                        '0' => 'datalab-to marker',
+                        '1' => 'Google Gemini',
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_moteur_pdf_conversion',
+                ],
             ]);
     }
 }
