@@ -30,3 +30,4 @@ vendor/codewithkyrian/transformers/cache/*
 .transformers-cache/Xenova/toxic-bert/tokenizer_config.json
 .transformers-cache/Xenova/toxic-bert/tokenizer.json
 .transformers-cache/Xenova/toxic-bert/onnx/model_quantized.onnx
+src/View/Helper/ChaoticumSeminario.code-workspace
