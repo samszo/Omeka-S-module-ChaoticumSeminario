@@ -8,6 +8,7 @@ use Laminas\Http\Headers;
 use Omeka\Api\Manager as ApiManager;
 use Omeka\Permissions\Acl;
 use mikehaertl\shellcommand\Command;
+use Omeka\Api\Exception\RuntimeException;
 
 class AnythingLLM extends AbstractHelper
 {
@@ -57,6 +58,11 @@ class AnythingLLM extends AbstractHelper
     protected $docs;
     protected $propRef;
     protected $headers;
+    protected $chunks = [
+                        '0' => 'Transcription',
+                        '1' => 'HAL',
+                        '2' => 'Title and description',
+                    ];
 
     public function __construct(
         ApiManager $api,
@@ -83,7 +89,7 @@ class AnythingLLM extends AbstractHelper
         ];        
         $this->setClientApi();   
         //récupère la propriété de référence
-        $this->propRef = $this->api->search('properties', ['term' => 'dcterms:isReferencedBy'])->getContent()[0];
+        $this->propRef = $this->api->search('properties', ['term' => 'jdc:ragRef'])->getContent()[0];
 
     }    
 
@@ -102,7 +108,7 @@ class AnythingLLM extends AbstractHelper
         }
         switch ($query['action'] ?? null) {
             case 'addDoc':
-                $result = $this->addDoc($query['item']);
+                $result = $this->addDoc($query);
                 break;
             default:
                 $result = [];
@@ -135,19 +141,20 @@ class AnythingLLM extends AbstractHelper
     /**
      * Ajoute un resource dans le RAG
      *
-     * @param object $item
+     * @param object $query
      * 
      */
-    protected function addDoc($item){
+    protected function addDoc($query){
 
+        $item = $query["item"];
         //vérifie que la ressource n'est pas déjà dans le RAG
         if(!isset($this->docs[$item->id()])){
             //ajoute le titre dans le RAG
-            $this->addDocToWorkspace($item);
+            $this->addDocToWorkspace($item, $query['chunk']);
             $this->logger->info('La resource '.$item->id().' est ajoutée dans le RAG');
         }else{
             //vérifie si la référence est définie
-            $isRef = $item->value('dcterms:isReferencedBy');
+            $isRef = $item->value($this->propRef->term())->value();
             if($isRef){
                 $this->logger->info('La resource '.$item->id().' est déjà référencée : '.$isRef->asHtml());                
             }else{
@@ -163,10 +170,11 @@ class AnythingLLM extends AbstractHelper
      * ajoute le doc dans le workspace
      *
      * @param object $item
+     * @param string $chunk
      * 
      */
-    protected function addDocToWorkspace($item){
-        $doc = $this->addDocToAnythingLLM($item);
+    protected function addDocToWorkspace($item, $chunk){
+        $doc = $this->addDocToAnythingLLM($item, $chunk);
         $params = [
             "adds"=> [
                 $doc->documents[0]->location
@@ -180,26 +188,68 @@ class AnythingLLM extends AbstractHelper
      * ajoute le doc dans le workspace
      *
      * @param object $item
+     * @param string $chunk
      * 
      */
-    protected function addDocToAnythingLLM($item){
-        $frag = $item->value('ma:isFragmentOf')->valueResource();
-        $source = $item->value('oa:hasSource')->valueResource();
-        $txt = "#".$frag->displayTitle()."\n"
-            ."##".$source->displayTitle()."\n"
-            .$item->displayTitle();
-        $params = [
-            "textContent"=>$txt,
-            "metadata"=>[
-                "title"=>"Transcription ".$item->id(),
-                "idTrans"=>$item->id(),
-                "docSource"=>$source->id(),
-                "description"=>"cours_".$frag->id()
-                    ."-frag_".$source->id(),
-                "idSource"=>$source->id(),
-                "idCours"=>$frag->id()
-            ]
-        ];
+    protected function addDocToAnythingLLM($item, $chunk){
+
+        switch ($this->chunks[$chunk]) {
+            case 'Transcription':
+                $frag = $item->value('ma:isFragmentOf')->valueResource();
+                $source = $item->value('oa:hasSource')->valueResource();
+                $txt = "#".$frag->displayTitle()."\n"
+                    ."##".$source->displayTitle()."\n"
+                    .$item->displayTitle();
+                $params = [
+                    "textContent"=>$txt,
+                    "metadata"=>[
+                        "title"=>"Transcription ".$item->id(),
+                        "idTrans"=>$item->id(),
+                        "docSource"=>$source->id(),
+                        "description"=>"cours_".$frag->id()
+                            ."-frag_".$source->id(),
+                        "idSource"=>$source->id(),
+                        "idCours"=>$frag->id()
+                    ]
+                ];
+                break;
+        case 'HAL':
+                $mdAutors = "author:\n";
+                $mdInstitute = "institute:\n";
+                $creators = $item->value('dcterms:creator',['all'=>true]);
+                foreach ($creators as $vc) {
+                    $c = explode('_',$vc->valueResource()->displayTitle());
+                    $mdAutors .= "  - name: ".$c[2]."\n"
+                        ."    institute: ".$c[4]."\n"; 
+                    $mdInstitute .= "  - ".$c[4].": ".$c[6]."\n";
+                }
+                $mdKeyword = "keyword:\n";
+                $keywords = $item->value('dcterms:subject',['all'=>true]);
+                foreach ($keywords as $vkw) {
+                    $mdKeyword = $vkw->valueResource()->displayTitle();
+                }
+                $abstract = $item->value('bibo:abstract') ? $item->value('bibo:abstract')->__toString() : "no text";
+                $txt = "---\n"
+                    ."title: ".$item->displayTitle()."\n"
+                    .$mdAutors
+                    .$mdInstitute
+                    ."---\n\n"
+                    ."#".$item->displayTitle()."\n\n"
+                    .$abstract."\n\n"
+                    .$mdKeyword."\n";
+                $params = [
+                    "textContent"=>$txt,
+                    "metadata"=>[
+                        "title"=>"HAL-OMK-".$item->id(),
+                        "idItem"=>$item->id()
+                    ]
+                ];
+            break;
+        case 'Title and description':
+            # code...
+            break;
+        }
+
         return $this->getResponse($this->credentials['url'].'document/raw-text',"POST",$params);
     }
 
@@ -277,7 +327,7 @@ class AnythingLLM extends AbstractHelper
         if($params)$this->client->setParameterPost($params);
         $response = $this->client->setUri($url)->send();
         if (!$response->isSuccess()) {
-            throw new Exception\RuntimeException(sprintf(
+            throw new RuntimeException(sprintf(
                 'Requested "%s" got "%s".', $url, $response->renderStatusLine()
             ));
         }

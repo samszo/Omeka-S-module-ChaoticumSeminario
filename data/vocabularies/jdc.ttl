@@ -232,3 +232,8 @@ jdc:hasLink a rdf:Property ;
     rdfs:label "a comme lien" ;
     rdfs:domain o:Resource ;
     vs:term_status "experimental" .
+
+jdc:ragRef a rdf:Property ;
+    rdfs:label "Référence dans le RAG" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .

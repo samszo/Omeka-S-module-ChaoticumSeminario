@@ -176,6 +176,7 @@ class Module extends AbstractModule
         if(!empty($data['chaoticum_seminario']['chaoticumseminario_anythingllm_addDoc'])){
             $params['service']='anythingllm';
             $params['pipeline']='addDoc';
+            $params['chunk']=$data['chaoticum_seminario']['chaoticumseminario_anythingllm_addDoc'];
             $this->createJob(\ChaoticumSeminario\Job\AnythinLLM::class, $params, $url, $dispatcher, $messenger);                
         }
 

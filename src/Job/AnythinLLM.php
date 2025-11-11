@@ -83,6 +83,7 @@ class AnythinLLM extends AbstractJob
                 }
                 $result = $allm([
                     'action' => $this->getArg('pipeline'),
+                    'chunk' => $this->getArg('chunk'),
                     'item' => $resource,
                 ]);    
 

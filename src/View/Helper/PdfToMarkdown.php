@@ -7,6 +7,7 @@ use Laminas\View\Helper\AbstractHelper;
 use Laminas\Http\Headers;
 use Omeka\Api\Manager as ApiManager;
 use Omeka\Permissions\Acl;
+use Omeka\Api\Exception\RuntimeException;
 use mikehaertl\shellcommand\Command;
 use Iamgerwin\PdfToMarkdownParser\PdfToMarkdownParser;
 use Gemini;
@@ -414,7 +415,7 @@ class PdfToMarkdown extends AbstractHelper
         if($params)$this->client->setParameterPost($params);
         $response = $this->client->setUri($url)->send();
         if (!$response->isSuccess()) {
-            throw new Exception\RuntimeException(sprintf(
+            throw new Exception\(sprintf(
                 'Requested "%s" got "%s".', $url, $response->renderStatusLine()
             ));
         }

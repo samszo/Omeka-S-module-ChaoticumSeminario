@@ -60,18 +60,6 @@ class BatchEditFieldset extends Fieldset
                 ],
             ])
             ->add([
-                'name' => 'chaoticumseminario_anythingllm_addDoc',
-                'type' => Element\Checkbox::class,
-                'options' => [
-                    'label' => 'Add title to AnythingLLM RAG', // @translate
-                ],
-                'attributes' => [
-                    'id' => 'chaoticumseminario_anythingllm_addDoc',
-                    // This attribute is required to make "batch edit all" working.
-                    'data-collection-action' => 'replace',
-                ],
-            ])
-            ->add([
                 'name' => 'chaoticumseminario_pdfToMarkdown',
                 'type' => Element\Checkbox::class,
                 'options' => [
@@ -83,7 +71,24 @@ class BatchEditFieldset extends Fieldset
                     'data-collection-action' => 'replace',
                 ],
             ])
-
-         ;
+            ->add([
+                'type' => Element\Select::class,
+                'name' => 'chaoticumseminario_anythingllm_addDoc',
+                'options' => [
+                    'label' => 'Add item to AnythingLLM RAG',
+                    'empty_option' => 'Please choose your chunk type', // @translate
+                    'value_options' => [
+                        '0' => 'Transcription',
+                        '1' => 'HAL',
+                        '2' => 'Title and description',
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_anythingllm_addDoc',
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ])            
+        ;
     }
 }
