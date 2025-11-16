@@ -28,7 +28,8 @@ class PdfToMarkdown extends AbstractJob
         $ids = $this->getArg('ids');
 
         //vérification du moteur par défaut
-        $moteur = $services->get('Omeka\Settings')->get("chaoticumseminario_moteur_pdf_conversion");
+        $moteur = $this->getArg('service');
+        if(!$moteur) $services->get('Omeka\Settings')->get("chaoticumseminario_moteur_pdf_conversion");
 
         // Vérification amont des droits.
         if($moteur=="gemini") {

@@ -263,6 +263,9 @@ class AnythingLLM extends AbstractHelper
     protected function updateRef($item){
 
         $dataItem = json_decode(json_encode($item), true);
+        if($dataItem[$this->propRef->term()]){
+            unset($dataItem[$this->propRef->term()]);
+        }
         $valueObject = [];
         $valueObject['property_id'] = $this->propRef->id();
         $valueObject['@value'] = (string) $this->docs[$item->id()]->docpath;

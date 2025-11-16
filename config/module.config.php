@@ -15,7 +15,8 @@ return [
             'anythingLLMCredentials' => Service\ViewHelper\AnythingLLMCredentialsFactory::class,    
             'anythingLLM' => Service\ViewHelper\AnythingLLMFactory::class,    
             'chaoticumSeminarioCredentials' => Service\ViewHelper\ChaoticumSeminarioCredentialsFactory::class,
-            'pdfToMarkdown' => Service\ViewHelper\PdfToMarkdownFactory::class  
+            'pdfToMarkdown' => Service\ViewHelper\PdfToMarkdownFactory::class,  
+            'semaforCredentials' => Service\ViewHelper\SemaforCredentialsFactory::class
         ],
 
     ],
@@ -60,6 +61,7 @@ return [
             'chaoticumseminario_anonymous_key_identity' => '',
             'chaoticumseminario_anonymous_key_credential' => '',
             'chaoticumseminario_moteur_pdf_conversion' => '',
+            'chaoticumseminario_url_semafor_api' => '',
         ],
         'user_settings' => [
             'chaoticumseminario_google_credentials' => '',
@@ -67,6 +69,8 @@ return [
             'chaoticumseminario_anythingllm_login' => '',
             'chaoticumseminario_anythingllm_key' => '',
             'chaoticumseminario_anythingllm_workspace' => '',
+            'chaoticumseminario_semafor_client_id' => '',
+            'chaoticumseminario_semafor_client_secret' => '',
         ],
         'block_settings' => [
             'chaoticumSeminario' => [

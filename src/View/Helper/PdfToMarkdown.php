@@ -122,12 +122,10 @@ class PdfToMarkdown extends AbstractHelper
             $query = $params->fromQuery();
             // $post = $params->fromPost();
         }
+        $result = [];
         switch ($query['action'] ?? null) {
             case 'pdfToMarkdown':
                 $result = $this->getMarkdown($query['item'],$query['moteur']);
-                break;
-            default:
-                $result = [];
                 break;
         }
         return $result;
@@ -161,7 +159,7 @@ class PdfToMarkdown extends AbstractHelper
                             $pdfContent = file_get_contents($pdfFile);
                             $markdown = $parser->parseContent($pdfContent);
                             break;
-                        case 'PdfToMarkdownParser':
+                        case 'Gemini':
                             $markdown = $this->getGeminiMarkdown($item,$media);                        
                             break;
                         case 'marker':
@@ -196,13 +194,14 @@ class PdfToMarkdown extends AbstractHelper
     protected function getMarkerMarkdown($item, $media)
     {
         $outputDir = $this->pathFiles."/md";
+        $sourcePath = $this->pathFiles."/original/".$media->filename();
         //extraction des chunks
-        $cmd = 'marker_single '.$outputDir['source'].' --output_dir '.$outputDir.' --output_format chunks';
+        $cmd = 'marker_single '.$sourcePath.' --output_dir '.$outputDir.' --output_format chunks';
         $chunks = shell_exec($cmd);                        
         $this->logger->info('Item ' . $item->id() . ' : getMarkerMarkdown : '.$media->id().' : chunks extraits');
 
         //extraction du markdown
-        $cmd = 'marker_single '.$outputDir['source'].' --output_dir '.$outputDir.' --output_format markdown';
+        $cmd = 'marker_single '.$sourcePath.' --output_dir '.$outputDir.' --output_format markdown';
         $md = shell_exec($cmd);                        
         $this->logger->info('Item ' . $item->id() . ' : getMarkerMarkdown : '.$media->id().' : markdown extraits');
 
@@ -415,7 +414,7 @@ class PdfToMarkdown extends AbstractHelper
         if($params)$this->client->setParameterPost($params);
         $response = $this->client->setUri($url)->send();
         if (!$response->isSuccess()) {
-            throw new Exception\(sprintf(
+            throw new RuntimeException(sprintf(
                 'Requested "%s" got "%s".', $url, $response->renderStatusLine()
             ));
         }

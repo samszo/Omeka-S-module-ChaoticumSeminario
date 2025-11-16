@@ -173,16 +173,18 @@ class Module extends AbstractModule
             $this->createJob(\ChaoticumSeminario\Job\TransformersPipeline::class, $params, $url, $dispatcher, $messenger);                
         }
 
-        if(!empty($data['chaoticum_seminario']['chaoticumseminario_anythingllm_addDoc'])){
+        if(!empty($data['chaoticum_seminario']['chaoticumseminario_anythingllm_addDoc'])
+            && $data['chaoticum_seminario']['chaoticumseminario_anythingllm_addDoc']!='no'){
             $params['service']='anythingllm';
             $params['pipeline']='addDoc';
             $params['chunk']=$data['chaoticum_seminario']['chaoticumseminario_anythingllm_addDoc'];
             $this->createJob(\ChaoticumSeminario\Job\AnythinLLM::class, $params, $url, $dispatcher, $messenger);                
         }
 
-        if(!empty($data['chaoticum_seminario']['chaoticumseminario_pdfToMarkdown'])){
-            $params['service']='iamgerwin';
+        if(!empty($data['chaoticum_seminario']['chaoticumseminario_pdfToMarkdown'])
+            && $data['chaoticum_seminario']['chaoticumseminario_pdfToMarkdown']!='no'){
             $params['pipeline']='pdfToMarkdown';
+            $params['service']=$data['chaoticum_seminario']['chaoticumseminario_pdfToMarkdown'];
             $this->createJob(\ChaoticumSeminario\Job\PdfToMarkdown::class, $params, $url, $dispatcher, $messenger);                
         }
         
@@ -191,10 +193,11 @@ class Module extends AbstractModule
     function createJob($jobName, $params, $url, $dispatcher, $messenger): void
     {
         $action = isset($params['pipeline']) ? $params['pipeline'] : "speech to text";
+        $idFirstLast = isset($params['idFirst']) ? ' ids='.$params['idFirst'].' -> '.$params['idLast'] : "";
         $job = $dispatcher->dispatch($jobName, $params);
         $message = new \Omeka\Stdlib\Message(
             'Extracting '.$action.' via a '.$params['service'].' derivated background job='.$job->getId()
-            . ' ids='.$params['idFirst'].' -> '.$params['idLast']
+            . $idFirstLast
         );
         /*TODO: corriger erreur url
         $message = new \Omeka\Stdlib\Message(

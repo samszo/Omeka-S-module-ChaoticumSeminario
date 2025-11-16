@@ -81,7 +81,30 @@ class UserSettingsFieldset extends Fieldset
                     'rows' => 1,
                 ],
             ])
-
-        ;
+            ->add([
+                'name' => 'chaoticumseminario_semafor_client_id',
+                'type' => Element\Textarea::class,
+                'options' => [
+                    'element_group' => 'chaoticum_seminario',
+                    'label' => 'Semafor Id Client', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_semafor_client_id',
+                    'rows' => 1,
+                ],
+            ])
+            ->add([
+                'name' => 'chaoticumseminario_semafor_client_secret',
+                'type' => Element\Textarea::class,
+                'options' => [
+                    'element_group' => 'chaoticum_seminario',
+                    'label' => 'Semafor secret', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_semafor_client_secret',
+                    'rows' => 1,
+                ],
+            ])
+             ;
     }
 }

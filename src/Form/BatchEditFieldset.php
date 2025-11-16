@@ -60,10 +60,16 @@ class BatchEditFieldset extends Fieldset
                 ],
             ])
             ->add([
+                'type' => Element\Select::class,
                 'name' => 'chaoticumseminario_pdfToMarkdown',
-                'type' => Element\Checkbox::class,
                 'options' => [
-                    'label' => 'Transcript PDF to mardown', // @translate
+                    'label' => 'Transcript PDF to mardown',
+                    'value_options' => [
+                        'no' => 'no transcription',
+                        'marker' => 'datalab-to marker',
+                        'Gemini' => 'Google Gemini',
+                        'PdfToMarkdownParser' => 'php Pdf To Markdown Parser',
+                    ],
                 ],
                 'attributes' => [
                     'id' => 'chaoticumseminario_pdfToMarkdown',
@@ -76,8 +82,8 @@ class BatchEditFieldset extends Fieldset
                 'name' => 'chaoticumseminario_anythingllm_addDoc',
                 'options' => [
                     'label' => 'Add item to AnythingLLM RAG',
-                    'empty_option' => 'Please choose your chunk type', // @translate
                     'value_options' => [
+                        'no' => 'no adding',
                         '0' => 'Transcription',
                         '1' => 'HAL',
                         '2' => 'Title and description',

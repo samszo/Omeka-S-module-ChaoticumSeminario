@@ -107,12 +107,24 @@ class ConfigForm extends Form
                     'label' => 'Moteur pour la conversion du pdf en markdown',
                     'value_options' => [
                         'marker' => 'datalab-to marker',
-                        'gemini' => 'Google Gemini',
+                        'Gemini' => 'Google Gemini',
                     ],
                 ],
                 'attributes' => [
                     'id' => 'chaoticumseminario_moteur_pdf_conversion',
                 ],
-            ]);
+            ])
+            ->add([
+                'name' => 'chaoticumseminario_url_semafor_api',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => "Url API semafor", // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_url_semafor_api',
+                ],
+            ])            
+            ;
     }
+
 }
