@@ -3,6 +3,16 @@
 namespace ChaoticumSeminario;
 
 return [
+    'datavis_dataset_types' => [
+        'invokables' => [
+            'datasetCompetencesRelationships' => Datavis\DatasetType\datasetCompetencesRelationships::class,
+        ],
+    ],
+    'datavis_diagram_types' => [
+        'invokables' => [
+            'diagramCompetencesRelationships' => Datavis\DiagramType\diagramCompetencesRelationships::class,
+        ],
+    ],        
     'view_helpers' => [
         'factories' => [
             'chaoticumSeminarioSql' => Service\ViewHelper\ChaoticumSeminarioSqlFactory::class,
@@ -16,9 +26,9 @@ return [
             'anythingLLM' => Service\ViewHelper\AnythingLLMFactory::class,    
             'chaoticumSeminarioCredentials' => Service\ViewHelper\ChaoticumSeminarioCredentialsFactory::class,
             'pdfToMarkdown' => Service\ViewHelper\PdfToMarkdownFactory::class,  
-            'semaforCredentials' => Service\ViewHelper\SemaforCredentialsFactory::class
+            'semaforCredentials' => Service\ViewHelper\SemaforCredentialsFactory::class,
+            'semafor' => Service\ViewHelper\SemaforFactory::class
         ],
-
     ],
     'view_manager' => [
         'template_path_stack' => [
@@ -62,6 +72,8 @@ return [
             'chaoticumseminario_anonymous_key_credential' => '',
             'chaoticumseminario_moteur_pdf_conversion' => '',
             'chaoticumseminario_url_semafor_api' => '',
+            'chaoticumseminario_url_semafor_token' => '',
+            'chaoticumseminario_semafor_nb_results' => '10',
         ],
         'user_settings' => [
             'chaoticumseminario_google_credentials' => '',

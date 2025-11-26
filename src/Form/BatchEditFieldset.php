@@ -95,6 +95,24 @@ class BatchEditFieldset extends Fieldset
                     'data-collection-action' => 'replace',
                 ],
             ])            
+            ->add([
+                'type' => Element\Select::class,
+                'name' => 'chaoticumseminario_semafor_addCompetences',
+                'options' => [
+                    'label' => 'Add competence to item from Semafor',
+                    'value_options' => [
+                        'no' => 'no adding',
+                        'Title' => 'Title',
+                        'TitleAbstract' => 'Title and abstract',
+                        'TitleDescription' => 'Title and description',
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_semafor_addCompetences',
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
+            ])            
         ;
     }
 }

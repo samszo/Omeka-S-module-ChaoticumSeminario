@@ -11,7 +11,8 @@ class ChaoticumSeminarioSqlFactory implements FactoryInterface
     {
         $api = $services->get('Omeka\ApiManager');
         $conn = $services->get('Omeka\Connection');
+        $cs = $services->get('ViewHelperManager')->get('chaoticumSeminario');
 
-        return new ChaoticumSeminarioSql($api, $conn);
+        return new ChaoticumSeminarioSql($api, $conn, $cs);
     }
 }

@@ -7,11 +7,13 @@ class ChaoticumSeminarioSql extends AbstractHelper
 {
     protected $api;
     protected $conn;
+    protected $cs; //chaoticumSeminario view helper
 
-    public function __construct($api, $conn)
+    public function __construct($api, $conn, $cs)
     {
       $this->api = $api;
       $this->conn = $conn;
+      $this->cs = $cs;
     }
 
     /**
@@ -80,6 +82,50 @@ class ChaoticumSeminarioSql extends AbstractHelper
         return $result;
 
     }
+
+    /**
+     * return dataset for datavis
+     *
+     * @param   object   $vis
+     * @param   array    $idsItems
+     * @return  array
+     */
+    function getDataForVis($vis,$idsItems){
+
+        $dtsData = $vis->datasetData();
+        /*
+        'numCompForItems' => 'Compétences pour les items', // @translate
+        'numCompForAutors' => 'Compétences pour les auteurs', // @translate
+        */
+        switch ($dtsData['typeQuery'] ?? '') {
+            case 'numCompForItems':
+                $query = "SELECT 
+                    rcomp.id, rcomp.title, rcomp.resource_class_id grId, c.label grLabel
+                    , count(*) nb_items
+                    , group_concat(r.id) idsItems
+                FROM
+                    resource r
+                    inner join resource rc on rc.resource_template_id = ".$this->cs->getResourceTemplate('Compétences du document')->id()."
+                    inner join value vrc on vrc.resource_id = rc.id and vrc.property_id = ".$this->cs->getProperty('dcterms:source')->id()." and vrc.value_resource_id = r.id
+                    inner join value vcomp on vcomp.resource_id = vrc.resource_id and vcomp.property_id = ".$this->cs->getProperty('rome:hasCompetence')->id()."
+                    inner join resource rcomp on rcomp.id = vcomp.value_resource_id
+                    inner join resource_class c on c.id = rcomp.resource_class_id
+                WHERE
+                    r.id IN (".implode(',', $idsItems).")        
+                group by rcomp.id, rcomp.title
+                order by rcomp.title";
+                break;
+            case 'numCompForAutors':
+                $query = "";                  
+                break;
+            default:
+                # code...
+                break;
+        }
+        $dataset = $this->conn->fetchAll($query);
+        return $dataset; 
+    }
+
 
     /**
      * récupère les transcriptions à ajouter dans le RAG

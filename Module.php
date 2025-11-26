@@ -187,7 +187,14 @@ class Module extends AbstractModule
             $params['service']=$data['chaoticum_seminario']['chaoticumseminario_pdfToMarkdown'];
             $this->createJob(\ChaoticumSeminario\Job\PdfToMarkdown::class, $params, $url, $dispatcher, $messenger);                
         }
-        
+
+        if(!empty($data['chaoticum_seminario']['chaoticumseminario_semafor_addCompetences'])
+            && $data['chaoticum_seminario']['chaoticumseminario_semafor_addCompetences']!='no'){
+            $params['pipeline']='addCompetences';
+            $params['scope']=$data['chaoticum_seminario']['chaoticumseminario_semafor_addCompetences'];
+            $this->createJob(\ChaoticumSeminario\Job\Semafor::class, $params, $url, $dispatcher, $messenger);                
+        }
+
    }
 
     function createJob($jobName, $params, $url, $dispatcher, $messenger): void

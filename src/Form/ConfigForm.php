@@ -118,10 +118,30 @@ class ConfigForm extends Form
                 'name' => 'chaoticumseminario_url_semafor_api',
                 'type' => Element\Text::class,
                 'options' => [
-                    'label' => "Url API semafor", // @translate
+                    'label' => "Url semafor API", // @translate
                 ],
                 'attributes' => [
                     'id' => 'chaoticumseminario_url_semafor_api',
+                ],
+            ])            
+            ->add([
+                'name' => 'chaoticumseminario_url_semafor_token',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => "Url semafor Token", // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_url_semafor_token',
+                ],
+            ])            
+            ->add([
+                'name' => 'chaoticumseminario_semafor_nb_results',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => "Url semafor Token", // @translate
+                ],
+                'attributes' => [
+                    'id' => 'chaoticumseminario_semafor_nb_results',
                 ],
             ])            
             ;

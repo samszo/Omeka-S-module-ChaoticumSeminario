@@ -2,7 +2,7 @@
 
 namespace ChaoticumSeminario\Service\ViewHelper;
 
-use ChaoticumSeminario\View\Helper\SemaforLLMCredentials;
+use ChaoticumSeminario\View\Helper\SemaforCredentials;
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
