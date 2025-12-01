@@ -4,6 +4,8 @@ namespace ChaoticumSeminario\Form;
 
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
+use Omeka\Form\Element\PropertySelect;
+use ChaoticumSeminario\Form\Element\BatchEditSemafor;
 
 class BatchEditFieldset extends Fieldset
 {
@@ -94,25 +96,29 @@ class BatchEditFieldset extends Fieldset
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
-            ])            
+            ])
             ->add([
-                'type' => Element\Select::class,
+                    'type' => BatchEditSemafor::class,
+                    'name' => 'chaoticumseminario_semafor_addCompetences',
+                ])
+            /*                        
+            ->add([
+                'type' => PropertySelect::class,
                 'name' => 'chaoticumseminario_semafor_addCompetences',
                 'options' => [
-                    'label' => 'Add competence to item from Semafor',
-                    'value_options' => [
-                        'no' => 'no adding',
-                        'Title' => 'Title',
-                        'TitleAbstract' => 'Title and abstract',
-                        'TitleDescription' => 'Title and description',
-                    ],
+                    'label' => 'Add competence to item whith Semafor from specific property', // @translate
+                    'required' => false,
+                    'empty_option' => '[Do nothing]',
                 ],
                 'attributes' => [
-                    'id' => 'chaoticumseminario_semafor_addCompetences',
+                    'class' => 'chosen-select',
+                    'data-placeholder' => 'Select one…', // @translate
+                    'id' => 'chaoticumseminario_semafor_specificCompetences',
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
-            ])            
+            ])           
+            */
         ;
     }
 }

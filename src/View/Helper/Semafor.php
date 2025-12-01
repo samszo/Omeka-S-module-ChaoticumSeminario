@@ -58,11 +58,7 @@ class Semafor extends AbstractHelper
     protected $propRef;
     protected $headers;
     protected $nbResult;
-    protected $scopes = [
-        'Title' => ['dcterms:title'],
-        'TitleAbstract' => ['dcterms:title','bibo:abstract'],
-        'TitleDescription' =>  ['dcterms:title','dcterms:description']
-    ];
+    protected $scope;
 
     public function __construct(
         ApiManager $api,
@@ -127,18 +123,27 @@ class Semafor extends AbstractHelper
      */
     protected function addCompetences($query){
 
-        $item = $query["item"];        
+        $item = $query["item"]; 
+        $this->scope = $this->api->read('properties',$query["scope"])->getContent();       
 
         //vérifie que les compétences ne sont pas déjà dans la base
-        $title = $query["action"]."_".$query["scope"]."_".$item->id();
+        $title = $query["action"]." to -".$item->displayTitle()."- from <".$this->scope->term().">";
         $compExist = $this->api->search('items', ['dcterms:title' => $title])->getContent();
         if(count($compExist)>0){
             $this->logger->info('Les compétences pour la ressource '.$item->id().' existent déjà.');
-            return ['OK'];
+            switch ($query["type"]) {
+                case 'update':
+                    $this->api->delete('items', $compExist[0]->id());
+                    break;                
+                case 'delete':
+                    $this->api->delete('items', $compExist[0]->id());
+                    return ['OK'];
+                    break;                
+            }
         }
-
+        //TODO:prendre en compte le type pour insérer ou remplacer ou supprimer
         //recherche les compétence dans avec l'api Semafor
-        $search = $this->getSearch($item,$query["scope"]);
+        $search = $this->getSearch($item,$this->scope);
         $competences = $this->getResponse(($this->credentials['url']
             ."Competences?query=".urlencode($search)
             ."&nb_results=".$this->nbResult));
@@ -153,7 +158,9 @@ class Semafor extends AbstractHelper
             'value_resource_id' => $item->id(),
             'type' => 'resource',
         ];
+        $dataComp['oa:hasScope']=[['type'=>'literal','@value'=>$this->scope->term(),'property_id' => $this->cs->getProperty('oa:hasScope')->id()]];        
         $dataComp['o:resource_template'] = ['o:id' => $this->cs->getResourceTemplate('Compétences du document')->id()];
+        $dataComp['o:resource_class'] = ['o:id' => $this->cs->getResourceClass('rome:semaforResult')->id()];
         $dataComp['rome:hasCompetence']=[];
         foreach($competences->search_results as $comp){
             $annotation = [];
@@ -209,19 +216,18 @@ class Semafor extends AbstractHelper
      * récupère la recherche suivant le scope
      *
      * @param object $item
-     * @param string $scope
+     * @param object $scope
      * 
      * @return string
      */
     protected function getSearch($item,$scope):string
     {
         $search = "";
-        foreach($this->scopes[$scope] as $prop){
-            $values = $item->value($prop, ['all' => true]);            
-            foreach($values as $value){
-                if($search!="")$search.=" ";
-                $search.=$value->__toString();
-            }
+        $values = $item->value($scope->term(), ['all' => true]);            
+        foreach($values as $value){
+            if($search!="")$search.=" ";
+            $vr = $value->valueResource();
+            $search.= $vr ? $vr->displayTitle() : $value->__toString();
         }
         return $search; 
     }

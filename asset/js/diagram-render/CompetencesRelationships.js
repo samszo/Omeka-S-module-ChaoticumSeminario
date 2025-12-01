@@ -27,6 +27,7 @@
  *
  * @see https://observablehq.com/@d3/force-directed-graph/2
  */
+let legendes = [];
 Datavis.addDiagramType('diagramCompetencesRelationships', (div, dataset, datasetData, diagramData, blockData) => {
 
     let userInteracted = false;
@@ -45,6 +46,12 @@ Datavis.addDiagramType('diagramCompetencesRelationships', (div, dataset, dataset
     // re-evaluating this cell produces the same result.
     const datasetLinks = dataset.links.map(link => ({...link}));
     const datasetNodes = dataset.nodes.map(node => ({...node}));
+
+    // Add the legend if requested.
+    diagramData.show_legend=true;
+    if (diagramData.show_legend) {  
+        addLegend(div, datasetNodes, width, 200);
+    }
 
     // Get the tooltip.
     const tooltip = Datavis.ItemRelationships.getTooltip(div);
@@ -83,7 +90,9 @@ Datavis.addDiagramType('diagramCompetencesRelationships', (div, dataset, dataset
         .selectAll()
         .data(datasetNodes)
         .join("circle")
-        .attr("r", node => 5 + (node.size ?  node.size * 5 : 5))
+        .attr("class", 'forceNode')
+        .attr("id", node=>`omk${node.id}`)
+        .attr("r", node => 10)//5 + (node.size ?  node.size * 5 : 5))
         .attr("fill", node => color(node.group_id))
         .attr("opacity", 0.5)
         .call(g => g.append('title').text(node => node.label))
@@ -182,4 +191,72 @@ Datavis.addDiagramType('diagramCompetencesRelationships', (div, dataset, dataset
     }
     const zoom = d3.zoom().on("zoom", zoomed);
     svg.call(zoom);
+
+    function addLegend(div, data, width, height) { 
+        let grpData = Array.from(d3.group(data, d=>d.group_label));
+        legendes = [];
+        grpData.forEach(groupData=>{
+            legendes.push(new window.brushFrequence({'data':groupData[1],'cont':d3.select(div)
+                , 'pVal':'size','title':'Féquence des liens : '+groupData[0], 'id':groupData[0]
+                ,'color':color(groupData[1][0].group_id),'colorSelect':color(groupData[1][0].group_id)
+                ,'width':width,'height':32, 'events':[{'type':'filterBrushed','callback':filterBrushedCallback}]})
+            );
+        });
+        /*on affiche uniquement les compétences
+        const dataFreq = datasetNodes.filter(d=>d.group_label=='Compétence');
+        window.brushFrequence.setParams({'data':dataFreq,'cont':d3.select(div)
+            , 'pVal':'size','title':'Fréquence des compétences','color':color(dataFreq[0].group_id)
+            ,'width':width,'height':32, 'events':[{'type':'filterBrushed','callback':filterBrushedCallback}]
+        });
+        */
+        /*
+        window.posiColor.setParams({'data':data,'cont':d3.select(div)
+            , 'pVal':'size','pLib':'group_label','pFreq':'title','frequency':true
+            , 'interpolates':{
+                'Compétence':d3.interpolateViridis,
+                'Document':d3.interpolatePlasma
+            }
+            ,'width':width,'height':height});
+        */
+    }
+
+    function filterBrushedCallback(legende){
+        console.log('filterBrushedCallback',legende.id, legende.bornes);
+        let grLabel = legende.data[0].group_label;
+        //nettoie les autres légendes
+        legendes.forEach(lg=>{
+            if(lg.id!==legende.id){
+                lg.bornes = [];
+                lg.brushClear();
+            }
+        });
+        //applique le filtre sur les noeuds
+        d3.select(div).selectAll('circle.forceNode')
+            .attr('visibility', node=>{
+                if(legende.bornes.length===0) return 'visible';
+                if(node.size>=legende.bornes[0] && node.size<=legende.bornes[1] && node.group_label===grLabel){
+                    return 'visible';
+                } else {
+                    return 'hidden';
+                }
+            });
+        //applique le filtre sur les liens
+        d3.select(div).selectAll('line')
+            .attr('visibility', link=>{
+                if(legende.bornes.length===0) return 'visible';
+                let node = legende.data.find(n=>n.id===link.source.id && n.group_label===grLabel);
+                node = !node ? legende.data.find(n=>n.id===link.target.id && n.group_label===grLabel) : node;
+                if(!node) return 'hidden';
+                if(node.size>=legende.bornes[0] && node.size<=legende.bornes[1]){
+                    //affiche les noeuds target et source associés
+                    d3.select(div).selectAll(`#omk${link.source.id}`).attr('visibility', 'visible');
+                    d3.select(div).selectAll(`#omk${link.target.id}`).attr('visibility', 'visible');
+                    return 'visible';
+                } else {
+                    return 'hidden';
+                }
+            }); 
+    }   
+
+
 });

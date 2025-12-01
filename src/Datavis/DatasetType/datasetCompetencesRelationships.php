@@ -54,7 +54,7 @@ class datasetCompetencesRelationships extends AbstractDatasetType
             'options' => [
                 'label' => 'Quel type de requêtes pour récupérer les compétences ?', // @translate
                 'value_options' => [
-                    'numCompForItems' => 'Compétences pour les items', // @translate
+                    'numCompForItems' => 'Compétences pour les documents', // @translate
                     'numCompForAutors' => 'Compétences pour les auteurs', // @translate
                 ],
             ],
@@ -79,6 +79,7 @@ class datasetCompetencesRelationships extends AbstractDatasetType
         $api = $services->get('Omeka\ApiManager');
         $url = $services->get('ViewHelperManager')->get('Url');
         $slug = $vis->site()->slug();
+        $dtsData = $vis->datasetData();
         /* 
         * Format du dataset retourné :{
         *   nodes: [
@@ -111,49 +112,88 @@ class datasetCompetencesRelationships extends AbstractDatasetType
         $dbItems=[];
         foreach ($rs as $r) {
             //ajoute le noeud compétence
-            $urlNode = $this->getUrlNode($url, $slug,$r["id"]);
-            $n = [
-                "id"=>$r["id"],
-                "label"=>$r["title"],
-                "comment"=>"",
-                "size"=>$r["nb_items"],
-                "url"=>$urlNode,
-                "group_id"=>$r["grId"],
-                "group_label"=>$r["grLabel"],
-             ];
-            $dataset['nodes'][]=$n;
+            if (!isset($dbItems[$r["idComp"]])) {
+                $dbItems[$r["idComp"]]=[
+                    "id"=>$r["idComp"],
+                    "size"=>0
+                ];
+                $urlComp = $this->getUrlNode($url, $slug,$r["idComp"]);
+                $n = [
+                    "id"=>$r["idComp"],
+                    "label"=>$r["titleComp"],
+                    "comment"=>"",
+                    "size"=>1,
+                    "url"=>$urlComp,
+                    "group_id"=>$r["grIdComp"],
+                    "group_label"=>$r["grLabelComp"],
+                ];
+                $dataset['nodes'][]=$n;
+            }else{
+                $dbItems[$r["idComp"]]["size"]+=1;
+            }
             //ajoute les items en lien avec cette compétence
-            $idsItems = explode(",",$r["idsItems"]);
-            foreach ($idsItems as $idItem) {
-                if (!isset($dbItems[$idItem])) {
-                    $oItem = $api->read('items', $idItem)->getContent();
+            if (!isset($dbItems[$r["idSrc"]])) {
+                //$oItem = $api->read('items', $idItem)->getContent();
+                $itemNode = [
+                    "id"=>$r["idSrc"],
+                    "label"=>$r["titleSrc"],
+                    "comment"=>"",
+                    "size"=>1,
+                    "url"=>$this->getUrlNode($url, $slug,$r["idSrc"]),
+                    "group_id"=>$r["grIdSrc"],
+                    "group_label"=>$r["grLabelSrc"]
+                ];
+                $dataset['nodes'][]=$itemNode;
+                $dbItems[$r["idSrc"]]=$itemNode;
+            }else{
+                $itemNode = $dbItems[$r["idSrc"]];
+                $dbItems[$r["idSrc"]]["size"]+=1;
+            }   
+            //ajoute le lien entre la compétence et l'item source
+            //TODO: prendre en compte la propriété qui sert pour le calcul des compétences = oa:scope
+            $link = [
+                "target"=>$r["idComp"],
+                "target_label"=>$r["titleComp"],
+                "target_url"=>$urlComp,
+                "source"=>$itemNode["id"],
+                "source_label"=>$itemNode["label"],
+                "source_url"=>$itemNode["url"],
+                "link_id"=>count($dataset['links']),
+                "link_label"=>$r["grLabelSrc"]." => ".$r["grLabelComp"],// @translate
+                ];
+            $dataset['links'][]=$link;
+            //ajoute la destination si elle existe
+            if($r["idDst"] && $r["idDst"]!=$r["idSrc"]){
+                //ajoute les items en lien avec cette compétence
+                if (!isset($dbItems[$r["idDst"]])) {
+                    //$oItem = $api->read('items', $idItem)->getContent();
                     $itemNode = [
-                        "id"=>$oItem->id(),
-                        "label"=>$oItem->displayTitle(),
+                        "id"=>$r["idDst"],
+                        "label"=>$r["titleDst"],
                         "comment"=>"",
                         "size"=>1,
-                        "url"=>$this->getUrlNode($url, $slug,$oItem->id()),
-                        "group_id"=>$oItem->resourceClass()->id(),
-                        "group_label"=>$oItem->resourceClass()->label()
+                        "url"=>$this->getUrlNode($url, $slug,$r["idDst"]),
+                        "group_id"=>$r["grIdDst"],
+                        "group_label"=>$r["grLabelDst"]
                     ];
                     $dataset['nodes'][]=$itemNode;
-                    $dbItems[$idItem]=$itemNode;
+                    $dbItems[$r["idDst"]]=$itemNode;
                 }else{
-                    $itemNode = $dbItems[$idItem];
-                    $dbItems[$idItem]["size"]+=1;
-                }   
-                //ajoute le lien entre la compétence et l'item
+                    $itemNode = $dbItems[$r["idDst"]];
+                    $dbItems[$r["idDst"]]["size"]+=1;       
+                }
+                //avec le lien entre l'item source et l'item destination
                 $link = [
-                    "source"=>$r["id"],
-                    "source_label"=>$r["title"],
-                    "source_url"=>$urlNode,
                     "target"=>$itemNode["id"],
                     "target_label"=>$itemNode["label"],
                     "target_url"=>$itemNode["url"],
+                    "source"=>$r["idSrc"],
+                    "source_label"=>$dbItems[$r["idSrc"]]["label"],
+                    "source_url"=>$dbItems[$r["idSrc"]]["url"],
                     "link_id"=>count($dataset['links']),
-                    "link_label"=>"A comme compétence",// @translate
-                 ];
-                $dataset['links'][]=$link;
+                    "link_label"=>$r["grLabelSrc"]." => ".$r["grLabelDst"],// @translate
+                    ];
+                $dataset['links'][]=$link;  
             }
         } 
         //met à jour les poids des noeuds items

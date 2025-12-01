@@ -14,6 +14,7 @@ use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\MvcEvent;
 use Omeka\Settings\SettingsInterface;
+use ChaoticumSeminario\Form\Element\BatchEditSemafor;
 
 class Module extends AbstractModule
 {
@@ -58,6 +59,7 @@ class Module extends AbstractModule
             [$this, 'handleResourceBatchUpdatePost']
         );
 
+        /*
         // Extend the batch edit form via js.
         $sharedEventManager->attach(
             'Omeka\Controller\Admin\Item',
@@ -74,6 +76,37 @@ class Module extends AbstractModule
             'form.add_elements',
             [$this, 'formAddElementsResourceBatchUpdateForm']
         );
+        */
+        $sharedEventManager->attach(
+            'Omeka\Form\ResourceBatchUpdateForm',
+            'form.add_elements',
+            function (Event $event) {
+                $form = $event->getTarget();
+                $form->add([
+                    'type' => BatchEditSemafor::class,
+                    'name' => 'BatchEditSemafor',
+                ]);
+            }
+        );
+        /*
+        $eventIds = [
+            'Omeka\Api\Adapter\ItemAdapter',
+            'Omeka\Api\Adapter\ItemSetAdapter',
+            'Omeka\Api\Adapter\MediaAdapter',
+        ];
+        foreach ($eventIds as $eventId) {
+            $sharedEventManager->attach(
+                $eventId,
+                'api.preprocess_batch_update',
+                function (Event $event) {
+                    $data = $event->getParam('data');
+                    $rawData = $event->getParam('request')->getContent();
+                    $event->setParam('data', $data);
+                }
+            );
+        }
+        */
+
 
         // Ajout du paramètre utilisateur
         $sharedEventManager->attach(
@@ -133,7 +166,8 @@ class Module extends AbstractModule
             && empty($data['chaoticum_seminario']['chaoticumseminario_whisper_speech_to_text'])
             && empty($data['chaoticum_seminario']['chaoticumseminario_transformer_token_classification'])
             && empty($data['chaoticum_seminario']['chaoticumseminario_anythingllm_addDoc'])
-            && empty($data['chaoticum_seminario']['chaoticumseminario_pdfToMarkdown'])   
+            && empty($data['chaoticum_seminario']['chaoticumseminario_pdfToMarkdown']) 
+            && empty($data['BatchEditSemafor'])  
         ) {
             return;
         }
@@ -188,10 +222,11 @@ class Module extends AbstractModule
             $this->createJob(\ChaoticumSeminario\Job\PdfToMarkdown::class, $params, $url, $dispatcher, $messenger);                
         }
 
-        if(!empty($data['chaoticum_seminario']['chaoticumseminario_semafor_addCompetences'])
-            && $data['chaoticum_seminario']['chaoticumseminario_semafor_addCompetences']!='no'){
+        if(!empty($data['BatchEditSemafor'])
+            && $data['BatchEditSemafor']['property']!='' && $data['BatchEditSemafor']['type']!=''){
             $params['pipeline']='addCompetences';
-            $params['scope']=$data['chaoticum_seminario']['chaoticumseminario_semafor_addCompetences'];
+            $params['type']=$data['BatchEditSemafor']['type'];
+            $params['scope']=$data['BatchEditSemafor']['property'];
             $this->createJob(\ChaoticumSeminario\Job\Semafor::class, $params, $url, $dispatcher, $messenger);                
         }
 

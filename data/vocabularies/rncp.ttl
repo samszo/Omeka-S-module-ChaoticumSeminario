@@ -1,0 +1,291 @@
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vs: <http://www.w3.org/2003/06/sw-vocab-status/ns#> .
+@prefix o: <http://omeka.org/s/vocabs/o#> .
+@prefix rncp: <https://jardindesconnaissances.univ-paris8.fr/onto/rncp#> .
+
+<https://jardindesconnaissances.univ-paris8.fr/onto/rncp> a owl:Ontology ;
+    dcterms:title "Répertoire National des Certifications Professionnelles" .
+
+rncp:FICHE a rdfs:Class ;
+    rdfs:label "Fiche" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:hasFICHE a rdf:Property ;
+    rdfs:label "A comme fiche" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+
+rncp:NSF a rdfs:Class ;
+    rdfs:label "Nomenclature des spécialités de formation" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:hasNSF a rdf:Property ;
+    rdfs:label "A comme NSF" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+    
+rncp:NOMENCLATURE_EUROPE a rdfs:Class ;
+    rdfs:label "Nomenclature européenne des niveaux" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:hasNOMENCLATURE_EUROPE a rdf:Property ;
+    rdfs:label "A comme nomenclature européenne" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:BLOC_COMPETENCES a rdfs:Class ;
+    rdfs:label "Bloc de compétence" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:hasBLOC_COMPETENCES a rdf:Property ;
+    rdfs:label "A comme bloc de compétence" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:LISTE_COMPETENCES a rdf:Property ;
+    rdfs:label "Liste des compétences" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:MODALITES_EVALUATION a rdf:Property ;
+    rdfs:label "Modalités d'évaluation" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:PREREQUIS_ENTREE_FORMATION a rdf:Property ;
+    rdfs:label "Prérequis à l'entrée dans la formation" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:PREREQUIS_VALIDATION_CERTIFICATION a rdf:Property ;
+    rdfs:label "Prérequis à la validation de la certification" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:OBJECTIFS_CONTEXTE a rdf:Property ;
+    rdfs:label "Objectifs et contexte de la certification" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:ID_FICHE a rdf:Property ;
+    rdfs:label "Id fiche" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:ACTIF a rdf:Property ;
+    rdfs:label "Actif" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:NUMERO_FICHE a rdf:Property ;
+    rdfs:label "N° de fiche" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:INTITULE a rdf:Property ;
+    rdfs:label "Intitulé" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:ETAT_FICHE a rdf:Property ;
+    rdfs:label "Etat de la fiche" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:CODE a rdf:Property ;
+    rdfs:label "Code" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:NIVEAU a rdf:Property ;
+    rdfs:label "Niveau" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:LIBELLE a rdf:Property ;
+    rdfs:label "Libelle" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:ACTIVITES_VISEES a rdf:Property ;
+    rdfs:label "Activités visées" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:CAPACITES_ATTESTEES a rdf:Property ;
+    rdfs:label "Capacités attestés" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:SECTEURS_ACTIVITE a rdf:Property ;
+    rdfs:label "Secteurs d'activité" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:TYPE_EMPLOI_ACCESSIBLES a rdf:Property ;
+    rdfs:label "Type d'emploi accessibles" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:NOUVELLES_CERTIFICATIONS a rdf:Property ;
+    rdfs:label "Nouvelles certifications" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:ABREGE a rdf:Property ;
+    rdfs:label "Abrégé" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:CERTIFICATEURS a rdf:Property ;
+    rdfs:label "Certificateurs" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:EXISTENCE_PARTENAIRES a rdf:Property ;
+    rdfs:label "Existance partenaires" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:REGLEMENTATIONS_ACTIVITES a rdf:Property ;
+    rdfs:label "Réglementations activités" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:REGLEMENTATIONS_ACTIVITES a rdf:Property ;
+    rdfs:label "Réglementations activités" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:SI_JURY_FI a rdf:Property ;
+    rdfs:label "Voie d'accès à la certification après un parcours de formation sous statut d'élève." ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:SI_JURY_FC a rdf:Property ;
+    rdfs:label "Voie d'accès à la certification après un parcours de formation continue." ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:SI_JURY_VAE a rdf:Property ;
+    rdfs:label "Voie d'accès à la certification par expérience." ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:SI_JURY_CQ a rdf:Property ;
+    rdfs:label "Voie d'accès à la certification en contrat de professionnalisation." ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:SI_JURY_CL a rdf:Property ;
+    rdfs:label "Voie d'accès à la certification par candidature individuelle." ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:ACCESSIBLE_NOUVELLE_CALEDONIE a rdf:Property ;
+    rdfs:label "Inscrite au cadre de la Nouvelle Calédonie" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:ACCESSIBLE_POLYNESIE_FRANCAISE a rdf:Property ;
+    rdfs:label "Inscrite au cadre de la Polynésie française" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:PUBLICATION_DECRET_CREATION a rdf:Property ;
+    rdfs:label "Publication du décret de création" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:PUBLICATION_DECRET_GENERAL a rdf:Property ;
+    rdfs:label "Publication du décret de création" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:PUBLICATION_DECRET_AUTRE a rdf:Property ;
+    rdfs:label "Publication du décret" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:DATE_DERNIER_JO a rdf:Property ;
+    rdfs:label "Date du dernier Journal Officiel ou Bulletin Officiel" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:LIEN_URL_DESCRIPTION a rdf:Property ;
+    rdfs:label "Lien URL de description" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:DATE_FIN_ENREGISTREMENT a rdf:Property ;
+    rdfs:label "Date de fin d'enregistrement" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:TYPE_ENREGISTREMENT a rdf:Property ;
+    rdfs:label "Type d'enregistrement" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:DATE_LIMITE_DELIVRANCE a rdf:Property ;
+    rdfs:label "Date limite de délivrance" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:CCN_1 a rdf:Property ;
+    rdfs:label "Convention Collective Nationale 1" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:CCN_2 a rdf:Property ;
+    rdfs:label "Convention Collective Nationale 2" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:CCN_3 a rdf:Property ;
+    rdfs:label "Convention Collective Nationale 3" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:PARTENAIRE a rdfs:Class ;
+    rdfs:label "Partenaire" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:hasPARTENAIRE a rdf:Property ;
+    rdfs:label "A comme partenaire" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:NOM_PARTENAIRE a rdf:Property ;
+    rdfs:label "Nom du partenaire" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:SIRET_PARTENAIRE a rdf:Property ;
+    rdfs:label "SIRET du partenaire" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:HABILITATION_PARTENAIRE a rdf:Property ;
+    rdfs:label "Habilitation du partenaire" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:ETAT_HABILITATION a rdf:Property ;
+    rdfs:label "Etat habilitation" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rncp:SI_JURY_CA a rdf:Property ;
+    rdfs:label "Voie d'accès à la certification en contrat d'apprentissage." ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .

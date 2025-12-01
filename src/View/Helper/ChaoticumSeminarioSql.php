@@ -88,36 +88,100 @@ class ChaoticumSeminarioSql extends AbstractHelper
      *
      * @param   object   $vis
      * @param   array    $idsItems
+     * @param   string   $typeQuery
      * @return  array
      */
-    function getDataForVis($vis,$idsItems){
+    function getDataForVis($vis,$idsItems,$typeQuery=""){
 
-        $dtsData = $vis->datasetData();
+        $typeQuery = $typeQuery ? $typeQuery : $vis->datasetData()['typeQuery'];
         /*
         'numCompForItems' => 'Compétences pour les items', // @translate
         'numCompForAutors' => 'Compétences pour les auteurs', // @translate
         */
-        switch ($dtsData['typeQuery'] ?? '') {
+        switch ($typeQuery) {
             case 'numCompForItems':
                 $query = "SELECT 
-                    rcomp.id, rcomp.title, rcomp.resource_class_id grId, c.label grLabel
-                    , count(*) nb_items
-                    , group_concat(r.id) idsItems
-                FROM
-                    resource r
-                    inner join resource rc on rc.resource_template_id = ".$this->cs->getResourceTemplate('Compétences du document')->id()."
-                    inner join value vrc on vrc.resource_id = rc.id and vrc.property_id = ".$this->cs->getProperty('dcterms:source')->id()." and vrc.value_resource_id = r.id
-                    inner join value vcomp on vcomp.resource_id = vrc.resource_id and vcomp.property_id = ".$this->cs->getProperty('rome:hasCompetence')->id()."
-                    inner join resource rcomp on rcomp.id = vcomp.value_resource_id
-                    inner join resource_class c on c.id = rcomp.resource_class_id
-                WHERE
-                    r.id IN (".implode(',', $idsItems).")        
-                group by rcomp.id, rcomp.title
-                order by rcomp.title";
+    rcomp.id, rcomp.title, rcomp.resource_class_id grId, c.label grLabel
+    , count(*) nb_items
+    , group_concat(r.id) idsItems
+FROM
+    resource r
+    inner join resource rc on rc.resource_template_id = ".$this->cs->getResourceTemplate('Compétences du document')->id()."
+    inner join value vrc on vrc.resource_id = rc.id and vrc.property_id = ".$this->cs->getProperty('dcterms:source')->id()." and vrc.value_resource_id = r.id
+    inner join value vcomp on vcomp.resource_id = vrc.resource_id and vcomp.property_id = ".$this->cs->getProperty('rome:hasCompetence')->id()."
+    inner join resource rcomp on rcomp.id = vcomp.value_resource_id
+    inner join resource_class c on c.id = rcomp.resource_class_id
+WHERE
+    r.id IN (".implode(',', $idsItems).")        
+group by rcomp.id, rcomp.title
+order by rcomp.title";
                 break;
             case 'numCompForAutors':
-                $query = "";                  
+                /*
+                $query = "SELECT 
+rComp.id, rComp.title, rcComp.label grLabel, rcComp.id grId,
+count(distinct r.id) nb_items,
+group_concat(r.id) idsItems
+FROM
+	resource r
+    inner join value vCrea on vCrea.value_resource_id = r.id
+    inner join value vDoc on vDoc.value_resource_id = vCrea.resource_id and vDoc.property_id = ".$this->cs->getProperty('dcterms:creator')->id()."
+    inner join value vAddComp on vAddComp.value_resource_id = vDoc.resource_id and vAddComp.property_id = ".$this->cs->getProperty('dcterms:source')->id()."
+    inner join value vComp on vComp.resource_id = vAddComp.resource_id and vComp.property_id = ".$this->cs->getProperty('rome:hasCompetence')->id()." 
+    inner join resource rComp on rComp.id = vComp.value_resource_id
+    inner join resource_class rcComp on rcComp.id = rComp.resource_class_id
+WHERE
+	r.resource_class_id = ".$this->cs->getResourceClass('foaf:Person')->id()."
+    AND r.id IN (".implode(',', $idsItems).")        
+GROUP BY rComp.id";
+                */
+                $rs = $this->getDataForVis(null, $idsItems, 'numCompForAutorsCreator');
+                return $rs;                  
                 break;
+            case 'numCompForAutorsCreator':
+                    $query = "SELECT 
+rComp.id idComp, rComp.title titleComp, 
+rcComp.label grLabelComp, rcComp.id grIdComp,
+rDoc.id idSrc, rDoc.title titleSrc,
+p.label pSrcDst,
+rcDoc.id grIdSrc, rcDoc.label grLabelSrc,
+r.id idDst, r.title titleDst,
+rc.label grLabelDst, rc.id grIdDst
+FROM
+	resource r
+    inner join resource_class rc on rc.id = r.resource_class_id
+    inner join value vCrea on vCrea.value_resource_id = r.id
+    inner join value vDoc on vDoc.value_resource_id = vCrea.resource_id and vDoc.property_id = ".$this->cs->getProperty('dcterms:creator')->id()."
+    inner join property p on p.id = vDoc.property_id
+    inner join resource rDoc on rDoc.id = vDoc.resource_id
+    inner join resource_class rcDoc on rcDoc.id = rDoc.resource_class_id
+    inner join value vAddComp on vAddComp.value_resource_id = vDoc.resource_id and vAddComp.property_id = ".$this->cs->getProperty('dcterms:source')->id()."
+    inner join value vComp on vComp.resource_id = vAddComp.resource_id and vComp.property_id = ".$this->cs->getProperty('rome:hasCompetence')->id()."
+    inner join resource rComp on rComp.id = vComp.value_resource_id
+    inner join resource_class rcComp on rcComp.id = rComp.resource_class_id
+WHERE r.id IN (".implode(',', $idsItems).")        
+";                  
+                break;
+            case 'numCompForAutorsMember':
+                    $query = "SELECT
+r.id idDst, r.title titleDst, 
+rcGr.label grLabelDst, rcGr.id grIdDst,
+rComp.id idComp, rComp.title titleComp,
+vMember.value_resource_id idSrc,
+rcMember.id grIdSrc, rcMember.label grLabelSrc
+FROM
+	resource r
+    inner join resource_class rcGr on rcGr.id = r.resource_class_id
+	inner join value vMember on vMember.resource_id = r.id and vMember.property_id = 180
+    inner join resource rMember on rMember.id = vMember.value_resource_id
+    inner join resource_class rcMember on rcMember.id = rMember.resource_class_id    
+    
+	inner join value vAddComp on vAddComp.value_resource_id = vMember.value_resource_id and vAddComp.property_id = 11
+    inner join value vComp on vComp.resource_id = vAddComp.resource_id and vComp.property_id = 726 
+    inner join resource rComp on rComp.id = vComp.value_resource_id
+WHERE
+	r.resource_class_id = 94 AND r.id = 7549";                  
+                break;                
             default:
                 # code...
                 break;

@@ -81,6 +81,7 @@ class Semafor extends AbstractJob
                 $result = $semafor([
                     'action' => $this->getArg('pipeline'),
                     'scope' => $this->getArg('scope'),
+                    'type' => $this->getArg('type'),
                     'item' => $resource,
                 ]);    
 

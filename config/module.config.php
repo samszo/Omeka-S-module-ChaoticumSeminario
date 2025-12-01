@@ -2,6 +2,8 @@
 
 namespace ChaoticumSeminario;
 
+use ChaoticumSeminario\Site\BlockLayout\ChaoticumSeminario;
+
 return [
     'datavis_dataset_types' => [
         'invokables' => [
@@ -29,6 +31,15 @@ return [
             'semaforCredentials' => Service\ViewHelper\SemaforCredentialsFactory::class,
             'semafor' => Service\ViewHelper\SemaforFactory::class
         ],
+        'invokables' => [
+            'formBatchEditSemafor' => View\Helper\BatchEditSemafor::class,
+        ],
+        'delegators' => [
+            'Laminas\Form\View\Helper\FormElement' => [
+                Service\Delegator\FormElementDelegatorFactory::class,
+            ],
+        ],
+
     ],
     'view_manager' => [
         'template_path_stack' => [
@@ -48,7 +59,11 @@ return [
             Form\ChaoticumSeminarioFieldset::class => Form\ChaoticumSeminarioFieldset::class,
             Form\ChaoticumSeminarioExploreFieldset::class => Form\ChaoticumSeminarioExploreFieldset::class,
         ],
+        'factories' => [
+            'ChaoticumSeminario\Form\Element\BatchEditSemafor' => Service\Form\Element\BatchEditSemaforFactory::class,
+        ],
     ],
+
     'translator' => [
         'translation_file_patterns' => [
             [

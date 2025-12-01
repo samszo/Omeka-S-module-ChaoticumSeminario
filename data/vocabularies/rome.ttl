@@ -1,0 +1,355 @@
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vs: <http://www.w3.org/2003/06/sw-vocab-status/ns#> .
+@prefix o: <http://omeka.org/s/vocabs/o#> .
+@prefix rome: <https://jardindesconnaissances.univ-paris8.fr/onto/rome#> .
+
+<https://jardindesconnaissances.univ-paris8.fr/onto/rome> a owl:Ontology ;
+    dcterms:title "Répertoire Opérationnel des Métiers et des Emplois" .
+
+rome:metier a rdfs:Class ;
+    rdfs:label "Métier" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:metierEnProximite a rdf:Property ;
+    rdfs:label "Métier en proximité" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:label a rdf:Property ;
+    rdfs:label "Label" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:appellationEsco a rdf:Property ;
+    rdfs:label "Appellation ESCO (European Skills, Competences, Qualifications and Occupations)" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:metierEnProximite a rdf:Property ;
+    rdfs:label "Métier en proximité" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:accesEmploi a rdf:Property ;
+    rdfs:label "Description de l'accés à ce métier" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:appellation a rdfs:Class ;
+    rdfs:label "Appellation" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasAppellation a rdf:Property ;
+    rdfs:label "A comme appellation" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:obsolete a rdf:Property ;
+    rdfs:label "Le métier n'est plus d'actualité" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:dateFin a rdf:Property ;
+    rdfs:label "Date de fin si métier obsolète" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:emploiCadre a rdf:Property ;
+    rdfs:label "Emploi cadre : oui/non" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:emploiReglemente a rdf:Property ;
+    rdfs:label "Emploi réglementé : oui/non" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:code a rdf:Property ;
+    rdfs:label "Code ROME" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:libelle a rdf:Property ;
+    rdfs:label "Libellé" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:definition a rdf:Property ;
+    rdfs:label "Définition" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:riasecMajeur a rdf:Property ;
+    rdfs:label "RIASEC Majeur" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:riasecMineur a rdf:Property ;
+    rdfs:label "RIASEC Mineur" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:transitionEcologique a rdf:Property ;
+    rdfs:label "Le métier est lié à la transition écologique" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:transitionEcologiqueDetaillee a rdf:Property ;
+    rdfs:label "En quoi le métier est lié à la transition écologique" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:transitionNumerique a rdf:Property ;
+    rdfs:label "Le métier est lié à la transition numérique" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:transitionDemographique a rdf:Property ;
+    rdfs:label "Le métier est lié à la transition démographique" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:codeIsco a rdf:Property ;
+    rdfs:label "Code International Standard Classification of Occupations" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:domaineProfessionnel a rdfs:Class ;
+    rdfs:label "Domaine professionnel" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasDomaineProfessionnel a rdf:Property ;
+    rdfs:label "A comme domaine professionnel" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:grandDomaineProfessionnel a rdfs:Class ;
+    rdfs:label "Grand domaine professionnel" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:grandDomaine a rdf:Property ;
+    rdfs:label "Grand domaine professionnel" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:libelleCourt a rdf:Property ;
+    rdfs:label "Libellé court" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:classification a rdf:Property ;
+    rdfs:label "Classification" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:competence a rdfs:Class ;
+    rdfs:label "Compétence" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasCompetence a rdf:Property ;
+    rdfs:label "A comme compétence" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasCompetenceCle a rdf:Property ;
+    rdfs:label "A comme compétence clé" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:type a rdf:Property ;
+    rdfs:label "Type" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:codeOgr a rdf:Property ;
+    rdfs:label "Code Outil de Gestion" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:frequence a rdf:Property ;
+    rdfs:label "Fréquence" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:theme a rdfs:Class ;
+    rdfs:label "Theme" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasTheme a rdf:Property ;
+    rdfs:label "A comme thème" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:centreInteret a rdfs:Class ;
+    rdfs:label "Centre d'interet" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasCentreInteret a rdf:Property ;
+    rdfs:label "A comme centre d'interet" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasCentreInteretLie a rdf:Property ;
+    rdfs:label "A comme centre d'interet lié" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:principal a rdf:Property ;
+    rdfs:label "Principal" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:secteurActivite a rdfs:Class ;
+    rdfs:label "Secteur d'activité" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasSecteurActivite a rdf:Property ;
+    rdfs:label "A comme secteur d'activité" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasSecteurActiviteLie a rdf:Property ;
+    rdfs:label "A comme secteur d'activité lié" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasCompetenceMobilisee a rdf:Property ;
+    rdfs:label "A comme compétence mobilisée" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasCompetenceMobiliseePrincipale a rdf:Property ;
+    rdfs:label "A comme compétence mobilisée principale" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasCompetenceMobiliseeEmergente a rdf:Property ;
+    rdfs:label "A comme compétence mobilisée émergente" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:naf a rdfs:Class ;
+    rdfs:label "NAF activité principale exercée" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasNaf a rdf:Property ;
+    rdfs:label "A comme NAF" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:formacode a rdfs:Class ;
+    rdfs:label "formacode" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasFormacode a rdf:Property ;
+    rdfs:label "A comme formacode" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:contexteTravail a rdfs:Class ;
+    rdfs:label "Contexte de travail" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasContexteTravail a rdf:Property ;
+    rdfs:label "A comme contexte de travail" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:categorie a rdf:Property ;
+    rdfs:label "Catégorie" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasMetier a rdf:Property ;
+    rdfs:label "A comme métier" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasMacroCompetence a rdf:Property ;
+    rdfs:label "A comme macro compétence" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:transferable a rdf:Property ;
+    rdfs:label "Transférable" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:qualiteProfessionnelle a rdf:Property ;
+    rdfs:label "Qualité professionnelle" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:sousCategorie a rdf:Property ;
+    rdfs:label "Sous catégorie" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:objectif a rdfs:Class ;
+    rdfs:label "Objectif" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasObjectif a rdf:Property ;
+    rdfs:label "A comme objectif" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:enjeu a rdfs:Class ;
+    rdfs:label "Enjeu" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasEnjeu a rdf:Property ;
+    rdfs:label "A comme enjeu" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:codeArborescence a rdf:Property ;
+    rdfs:label "Code arborescence" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:domaineCompetence a rdfs:Class ;
+    rdfs:label "Domaine de compétence" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasDomaineCompetence a rdf:Property ;
+    rdfs:label "A comme domaine de compétence" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:maturite a rdf:Property ;
+    rdfs:label "Maturité" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:categorieSavoir a rdfs:Class ;
+    rdfs:label "Catégorie de savoir" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:hasCategorieSavoir a rdf:Property ;
+    rdfs:label "A comme catégorie de savoir" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+rome:semaforResult a rdfs:Class ;
+    rdfs:label "Résultat de Semafor" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .

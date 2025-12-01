@@ -141,10 +141,11 @@ class diagramCompetencesRelationships implements DiagramTypeInterface
      */
     public function prepareRender(PhpRenderer $view) : void
     {
-        $view->headScript()->appendFile('https://d3js.org/d3.v6.js');
+        $view->headScript()->appendFile('https://d3js.org/d3.v7.js');
         $view->headScript()->appendFile('https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js');
         $view->headScript()->appendFile($view->assetUrl('js/diagram-render/item_relationships.js', 'Datavis'));
         $view->headScript()->appendFile($view->assetUrl('js/diagram-render/CompetencesRelationships.js', 'ChaoticumSeminario'));
-        $view->headLink()->appendStylesheet($view->assetUrl('css/diagram-render/network_graph.css', 'Datavis'));
+        $view->headScript()->appendFile($view->assetUrl('modules/mainDatavis.js', 'ChaoticumSeminario'),'module');
+        $view->headLink()->appendStylesheet($view->assetUrl('css/competences_network.css', 'ChaoticumSeminario'));
     }
 }
