@@ -86,6 +86,7 @@ class Module extends AbstractModule
                     'type' => BatchEditSemafor::class,
                     'name' => 'BatchEditSemafor',
                 ]);
+                $this->formAddElementsResourceBatchUpdateForm($event);
             }
         );
         /*
