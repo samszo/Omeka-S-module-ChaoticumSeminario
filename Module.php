@@ -59,24 +59,6 @@ class Module extends AbstractModule
             [$this, 'handleResourceBatchUpdatePost']
         );
 
-        /*
-        // Extend the batch edit form via js.
-        $sharedEventManager->attach(
-            'Omeka\Controller\Admin\Item',
-            'view.layout',
-            [$this, 'addAdminResourceHeaders']
-        );
-        $sharedEventManager->attach(
-            '*',
-            'view.batch_edit.before',
-            [$this, 'addAdminResourceHeaders']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Form\ResourceBatchUpdateForm::class,
-            'form.add_elements',
-            [$this, 'formAddElementsResourceBatchUpdateForm']
-        );
-        */
         $sharedEventManager->attach(
             'Omeka\Form\ResourceBatchUpdateForm',
             'form.add_elements',
@@ -89,25 +71,6 @@ class Module extends AbstractModule
                 $this->formAddElementsResourceBatchUpdateForm($event);
             }
         );
-        /*
-        $eventIds = [
-            'Omeka\Api\Adapter\ItemAdapter',
-            'Omeka\Api\Adapter\ItemSetAdapter',
-            'Omeka\Api\Adapter\MediaAdapter',
-        ];
-        foreach ($eventIds as $eventId) {
-            $sharedEventManager->attach(
-                $eventId,
-                'api.preprocess_batch_update',
-                function (Event $event) {
-                    $data = $event->getParam('data');
-                    $rawData = $event->getParam('request')->getContent();
-                    $event->setParam('data', $data);
-                }
-            );
-        }
-        */
-
 
         // Ajout du paramètre utilisateur
         $sharedEventManager->attach(
