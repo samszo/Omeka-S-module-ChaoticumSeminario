@@ -732,9 +732,13 @@ WHERE
         }                                  
         if($params['cherche']){
             $finds = $this->getTransRecherche($params);
-            $ids = array_map(function ($a) { return $a['id']; }, $finds);
-            $query.=" WHERE t.id IN (".implode(",",$ids).")";    
-            $timeline = $this->conn->fetchAll($query);
+            if(count($finds)){
+                $ids = array_map(function ($a) { return $a['id']; }, $finds);
+                $query.=" WHERE t.id IN (".implode(",",$ids).")";    
+                $timeline = $this->conn->fetchAll($query);
+            }else{
+                $timeline = [];
+            }
             $rs=['scores'=>$finds,'timeline'=>$timeline];    
         }                    
         return $rs;       
