@@ -50,6 +50,7 @@ return [
         'invokables' => [
             'chaoticumSeminario' => Site\BlockLayout\ChaoticumSeminario::class,
             'chaoticumSeminarioExplore' => Site\BlockLayout\ChaoticumSeminarioExplore::class,
+            'chaoticumSeminarioConferences' => Site\BlockLayout\ChaoticumSeminarioConferences::class,
         ],
     ],
     'form_elements' => [
@@ -58,6 +59,7 @@ return [
             Form\ConfigForm::class => Form\ConfigForm::class,
             Form\ChaoticumSeminarioFieldset::class => Form\ChaoticumSeminarioFieldset::class,
             Form\ChaoticumSeminarioExploreFieldset::class => Form\ChaoticumSeminarioExploreFieldset::class,
+            Form\ChaoticumSeminarioConferencesFieldset::class => Form\ChaoticumSeminarioConferencesFieldset::class,
         ],
         'factories' => [
             'ChaoticumSeminario\Form\Element\BatchEditSemafor' => Service\Form\Element\BatchEditSemaforFactory::class,
@@ -107,6 +109,13 @@ return [
             'chaoticumSeminarioExplore' => [
                 'heading' => '',
                 'item_id' => null,
+            ],
+            'chaoticumSeminarioConferences' => [
+                'heading' => '',
+                'item_set_id' => null,
+                'conference_template' => 'Cours',
+                'transcription_template' => 'Transcription',
+                'per_page' => 10,
             ],
         ],
     ],
