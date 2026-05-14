@@ -3,8 +3,10 @@
  * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var \Omeka\Api\Representation\SitePageBlockRepresentation $block
  * @var string $heading
- * @var array $conferencesByTheme  Keyed by theme label, each value: [['item' => ItemRepresentation, 'transcriptions' => ItemRepresentation[]], ...]
+ * @var array $conferencesByTheme  Keyed by theme label, each value: ItemRepresentation[]
  * @var int $totalConferences
+ * @var string $transcriptionTemplate
+ * @var string $apiUrl
  */
 ?>
 
@@ -25,7 +27,7 @@
                placeholder="<?php echo $this->escapeHtmlAttr($this->translate('Search conferences…')); ?>">
     </div>
 
-    <?php foreach ($conferencesByTheme as $theme => $entries): ?>
+    <?php foreach ($conferencesByTheme as $theme => $conferences): ?>
         <?php
         $themeSlug = preg_replace('/[^a-z0-9]+/', '-', strtolower($theme ?: 'sans-theme'));
         $accordionId = 'cs-accordion-' . $themeSlug . '-' . substr(md5($theme), 0, 6);
@@ -34,22 +36,18 @@
             <h3 class="cs-theme-heading d-flex align-items-center gap-2 mb-2">
                 <span class="badge bg-primary"><?php echo $this->escapeHtml($theme ?: $this->translate('No theme')); ?></span>
                 <span class="text-muted small fw-normal">
-                    <?php echo sprintf($this->translate('%d conference(s)'), count($entries)); ?>
+                    <?php echo sprintf($this->translate('%d conference(s)'), count($conferences)); ?>
                 </span>
             </h3>
 
             <div class="accordion" id="<?php echo $accordionId; ?>">
-                <?php foreach ($entries as $entry): ?>
+                <?php foreach ($conferences as $conference): ?>
                     <?php
-                    /** @var \Omeka\Api\Representation\ItemRepresentation $conference */
-                    $conference    = $entry['item'];
-                    $transcriptions = $entry['transcriptions'];
-                    $collapseId    = 'cs-conf-collapse-' . $conference->id();
-                    $headingId     = 'cs-conf-heading-' . $conference->id();
-
-                    $title       = $conference->displayTitle();
-                    $date        = $conference->value('dcterms:valid') ?? $conference->value('dcterms:date');
-                    $number      = $conference->value('curation:number');
+                    $collapseId = 'cs-conf-collapse-' . $conference->id();
+                    $headingId  = 'cs-conf-heading-' . $conference->id();
+                    $title      = $conference->displayTitle();
+                    $date       = $conference->value('dcterms:valid') ?? $conference->value('dcterms:date');
+                    $number     = $conference->value('curation:number');
                     $description = $conference->value('dcterms:description');
                     ?>
                     <div class="accordion-item cs-conference-item"
@@ -71,9 +69,6 @@
                                     <?php if ($date): ?>
                                         <span class="badge bg-light text-dark"><?php echo $this->escapeHtml($date->asHtml()); ?></span>
                                     <?php endif; ?>
-                                    <span class="badge bg-info text-dark">
-                                        <?php echo count($transcriptions); ?> <?php echo $this->translate('transcription(s)'); ?>
-                                    </span>
                                 </span>
                             </button>
                         </h4>
@@ -84,54 +79,19 @@
                                     <p class="text-muted mb-3"><?php echo $this->escapeHtml($description->asHtml()); ?></p>
                                 <?php endif; ?>
 
-                                <div class="d-flex justify-content-end mb-2">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <button class="btn btn-sm btn-outline-info cs-load-trans"
+                                            data-conf-id="<?php echo $conference->id(); ?>"
+                                            data-api-url="<?php echo $this->escapeHtmlAttr($apiUrl); ?>"
+                                            data-template="<?php echo $this->escapeHtmlAttr($transcriptionTemplate); ?>">
+                                        <i class="fas fa-file-alt me-1"></i><?php echo $this->translate('Load transcriptions'); ?>
+                                    </button>
                                     <a href="<?php echo $conference->siteUrl(); ?>" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-external-link-alt me-1"></i><?php echo $this->translate('View conference'); ?>
                                     </a>
                                 </div>
 
-                                <?php if (empty($transcriptions)): ?>
-                                    <p class="text-muted fst-italic"><?php echo $this->translate('No transcriptions available.'); ?></p>
-                                <?php else: ?>
-                                    <div class="cs-transcriptions-list">
-                                        <h6 class="text-uppercase text-muted small mb-2">
-                                            <i class="fas fa-file-alt me-1"></i><?php echo $this->translate('Transcriptions'); ?>
-                                        </h6>
-                                        <div class="list-group list-group-flush">
-                                            <?php foreach ($transcriptions as $transcription): ?>
-                                                <?php
-                                                $transTitle = $transcription->displayTitle();
-                                                $transDesc  = $transcription->value('dcterms:description');
-                                                ?>
-                                                <div class="list-group-item list-group-item-action px-0">
-                                                    <div class="d-flex w-100 justify-content-between align-items-start">
-                                                        <div class="flex-grow-1">
-                                                            <h6 class="mb-1">
-                                                                <a href="<?php echo $transcription->siteUrl(); ?>">
-                                                                    <?php echo $this->escapeHtml($transTitle); ?>
-                                                                </a>
-                                                            </h6>
-                                                            <?php if ($transDesc): ?>
-                                                                <p class="mb-1 small text-muted">
-                                                                    <?php echo $this->escapeHtml(mb_strimwidth($transDesc->asHtml(), 0, 200, '…')); ?>
-                                                                </p>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                        <div class="ms-3 d-flex flex-column align-items-end gap-1">
-                                                            <?php foreach ($transcription->media() as $media): ?>
-                                                                <a href="<?php echo $media->originalUrl(); ?>"
-                                                                   class="btn btn-sm btn-outline-secondary"
-                                                                   title="<?php echo $this->escapeHtmlAttr($media->displayTitle()); ?>">
-                                                                    <i class="fas fa-download me-1"></i><?php echo $this->escapeHtml($media->mediaType()); ?>
-                                                                </a>
-                                                            <?php endforeach; ?>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
+                                <div class="cs-transcriptions-container"></div>
                             </div>
                         </div>
                     </div>
@@ -143,19 +103,82 @@
 
 <script>
 (function () {
+    /* Live search */
     const searchInput = document.getElementById('cs-conf-search');
-    if (!searchInput) return;
-    searchInput.addEventListener('input', function () {
-        const q = this.value.toLowerCase().trim();
-        document.querySelectorAll('.cs-theme-section').forEach(function (section) {
-            let sectionVisible = false;
-            section.querySelectorAll('.cs-conference-item').forEach(function (el) {
-                const titleMatch = !q || (el.dataset.title || '').includes(q);
-                el.style.display = titleMatch ? '' : 'none';
-                if (titleMatch) sectionVisible = true;
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            const q = this.value.toLowerCase().trim();
+            document.querySelectorAll('.cs-theme-section').forEach(function (section) {
+                let visible = false;
+                section.querySelectorAll('.cs-conference-item').forEach(function (el) {
+                    const match = !q || (el.dataset.title || '').includes(q);
+                    el.style.display = match ? '' : 'none';
+                    if (match) visible = true;
+                });
+                section.style.display = visible ? '' : 'none';
             });
-            section.style.display = sectionVisible ? '' : 'none';
         });
+    }
+
+    /* Lazy-load transcriptions on button click */
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.cs-load-trans');
+        if (!btn) return;
+
+        const confId  = btn.dataset.confId;
+        const apiUrl  = btn.dataset.apiUrl;
+        const tpl     = btn.dataset.template;
+        const container = btn.closest('.accordion-body').querySelector('.cs-transcriptions-container');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span><?php echo $this->translate('Loading…'); ?>';
+
+        const url = apiUrl + '/items?resource_template_label=' + encodeURIComponent(tpl)
+            + '&property[0][joiner]=and'
+            + '&property[0][property]=dcterms%3AisReferencedBy'
+            + '&property[0][type]=res'
+            + '&property[0][text]=' + confId;
+
+        fetch(url)
+            .then(function (r) { return r.json(); })
+            .then(function (items) {
+                btn.remove();
+                if (!items.length) {
+                    container.innerHTML = '<p class="text-muted fst-italic"><?php echo $this->translate('No transcriptions available.'); ?></p>';
+                    return;
+                }
+                let html = '<h6 class="text-uppercase text-muted small mb-2"><i class="fas fa-file-alt me-1"></i><?php echo $this->translate('Transcriptions'); ?></h6>';
+                html += '<div class="list-group list-group-flush">';
+                items.forEach(function (item) {
+                    const title = item['o:title'] || '—';
+                    const link  = item['@id'] ? item['@id'].replace('/api/items/', '/s/<?php echo $this->params()->fromRoute('site-slug', 'default'); ?>/item/') : '#';
+                    const desc  = (item['dcterms:description'] || []).map(function(v){ return v['@value'] || ''; }).join(' ');
+                    const short = desc.length > 200 ? desc.substring(0, 200) + '…' : desc;
+                    const media = item['o:media'] || [];
+
+                    html += '<div class="list-group-item px-0">';
+                    html += '<div class="d-flex w-100 justify-content-between align-items-start">';
+                    html += '<div class="flex-grow-1"><h6 class="mb-1"><a href="' + link + '">' + title + '</a></h6>';
+                    if (short) html += '<p class="mb-1 small text-muted">' + short + '</p>';
+                    html += '</div>';
+                    if (media.length) {
+                        html += '<div class="ms-3 d-flex flex-column align-items-end gap-1">';
+                        media.forEach(function (m) {
+                            const mUrl = m['o:original_url'] || '#';
+                            const mType = m['o:media_type'] || '';
+                            html += '<a href="' + mUrl + '" class="btn btn-sm btn-outline-secondary"><i class="fas fa-download me-1"></i>' + mType + '</a>';
+                        });
+                        html += '</div>';
+                    }
+                    html += '</div></div>';
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            })
+            .catch(function () {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i><?php echo $this->translate('Error — retry'); ?>';
+            });
     });
 })();
 </script>

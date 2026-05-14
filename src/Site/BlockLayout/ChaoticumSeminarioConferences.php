@@ -68,35 +68,19 @@ class ChaoticumSeminarioConferences extends AbstractBlockLayout
         foreach ($conferences as $conference) {
             $themeValue = $conference->value('curation:theme');
             $theme = $themeValue ? $themeValue->asHtml() : '';
-
-            $transcriptions = [];
-            try {
-                $transResponse = $api->search('items', [
-                    'resource_template_label' => $transcriptionTemplate,
-                    'property' => [[
-                        'joiner' => 'and',
-                        'property' => 'dcterms:isReferencedBy',
-                        'type' => 'res',
-                        'text' => $conference->id(),
-                    ]],
-                ]);
-                $transcriptions = $transResponse->getContent();
-            } catch (\Exception $e) {
-                $transcriptions = [];
-            }
-
-            $conferencesByTheme[$theme][] = [
-                'item' => $conference,
-                'transcriptions' => $transcriptions,
-            ];
+            $conferencesByTheme[$theme][] = $conference;
         }
         ksort($conferencesByTheme);
+
+        $apiUrl = $view->serverUrl($view->basePath('/api'));
 
         $vars = [
             'block' => $block,
             'heading' => $block->dataValue('heading', ''),
             'conferencesByTheme' => $conferencesByTheme,
             'totalConferences' => $totalConferences,
+            'transcriptionTemplate' => $transcriptionTemplate,
+            'apiUrl' => $apiUrl,
         ];
         return $view->partial(self::PARTIAL_NAME, $vars);
     }
