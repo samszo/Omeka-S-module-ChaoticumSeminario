@@ -64,8 +64,11 @@ class ChaoticumSeminarioConferences extends AbstractBlockLayout
             $totalConferences = 0;
         }
 
-        $conferenceData = [];
+        $conferencesByTheme = [];
         foreach ($conferences as $conference) {
+            $themeValue = $conference->value('curation:theme');
+            $theme = $themeValue ? $themeValue->asHtml() : '';
+
             $transcriptions = [];
             try {
                 $transResponse = $api->search('items', [
@@ -82,16 +85,17 @@ class ChaoticumSeminarioConferences extends AbstractBlockLayout
                 $transcriptions = [];
             }
 
-            $conferenceData[] = [
+            $conferencesByTheme[$theme][] = [
                 'item' => $conference,
                 'transcriptions' => $transcriptions,
             ];
         }
+        ksort($conferencesByTheme);
 
         $vars = [
             'block' => $block,
             'heading' => $block->dataValue('heading', ''),
-            'conferenceData' => $conferenceData,
+            'conferencesByTheme' => $conferencesByTheme,
             'totalConferences' => $totalConferences,
         ];
         return $view->partial(self::PARTIAL_NAME, $vars);

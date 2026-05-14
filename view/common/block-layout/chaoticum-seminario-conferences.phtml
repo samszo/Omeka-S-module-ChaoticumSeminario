@@ -3,7 +3,7 @@
  * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var \Omeka\Api\Representation\SitePageBlockRepresentation $block
  * @var string $heading
- * @var array $conferenceData  Each entry: ['item' => ItemRepresentation, 'transcriptions' => ItemRepresentation[]]
+ * @var array $conferencesByTheme  Keyed by theme label, each value: [['item' => ItemRepresentation, 'transcriptions' => ItemRepresentation[]], ...]
  * @var int $totalConferences
  */
 ?>
@@ -12,7 +12,7 @@
 <h2><?php echo $this->escapeHtml($heading); ?></h2>
 <?php endif; ?>
 
-<?php if (empty($conferenceData)): ?>
+<?php if (empty($conferencesByTheme)): ?>
 <p class="alert alert-info"><?php echo $this->translate('No conferences found.'); ?></p>
 <?php else: ?>
 
@@ -25,109 +25,120 @@
                placeholder="<?php echo $this->escapeHtmlAttr($this->translate('Search conferences…')); ?>">
     </div>
 
-    <div class="accordion" id="cs-conferences-accordion">
-        <?php foreach ($conferenceData as $index => $entry): ?>
-            <?php
-            /** @var \Omeka\Api\Representation\ItemRepresentation $conference */
-            $conference = $entry['item'];
-            $transcriptions = $entry['transcriptions'];
-            $collapseId = 'cs-conf-collapse-' . $conference->id();
-            $headingId  = 'cs-conf-heading-' . $conference->id();
+    <?php foreach ($conferencesByTheme as $theme => $entries): ?>
+        <?php
+        $themeSlug = preg_replace('/[^a-z0-9]+/', '-', strtolower($theme ?: 'sans-theme'));
+        $accordionId = 'cs-accordion-' . $themeSlug . '-' . substr(md5($theme), 0, 6);
+        ?>
+        <section class="cs-theme-section mb-4" data-theme="<?php echo $this->escapeHtmlAttr(strtolower($theme)); ?>">
+            <h3 class="cs-theme-heading d-flex align-items-center gap-2 mb-2">
+                <span class="badge bg-primary"><?php echo $this->escapeHtml($theme ?: $this->translate('No theme')); ?></span>
+                <span class="text-muted small fw-normal">
+                    <?php echo sprintf($this->translate('%d conference(s)'), count($entries)); ?>
+                </span>
+            </h3>
 
-            $title = $conference->displayTitle();
-            $date  = $conference->value('dcterms:valid') ?? $conference->value('dcterms:date');
-            $theme = $conference->value('curation:theme');
-            $number = $conference->value('curation:number');
-            $description = $conference->value('dcterms:description');
-            ?>
-            <div class="accordion-item cs-conference-item" data-title="<?php echo $this->escapeHtmlAttr(strtolower($title)); ?>">
-                <h2 class="accordion-header" id="<?php echo $headingId; ?>">
-                    <button class="accordion-button collapsed" type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#<?php echo $collapseId; ?>"
-                            aria-expanded="false"
-                            aria-controls="<?php echo $collapseId; ?>">
-                        <span class="cs-conf-title flex-grow-1">
-                            <?php if ($number): ?>
-                                <span class="badge bg-secondary me-2"><?php echo $this->escapeHtml($number->asHtml()); ?></span>
-                            <?php endif; ?>
-                            <?php echo $this->escapeHtml($title); ?>
-                        </span>
-                        <span class="ms-3 d-flex gap-2 align-items-center">
-                            <?php if ($date): ?>
-                                <span class="badge bg-light text-dark"><?php echo $this->escapeHtml($date->asHtml()); ?></span>
-                            <?php endif; ?>
-                            <?php if ($theme): ?>
-                                <span class="badge bg-primary"><?php echo $this->escapeHtml($theme->asHtml()); ?></span>
-                            <?php endif; ?>
-                            <span class="badge bg-info text-dark">
-                                <?php echo count($transcriptions); ?> <?php echo $this->translate('transcription(s)'); ?>
-                            </span>
-                        </span>
-                    </button>
-                </h2>
-                <div id="<?php echo $collapseId; ?>" class="accordion-collapse collapse"
-                     aria-labelledby="<?php echo $headingId; ?>"
-                     data-bs-parent="#cs-conferences-accordion">
-                    <div class="accordion-body">
-                        <?php if ($description): ?>
-                            <p class="text-muted mb-3"><?php echo $this->escapeHtml($description->asHtml()); ?></p>
-                        <?php endif; ?>
+            <div class="accordion" id="<?php echo $accordionId; ?>">
+                <?php foreach ($entries as $entry): ?>
+                    <?php
+                    /** @var \Omeka\Api\Representation\ItemRepresentation $conference */
+                    $conference    = $entry['item'];
+                    $transcriptions = $entry['transcriptions'];
+                    $collapseId    = 'cs-conf-collapse-' . $conference->id();
+                    $headingId     = 'cs-conf-heading-' . $conference->id();
 
-                        <div class="d-flex justify-content-end mb-2">
-                            <a href="<?php echo $conference->siteUrl(); ?>" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-external-link-alt me-1"></i><?php echo $this->translate('View conference'); ?>
-                            </a>
-                        </div>
+                    $title       = $conference->displayTitle();
+                    $date        = $conference->value('dcterms:valid') ?? $conference->value('dcterms:date');
+                    $number      = $conference->value('curation:number');
+                    $description = $conference->value('dcterms:description');
+                    ?>
+                    <div class="accordion-item cs-conference-item"
+                         data-title="<?php echo $this->escapeHtmlAttr(strtolower($title)); ?>"
+                         data-theme="<?php echo $this->escapeHtmlAttr(strtolower($theme)); ?>">
+                        <h4 class="accordion-header" id="<?php echo $headingId; ?>">
+                            <button class="accordion-button collapsed" type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#<?php echo $collapseId; ?>"
+                                    aria-expanded="false"
+                                    aria-controls="<?php echo $collapseId; ?>">
+                                <span class="cs-conf-title flex-grow-1">
+                                    <?php if ($number): ?>
+                                        <span class="badge bg-secondary me-2"><?php echo $this->escapeHtml($number->asHtml()); ?></span>
+                                    <?php endif; ?>
+                                    <?php echo $this->escapeHtml($title); ?>
+                                </span>
+                                <span class="ms-3 d-flex gap-2 align-items-center flex-shrink-0">
+                                    <?php if ($date): ?>
+                                        <span class="badge bg-light text-dark"><?php echo $this->escapeHtml($date->asHtml()); ?></span>
+                                    <?php endif; ?>
+                                    <span class="badge bg-info text-dark">
+                                        <?php echo count($transcriptions); ?> <?php echo $this->translate('transcription(s)'); ?>
+                                    </span>
+                                </span>
+                            </button>
+                        </h4>
+                        <div id="<?php echo $collapseId; ?>" class="accordion-collapse collapse"
+                             aria-labelledby="<?php echo $headingId; ?>">
+                            <div class="accordion-body">
+                                <?php if ($description): ?>
+                                    <p class="text-muted mb-3"><?php echo $this->escapeHtml($description->asHtml()); ?></p>
+                                <?php endif; ?>
 
-                        <?php if (empty($transcriptions)): ?>
-                            <p class="text-muted fst-italic"><?php echo $this->translate('No transcriptions available.'); ?></p>
-                        <?php else: ?>
-                            <div class="cs-transcriptions-list">
-                                <h6 class="text-uppercase text-muted small mb-2">
-                                    <i class="fas fa-file-alt me-1"></i><?php echo $this->translate('Transcriptions'); ?>
-                                </h6>
-                                <div class="list-group list-group-flush">
-                                    <?php foreach ($transcriptions as $transcription): ?>
-                                        <?php
-                                        $transTitle = $transcription->displayTitle();
-                                        $transDesc  = $transcription->value('dcterms:description');
-                                        $transData  = $transcription->value('curation:data');
-                                        ?>
-                                        <div class="list-group-item list-group-item-action px-0">
-                                            <div class="d-flex w-100 justify-content-between align-items-start">
-                                                <div class="flex-grow-1">
-                                                    <h6 class="mb-1">
-                                                        <a href="<?php echo $transcription->siteUrl(); ?>">
-                                                            <?php echo $this->escapeHtml($transTitle); ?>
-                                                        </a>
-                                                    </h6>
-                                                    <?php if ($transDesc): ?>
-                                                        <p class="mb-1 small text-muted">
-                                                            <?php echo $this->escapeHtml(mb_strimwidth($transDesc->asHtml(), 0, 200, '…')); ?>
-                                                        </p>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <div class="ms-3 d-flex flex-column align-items-end gap-1">
-                                                    <?php foreach ($transcription->media() as $media): ?>
-                                                        <a href="<?php echo $media->originalUrl(); ?>"
-                                                           class="btn btn-xs btn-outline-secondary"
-                                                           title="<?php echo $this->escapeHtmlAttr($media->displayTitle()); ?>">
-                                                            <i class="fas fa-download me-1"></i><?php echo $this->escapeHtml($media->mediaType()); ?>
-                                                        </a>
-                                                    <?php endforeach; ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
+                                <div class="d-flex justify-content-end mb-2">
+                                    <a href="<?php echo $conference->siteUrl(); ?>" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-external-link-alt me-1"></i><?php echo $this->translate('View conference'); ?>
+                                    </a>
                                 </div>
+
+                                <?php if (empty($transcriptions)): ?>
+                                    <p class="text-muted fst-italic"><?php echo $this->translate('No transcriptions available.'); ?></p>
+                                <?php else: ?>
+                                    <div class="cs-transcriptions-list">
+                                        <h6 class="text-uppercase text-muted small mb-2">
+                                            <i class="fas fa-file-alt me-1"></i><?php echo $this->translate('Transcriptions'); ?>
+                                        </h6>
+                                        <div class="list-group list-group-flush">
+                                            <?php foreach ($transcriptions as $transcription): ?>
+                                                <?php
+                                                $transTitle = $transcription->displayTitle();
+                                                $transDesc  = $transcription->value('dcterms:description');
+                                                ?>
+                                                <div class="list-group-item list-group-item-action px-0">
+                                                    <div class="d-flex w-100 justify-content-between align-items-start">
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="mb-1">
+                                                                <a href="<?php echo $transcription->siteUrl(); ?>">
+                                                                    <?php echo $this->escapeHtml($transTitle); ?>
+                                                                </a>
+                                                            </h6>
+                                                            <?php if ($transDesc): ?>
+                                                                <p class="mb-1 small text-muted">
+                                                                    <?php echo $this->escapeHtml(mb_strimwidth($transDesc->asHtml(), 0, 200, '…')); ?>
+                                                                </p>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <div class="ms-3 d-flex flex-column align-items-end gap-1">
+                                                            <?php foreach ($transcription->media() as $media): ?>
+                                                                <a href="<?php echo $media->originalUrl(); ?>"
+                                                                   class="btn btn-sm btn-outline-secondary"
+                                                                   title="<?php echo $this->escapeHtmlAttr($media->displayTitle()); ?>">
+                                                                    <i class="fas fa-download me-1"></i><?php echo $this->escapeHtml($media->mediaType()); ?>
+                                                                </a>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                        <?php endif; ?>
+                        </div>
                     </div>
-                </div>
+                <?php endforeach; ?>
             </div>
-        <?php endforeach; ?>
-    </div>
+        </section>
+    <?php endforeach; ?>
 </div>
 
 <script>
@@ -136,9 +147,14 @@
     if (!searchInput) return;
     searchInput.addEventListener('input', function () {
         const q = this.value.toLowerCase().trim();
-        document.querySelectorAll('.cs-conference-item').forEach(function (el) {
-            const title = el.dataset.title || '';
-            el.style.display = (!q || title.includes(q)) ? '' : 'none';
+        document.querySelectorAll('.cs-theme-section').forEach(function (section) {
+            let sectionVisible = false;
+            section.querySelectorAll('.cs-conference-item').forEach(function (el) {
+                const titleMatch = !q || (el.dataset.title || '').includes(q);
+                el.style.display = titleMatch ? '' : 'none';
+                if (titleMatch) sectionVisible = true;
+            });
+            section.style.display = sectionVisible ? '' : 'none';
         });
     });
 })();
