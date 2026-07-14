@@ -5,8 +5,7 @@
  * @var string $heading
  * @var array $conferencesByTheme  Keyed by theme label, each value: ItemRepresentation[]
  * @var int $totalConferences
- * @var string $transcriptionTemplate
- * @var string $apiUrl
+ * @var string $transcriptionsApiUrl
  */
 ?>
 
@@ -82,8 +81,7 @@
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <button class="btn btn-sm btn-outline-info cs-load-trans"
                                             data-conf-id="<?php echo $conference->id(); ?>"
-                                            data-api-url="<?php echo $this->escapeHtmlAttr($apiUrl); ?>"
-                                            data-template="<?php echo $this->escapeHtmlAttr($transcriptionTemplate); ?>">
+                                            data-api-url="<?php echo $this->escapeHtmlAttr($transcriptionsApiUrl); ?>">
                                         <i class="fas fa-file-alt me-1"></i><?php echo $this->translate('Load transcriptions'); ?>
                                     </button>
                                     <a href="<?php echo $conference->siteUrl(); ?>" class="btn btn-sm btn-outline-primary">
@@ -127,47 +125,37 @@
 
         const confId  = btn.dataset.confId;
         const apiUrl  = btn.dataset.apiUrl;
-        const tpl     = btn.dataset.template;
         const container = btn.closest('.accordion-body').querySelector('.cs-transcriptions-container');
 
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span><?php echo $this->translate('Loading…'); ?>';
 
-        const url = apiUrl + '/items?resource_template_label=' + encodeURIComponent(tpl)
-            + '&property[0][joiner]=and'
-            + '&property[0][property]=dcterms%3AisReferencedBy'
-            + '&property[0][type]=res'
-            + '&property[0][text]=' + confId;
+        const url = apiUrl + '?idConf=' + encodeURIComponent(confId);
 
         fetch(url)
             .then(function (r) { return r.json(); })
-            .then(function (items) {
+            .then(function (data) {
                 btn.remove();
-                if (!items.length) {
+                const transcriptions = data.transcriptions || [];
+                if (!transcriptions.length) {
                     container.innerHTML = '<p class="text-muted fst-italic"><?php echo $this->translate('No transcriptions available.'); ?></p>';
                     return;
                 }
                 let html = '<h6 class="text-uppercase text-muted small mb-2"><i class="fas fa-file-alt me-1"></i><?php echo $this->translate('Transcriptions'); ?></h6>';
                 html += '<div class="list-group list-group-flush">';
-                items.forEach(function (item) {
-                    const title = item['o:title'] || '—';
-                    const link  = item['@id'] ? item['@id'].replace('/api/items/', '/s/<?php echo $this->params()->fromRoute('site-slug', 'default'); ?>/item/') : '#';
-                    const desc  = (item['dcterms:description'] || []).map(function(v){ return v['@value'] || ''; }).join(' ');
-                    const short = desc.length > 200 ? desc.substring(0, 200) + '…' : desc;
-                    const media = item['o:media'] || [];
+                transcriptions.forEach(function (t) {
+                    const concepts = (t.concepts || []).map(function (c) { return c.title; }).filter(Boolean).join(', ');
 
                     html += '<div class="list-group-item px-0">';
                     html += '<div class="d-flex w-100 justify-content-between align-items-start">';
-                    html += '<div class="flex-grow-1"><h6 class="mb-1"><a href="' + link + '">' + title + '</a></h6>';
-                    if (short) html += '<p class="mb-1 small text-muted">' + short + '</p>';
+                    html += '<div class="flex-grow-1">';
+                    html += '<h6 class="mb-1">' + t.start + 's – ' + t.end + 's</h6>';
+                    if (t.creator) html += '<p class="mb-1 small text-muted">' + t.creator + '</p>';
+                    if (concepts) html += '<p class="mb-1 small">' + concepts + '</p>';
                     html += '</div>';
-                    if (media.length) {
+                    if (t.source) {
                         html += '<div class="ms-3 d-flex flex-column align-items-end gap-1">';
-                        media.forEach(function (m) {
-                            const mUrl = m['o:original_url'] || '#';
-                            const mType = m['o:media_type'] || '';
-                            html += '<a href="' + mUrl + '" class="btn btn-sm btn-outline-secondary"><i class="fas fa-download me-1"></i>' + mType + '</a>';
-                        });
+                        html += '<a href="' + t.source + '" class="btn btn-sm btn-outline-secondary"><i class="fas fa-download me-1"></i><?php echo $this->translate('Audio'); ?></a>';
                         html += '</div>';
                     }
                     html += '</div></div>';

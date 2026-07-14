@@ -46,7 +46,6 @@ class ChaoticumSeminarioConferences extends AbstractBlockLayout
         $api = $view->api();
 
         $conferenceTemplate = $block->dataValue('conference_template', 'Cours');
-        $transcriptionTemplate = $block->dataValue('transcription_template', 'Transcription');
         $itemSetId = (int) $block->dataValue('item_set_id', 0);
         $perPage = (int) $block->dataValue('per_page', 10);
 
@@ -72,15 +71,15 @@ class ChaoticumSeminarioConferences extends AbstractBlockLayout
         }
         ksort($conferencesByTheme);
 
-        $apiUrl = $view->serverUrl($view->basePath('/api'));
+        $site = $view->currentSite();
+        $transcriptionsApiUrl = $view->serverUrl($view->basePath('/s/' . $site->slug() . '/chaoticum-seminario-api/transcriptions'));
 
         $vars = [
             'block' => $block,
             'heading' => $block->dataValue('heading', ''),
             'conferencesByTheme' => $conferencesByTheme,
             'totalConferences' => $totalConferences,
-            'transcriptionTemplate' => $transcriptionTemplate,
-            'apiUrl' => $apiUrl,
+            'transcriptionsApiUrl' => $transcriptionsApiUrl,
         ];
         return $view->partial(self::PARTIAL_NAME, $vars);
     }

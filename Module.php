@@ -25,6 +25,16 @@ class Module extends AbstractModule
         parent::onBootstrap($event);
 
         require_once __DIR__ . '/vendor/autoload.php';
+
+        // Ouvre en lecture publique les endpoints JSON utilisés par l'appli mobile
+        // (liste des cours et transcriptions), sans toucher aux autres actions
+        // du contrôleur (delconf, conferences, ...) qui restent protégées.
+        $acl = $this->getServiceLocator()->get('Omeka\Acl');
+        $acl->allow(
+            null,
+            [Controller\Site\ApiController::class],
+            ['listconferences', 'transcriptions']
+        );
     }
 
     protected function preInstall(): void

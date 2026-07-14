@@ -46,6 +46,46 @@ return [
             dirname(__DIR__) . '/view',
         ],
     ],
+    'controllers' => [
+        'factories' => [
+            Controller\Site\ApiController::class => Service\Controller\Site\ApiControllerFactory::class,
+        ],
+    ],
+    'router' => [
+        'routes' => [
+            'site' => [
+                'child_routes' => [
+                    'chaoticum-seminario-api' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/chaoticum-seminario-api',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'ChaoticumSeminario\Controller\Site',
+                                '__SITE__' => true,
+                                'controller' => Controller\Site\ApiController::class,
+                                'action' => 'conferences',
+                            ],
+                        ],
+                        'may_terminate' => true,
+                        'child_routes' => [
+                            'default' => [
+                                'type' => \Laminas\Router\Http\Segment::class,
+                                'options' => [
+                                    'route' => '/:action',
+                                    'constraints' => [
+                                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                    ],
+                                    'defaults' => [
+                                        'action' => 'conferences',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
     'block_layouts' => [
         'invokables' => [
             'chaoticumSeminario' => Site\BlockLayout\ChaoticumSeminario::class,
