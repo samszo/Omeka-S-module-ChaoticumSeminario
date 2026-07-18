@@ -699,7 +699,7 @@ WHERE
         $query = "SELECT 
             c.id idConf, c.theme titleConf, c.source source1, c.created, c.num,
             d.id idMediaConf, d.face , d.plage, d.uri source2,
-            t.id idTrans, t.idFrag, t.start startFrag, t.end endFrag, t.agent creator, t.file source3,
+            t.id idTrans, t.idFrag, t.start startFrag, t.end endFrag, t.agent creator, t.file source3, t.texte,
             tc.id idAnno, tc.idConcept idCpt, tc.start startCpt, tc.end endCpt, tc.confidence confiance,
             cpt.label titleCpt, LENGTH(cpt.label) nbCar
         FROM
@@ -720,9 +720,15 @@ WHERE
         }                        
         if($params['idConf']){
             $query.=" WHERE c.id = ? ";    
-            $rs = $this->conn->fetchAll($query,[
+            $timeline = $this->conn->fetchAll($query,[
                 $params['idConf']
-            ]);    
+            ]);
+            if(isset($params['getTexte'])){
+                $finds = $this->conn->fetchAll("SELECT id, 1 'score', texte FROM transcriptions WHERE idConf = ?",[
+                    $params['idConf']
+                ]);
+                return ['scores'=>$finds,'timeline'=>$timeline]; 
+            }else return $timeline;
         }
         if($params['idTrans']){
             /* on récupère les identifiants de transcription
@@ -751,7 +757,7 @@ WHERE
      */
     function getTransRecherche($params){
 
-        $query = "SELECT id, MATCH (texte)
+        $query = "SELECT id, texte, MATCH (texte)
             AGAINST (? IN NATURAL LANGUAGE MODE) AS score
             FROM transcriptions
             WHERE MATCH (texte) AGAINST(? IN NATURAL LANGUAGE MODE)";

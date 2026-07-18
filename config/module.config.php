@@ -62,6 +62,7 @@ return [
                             'defaults' => [
                                 '__NAMESPACE__' => 'ChaoticumSeminario\Controller\Site',
                                 '__SITE__' => true,
+                                '__KEYAUTH__' => true,
                                 'controller' => Controller\Site\ApiController::class,
                                 'action' => 'conferences',
                             ],

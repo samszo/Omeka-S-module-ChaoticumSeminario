@@ -26,14 +26,18 @@ class Module extends AbstractModule
 
         require_once __DIR__ . '/vendor/autoload.php';
 
-        // Ouvre en lecture publique les endpoints JSON utilisés par l'appli mobile
-        // (liste des cours et transcriptions), sans toucher aux autres actions
-        // du contrôleur (delconf, conferences, ...) qui restent protégées.
+        // Ouvre l'accès à l'action du contrôleur (pas la ressource elle-même) pour ces
+        // endpoints JSON utilisés par l'appli mobile. Les endpoints de lecture sont
+        // publics ; relancer/signaler vérifient eux-mêmes l'identité de l'utilisateur
+        // ($this->identity()) et délèguent l'autorisation d'écriture réelle à l'ACL
+        // Omeka standard (création d'items, droits de job) - sans cette entrée, Omeka
+        // refuse même d'atteindre l'action, avant que ce contrôle interne ne s'exécute.
+        // Les autres actions (delconf, conferences, ...) restent protégées par défaut.
         $acl = $this->getServiceLocator()->get('Omeka\Acl');
         $acl->allow(
             null,
             [Controller\Site\ApiController::class],
-            ['listconferences', 'transcriptions']
+            ['listconferences', 'transcriptions', 'cherche', 'relancer', 'signaler']
         );
     }
 
