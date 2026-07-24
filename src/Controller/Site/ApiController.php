@@ -214,7 +214,7 @@ class ApiController extends AbstractActionController
     }
 
     /**
-     * GET /chaoticum-seminario-api/signaler?idConf=1&idTrans=2&type=personne&texte=...&lien=...
+     * GET /chaoticum-seminario-api/signaler?idConf=1&idTrans=2&type=personne&texte=...&timecode=83.4&lien=...
      * Crée un signalement léger (à trier plus tard dans l'admin Omeka).
      * Nécessite un utilisateur authentifié (key_identity/key_credential) ayant les droits.
      */
@@ -231,6 +231,7 @@ class ApiController extends AbstractActionController
         $type = $this->params()->fromQuery('type');
         $texte = trim((string) $this->params()->fromQuery('texte'));
         $lien = $this->params()->fromQuery('lien');
+        $timecode = $this->params()->fromQuery('timecode');
 
         $typesLabels = [
             'correction' => 'Correction de transcription',
@@ -246,11 +247,18 @@ class ApiController extends AbstractActionController
             return new JsonModel(['error' => 'Paramètres idConf, idTrans, type et texte requis']);
         }
 
+        $timecodeLabel = null;
+        if ($timecode !== null && $timecode !== '') {
+            $seconds = max(0, (int) floor((float) $timecode));
+            $timecodeLabel = sprintf('%d:%02d', intdiv($seconds, 60), $seconds % 60);
+        }
+
         try {
             $data = [];
             $data['dcterms:title'][] = [
                 'property_id' => $this->getPropertyId('dcterms:title'),
-                '@value' => $typesLabels[$type].' — fragment #'.$idTrans,
+                '@value' => $typesLabels[$type].' — fragment #'.$idTrans
+                    .($timecodeLabel ? ' à '.$timecodeLabel : ''),
                 'type' => 'literal',
             ];
             $data['dcterms:type'][] = [
@@ -258,11 +266,23 @@ class ApiController extends AbstractActionController
                 '@value' => $type,
                 'type' => 'literal',
             ];
+            $data['dcterms:source'][] = [
+                'property_id' => $this->getPropertyId('dcterms:source'),
+                'value_resource_id' => $idTrans,
+                'type' => 'resource',                
+            ];
             $data['dcterms:description'][] = [
                 'property_id' => $this->getPropertyId('dcterms:description'),
                 '@value' => $texte,
                 'type' => 'literal',
             ];
+            if ($timecodeLabel) {
+                $data['dcterms:temporal'][] = [
+                    'property_id' => $this->getPropertyId('dcterms:temporal'),
+                    '@value' => $timecodeLabel,
+                    'type' => 'literal',
+                ];
+            }
             if ($lien) {
                 $data['dcterms:references'][] = [
                     'property_id' => $this->getPropertyId('dcterms:references'),
