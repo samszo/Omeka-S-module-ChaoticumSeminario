@@ -13,7 +13,7 @@ class ApiControllerFactory implements FactoryInterface
         $chaoticumSeminarioSql = $services->get('ViewHelperManager')->get('chaoticumSeminarioSql');
         $acl = $services->get('Omeka\Acl');
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
-
-        return new ApiController($api, $chaoticumSeminarioSql, $acl, $dispatcher);
+        $cs = $services->get('ViewHelperManager')->get('chaoticumSeminario');
+        return new ApiController($api, $chaoticumSeminarioSql, $acl, $dispatcher, $cs);
     }
 }

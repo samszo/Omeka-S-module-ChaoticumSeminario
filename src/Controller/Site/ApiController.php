@@ -15,13 +15,15 @@ class ApiController extends AbstractActionController
     protected $chaoticumSeminarioSql;
     protected $acl;
     protected $dispatcher;
+    protected $cs;
 
-    public function __construct(ApiManager $api, $chaoticumSeminarioSql, $acl, Dispatcher $dispatcher)
+    public function __construct(ApiManager $api, $chaoticumSeminarioSql, $acl, Dispatcher $dispatcher, $cs)
     {
         $this->api = $api;
         $this->chaoticumSeminarioSql = $chaoticumSeminarioSql;
         $this->acl = $acl;
         $this->dispatcher = $dispatcher;
+        $this->cs = $cs;
     }
 
     /**
@@ -215,6 +217,7 @@ class ApiController extends AbstractActionController
 
     /**
      * GET /chaoticum-seminario-api/signaler?idConf=1&idTrans=2&type=personne&texte=...&timecode=83.4&lien=...
+     * Pour type=correction : remplacer=...&par=...&surTout=1|0 (stockés dans jdc:remplacer/jdc:par/jdc:surTout).
      * Crée un signalement léger (à trier plus tard dans l'admin Omeka).
      * Nécessite un utilisateur authentifié (key_identity/key_credential) ayant les droits.
      */
@@ -232,13 +235,16 @@ class ApiController extends AbstractActionController
         $texte = trim((string) $this->params()->fromQuery('texte'));
         $lien = $this->params()->fromQuery('lien');
         $timecode = $this->params()->fromQuery('timecode');
+        $remplacer = $this->params()->fromQuery('remplacer');
+        $par = $this->params()->fromQuery('par');
+        $surTout = $this->params()->fromQuery('surTout');
 
         $typesLabels = [
-            'correction' => 'Correction de transcription',
-            'personne' => 'Référence à une personne',
-            'oeuvre' => 'Référence à une œuvre',
-            'date' => 'Référence à une date ou une période',
-            'lieu' => 'Référence à un lieu',
+            'correction' => ["title"=>'Correction de transcription',"rt"=>"Correction transcription","status"=>"A faire"],
+            'personne' => ["title"=>'Référence à une personne',"rt"=>"","status"=>"A référencer"],
+            'oeuvre' => ["title"=>'Référence à une œuvre',"rt"=>"","status"=>"A référencer"],
+            'date' => ["title"=>'Référence à une date ou une période',"rt"=>"","status"=>"A vérifier"],
+            'lieu' => ["title"=>'Référence à un lieu',"rt"=>"","status"=>"A référencer"],
         ];
 
         if (!$idConf || !$idTrans || !isset($typesLabels[$type]) || !$texte) {
@@ -255,37 +261,72 @@ class ApiController extends AbstractActionController
 
         try {
             $data = [];
+            if(isset($typesLabels[$type]["rt"])){
+                $rt = $this->cs->getResourceTemplate($typesLabels[$type]["rt"]);
+                $data['o:resource_template'] = ['o:id' => $rt->id()];
+                $data['o:resource_class'] = ['o:id' => $rt->resourceClass()->id()];
+            }
+
+            if(isset($typesLabels[$type]["status"])){
+                $data['curation:status'][] = [
+                    'property_id' => $this->cs->getProperty('curation:status')->id(),
+                    '@value' => $typesLabels[$type]["status"],
+                    'type' => 'literal',
+                ];
+            }
+
             $data['dcterms:title'][] = [
-                'property_id' => $this->getPropertyId('dcterms:title'),
-                '@value' => $typesLabels[$type].' — fragment #'.$idTrans
+                'property_id' => $this->cs->getProperty('dcterms:title')->id(),
+                '@value' => $typesLabels[$type]["title"].' — fragment #'.$idTrans
                     .($timecodeLabel ? ' à '.$timecodeLabel : ''),
                 'type' => 'literal',
             ];
             $data['dcterms:type'][] = [
-                'property_id' => $this->getPropertyId('dcterms:type'),
+                'property_id' => $this->cs->getProperty('dcterms:type')->id(),
                 '@value' => $type,
                 'type' => 'literal',
             ];
             $data['dcterms:source'][] = [
-                'property_id' => $this->getPropertyId('dcterms:source'),
+                'property_id' => $this->cs->getProperty('dcterms:source')->id(),
                 'value_resource_id' => $idTrans,
                 'type' => 'resource',                
             ];
             $data['dcterms:description'][] = [
-                'property_id' => $this->getPropertyId('dcterms:description'),
+                'property_id' => $this->cs->getProperty('dcterms:description')->id(),
                 '@value' => $texte,
                 'type' => 'literal',
             ];
             if ($timecodeLabel) {
                 $data['dcterms:temporal'][] = [
-                    'property_id' => $this->getPropertyId('dcterms:temporal'),
+                    'property_id' => $this->cs->getProperty('dcterms:temporal')->id(),
                     '@value' => $timecodeLabel,
+                    'type' => 'literal',
+                ];
+            }
+            if ($type === 'correction') {
+                if ($remplacer !== null && $remplacer !== '') {
+                    $data['jdc:remplacer'][] = [
+                        'property_id' => $this->cs->getProperty('jdc:remplacer')->id(),
+                        '@value' => $remplacer,
+                        'type' => 'literal',
+                    ];
+                }
+                if ($par !== null && $par !== '') {
+                    $data['jdc:par'][] = [
+                        'property_id' => $this->cs->getProperty('jdc:par')->id(),
+                        '@value' => $par,
+                        'type' => 'literal',
+                    ];
+                }
+                $data['jdc:surTout'][] = [
+                    'property_id' => $this->cs->getProperty('jdc:surTout')->id(),
+                    '@value' => filter_var($surTout, FILTER_VALIDATE_BOOLEAN) ? 'oui' : 'non',
                     'type' => 'literal',
                 ];
             }
             if ($lien) {
                 $data['dcterms:references'][] = [
-                    'property_id' => $this->getPropertyId('dcterms:references'),
+                    'property_id' => $this->cs->getProperty('dcterms:references')->id(),
                     '@id' => $lien,
                     'type' => 'uri',
                 ];
@@ -299,16 +340,6 @@ class ApiController extends AbstractActionController
         }
 
         return new JsonModel(['id' => $item->id()]);
-    }
-
-    protected function getPropertyId($term)
-    {
-        static $cache = [];
-        if (!isset($cache[$term])) {
-            $result = $this->api->search('properties', ['term' => $term])->getContent();
-            $cache[$term] = $result ? $result[0]->id() : null;
-        }
-        return $cache[$term];
     }
 
     function mapTranscriptions(array $rows, array $scores=[]){

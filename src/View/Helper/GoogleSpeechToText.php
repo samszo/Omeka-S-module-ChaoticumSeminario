@@ -333,8 +333,8 @@ class GoogleSpeechToText extends AbstractHelper
     {
         //TODO:ajouter la création automatique des ressources template et l'importation des vocabulaires
         $rt = $this->getRt('Transcription');
-        $oItem['o:resource_template'] = ['o:id' => $rt->id()];
         $oItem = [];
+        $oItem['o:resource_template'] = ['o:id' => $rt->id()];
         $oItem['o:resource_class'] = ['o:id' => $rt->resourceClass()->id()];
         $oItem['dcterms:title'][] = [
             'property_id' => $this->getProp('dcterms:title')->id(),
