@@ -1,0 +1,100 @@
+<?php
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+
+$this->htmlElement('body')->appendAttribute('class', 'chaoticum-seminario-correction run');
+?>
+
+<?php echo $this->pageTitle($translate('Bilan de la correction')); ?>
+
+<div id="page-actions">
+    <?php echo $this->hyperlink($translate('Retour à la correction'), $this->url('admin/correction/id', ['id' => $correction->id(), 'action' => 'show'])); ?>
+    <?php echo $this->hyperlink($translate('Retour à la liste'), $this->url('admin/correction')); ?>
+</div>
+
+<?php if (!empty($error)): ?>
+<div class="messages"><ul class="error"><li><?php echo $escape($error); ?></li></ul></div>
+<?php endif; ?>
+
+<?php if ($bilan): ?>
+
+<?php if (!empty($bilan['errors'])): ?>
+<div class="messages">
+    <ul class="error">
+        <?php foreach ($bilan['errors'] as $err): ?>
+        <li><?php echo $escape($err); ?></li>
+        <?php endforeach; ?>
+    </ul>
+</div>
+<?php endif; ?>
+
+<table class="tablesaw" data-tablesaw-mode="stack">
+    <tbody>
+        <tr><th><?php echo $translate('Correction'); ?></th><td><?php echo $escape($bilan['correction']['title']); ?> (#<?php echo $bilan['correction']['id']; ?>)</td></tr>
+        <tr><th><?php echo $translate('Transcription'); ?></th><td>#<?php echo $bilan['transcription']['id']; ?></td></tr>
+        <tr><th><?php echo $translate('Remplacer'); ?></th><td><?php echo $escape($bilan['remplacer']); ?></td></tr>
+        <tr><th><?php echo $translate('Par'); ?></th><td><?php echo $escape($bilan['par']); ?></td></tr>
+        <tr><th><?php echo $translate('Status de la correction'); ?></th><td><?php echo $bilan['status_updated'] ? $translate('Passé à "Fait"') : $translate('Inchangé'); ?></td></tr>
+        <tr><th><?php echo $translate('Annexes SQL'); ?></th><td><?php echo $bilan['annexe_updated'] ? $translate('Mises à jour') : $translate('Non mises à jour'); ?></td></tr>
+    </tbody>
+</table>
+
+<h3><?php echo $translate('Titre'); ?></h3>
+<?php if ($bilan['title']['changed']): ?>
+<p><em><?php echo $translate('Avant'); ?> :</em> <?php echo $escape($bilan['title']['before']); ?></p>
+<p><em><?php echo $translate('Après'); ?> :</em> <?php echo $escape($bilan['title']['after']); ?></p>
+<?php else: ?>
+<p><?php echo $translate('Aucune occurrence trouvée dans le titre.'); ?></p>
+<?php endif; ?>
+
+<h3><?php echo sprintf($translate('Segmentation (%d segment(s) modifié(s))'), count($bilan['segmentation'])); ?></h3>
+<?php if ($bilan['segmentation']): ?>
+<table class="tablesaw" data-tablesaw-mode="stack">
+    <thead>
+        <tr>
+            <th><?php echo $translate('Début'); ?></th>
+            <th><?php echo $translate('Fin'); ?></th>
+            <th><?php echo $translate('Avant'); ?></th>
+            <th><?php echo $translate('Après'); ?></th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($bilan['segmentation'] as $seg): ?>
+        <tr>
+            <td><?php echo $escape($seg['start']); ?></td>
+            <td><?php echo $escape($seg['end']); ?></td>
+            <td><?php echo $escape($seg['before']); ?></td>
+            <td><?php echo $escape($seg['after']); ?></td>
+        </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
+<?php else: ?>
+<p><?php echo $translate('Aucun segment modifié.'); ?></p>
+<?php endif; ?>
+
+<h3><?php echo sprintf($translate('Concepts-mots (%d suite(s) modifiée(s))'), count($bilan['data'])); ?></h3>
+<?php if ($bilan['data']): ?>
+<table class="tablesaw" data-tablesaw-mode="stack">
+    <thead>
+        <tr>
+            <th><?php echo $translate('Avant'); ?></th>
+            <th><?php echo $translate('Après'); ?></th>
+            <th><?php echo $translate('Minutage approximatif'); ?></th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($bilan['data'] as $d): ?>
+        <tr>
+            <td><?php echo $escape(implode(' ', $d['before_words'])); ?></td>
+            <td><?php echo $escape(implode(' ', $d['after_words'])); ?></td>
+            <td><?php echo $d['approximated_timing'] ? $translate('Oui') : $translate('Non'); ?></td>
+        </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
+<?php else: ?>
+<p><?php echo $translate('Aucune suite de concepts-mots modifiée.'); ?></p>
+<?php endif; ?>
+
+<?php endif; ?>

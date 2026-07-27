@@ -39,6 +39,18 @@ class Module extends AbstractModule
             [Controller\Site\ApiController::class],
             ['listconferences', 'transcriptions', 'cherche', 'relancer', 'signaler']
         );
+
+        $acl->allow(
+            \Omeka\Permissions\Acl::ROLE_EDITOR,
+            [Controller\Admin\CorrectionController::class],
+            ['browse', 'show', 'run', 'run-all']
+        );
+
+        $acl->allow(
+            \Omeka\Permissions\Acl::ROLE_EDITOR,
+            [Controller\Admin\ReferenceController::class],
+            ['browse', 'show', 'run', 'run-all']
+        );
     }
 
     protected function preInstall(): void

@@ -1,0 +1,46 @@
+<?php
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+
+$this->htmlElement('body')->appendAttribute('class', 'chaoticum-seminario-reference run');
+?>
+
+<?php echo $this->pageTitle($translate('Bilan de la référence')); ?>
+
+<div id="page-actions">
+    <?php echo $this->hyperlink($translate('Retour à la référence'), $this->url('admin/reference/id', ['id' => $reference->id(), 'action' => 'show'])); ?>
+    <?php echo $this->hyperlink($translate('Retour à la liste'), $this->url('admin/reference')); ?>
+</div>
+
+<?php if (!empty($error)): ?>
+<div class="messages"><ul class="error"><li><?php echo $escape($error); ?></li></ul></div>
+<?php endif; ?>
+
+<?php if ($bilan): ?>
+
+<?php if (!empty($bilan['errors'])): ?>
+<div class="messages">
+    <ul class="error">
+        <?php foreach ($bilan['errors'] as $err): ?>
+        <li><?php echo $escape($err); ?></li>
+        <?php endforeach; ?>
+    </ul>
+</div>
+<?php endif; ?>
+
+<table class="tablesaw" data-tablesaw-mode="stack">
+    <tbody>
+        <tr><th><?php echo $translate('Référence'); ?></th><td><?php echo $escape($bilan['reference']['title']); ?> (#<?php echo $bilan['reference']['id']; ?>)</td></tr>
+        <tr><th><?php echo $translate('Transcription'); ?></th><td><?php echo $escape($bilan['transcription']['title']); ?> (#<?php echo $bilan['transcription']['id']; ?>)</td></tr>
+        <tr><th><?php echo $translate('Wikidata'); ?></th><td><a href="https://www.wikidata.org/wiki/<?php echo $escape($bilan['qid']); ?>" target="_blank" rel="noopener noreferrer"><?php echo $escape($bilan['qid']); ?></a></td></tr>
+        <?php if ($bilan['person']): ?>
+        <tr><th><?php echo $translate('Personne'); ?></th><td>
+            <a href="<?php echo $escape($this->url('admin/id', ['controller' => 'item', 'id' => $bilan['person']['id']])); ?>"><?php echo $escape($bilan['person']['title']); ?></a>
+            (#<?php echo $bilan['person']['id']; ?>) — <?php echo $bilan['person']['created'] ? $translate('créée') : $translate('déjà existante'); ?>
+        </td></tr>
+        <?php endif; ?>
+        <tr><th><?php echo $translate('Status de la référence'); ?></th><td><?php echo $bilan['status_updated'] ? $translate('Passé à "Référencé"') : $translate('Inchangé'); ?></td></tr>
+    </tbody>
+</table>
+
+<?php endif; ?>

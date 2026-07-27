@@ -1,0 +1,75 @@
+<?php
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+
+$this->htmlElement('body')->appendAttribute('class', 'chaoticum-seminario-reference browse');
+
+$query = $this->params()->fromQuery();
+
+$sortLink = function ($label, $sortKey) use ($sortBy, $sortOrder, $query, $escape, $translate) {
+    $nextOrder = ($sortBy === $sortKey && $sortOrder === 'asc') ? 'desc' : 'asc';
+    $newQuery = array_replace($query, ['sort_by' => $sortKey, 'sort_order' => $nextOrder]);
+    $arrow = '';
+    if ($sortBy === $sortKey) {
+        $arrow = $sortOrder === 'asc' ? ' ▲' : ' ▼';
+    }
+    return sprintf(
+        '<a href="%s">%s%s</a>',
+        $escape($this->url(null, [], ['query' => $newQuery], true)),
+        $escape($translate($label)),
+        $arrow
+    );
+};
+?>
+
+<?php echo $this->pageTitle($translate('Références de transcription')); ?>
+
+<form method="get" class="browse-controls">
+    <label for="status_filter"><?php echo $translate('Filtrer par Status'); ?></label>
+    <select id="status_filter" name="status_filter" onchange="this.form.submit()">
+        <option value=""><?php echo $translate('Tous'); ?></option>
+        <?php foreach ($statusOptions as $status): ?>
+        <option value="<?php echo $escape($status); ?>" <?php echo $status === $statusFilter ? 'selected' : ''; ?>><?php echo $escape($status); ?></option>
+        <?php endforeach; ?>
+    </select>
+    <noscript><button type="submit"><?php echo $translate('Filtrer'); ?></button></noscript>
+</form>
+
+<div class="browse-controls">
+    <?php echo $this->pagination(); ?>
+</div>
+
+<?php if (!$references): ?>
+<p><?php echo $translate('Aucune référence de transcription trouvée.'); ?></p>
+<?php else: ?>
+<table class="tablesaw" data-tablesaw-mode="stack">
+    <thead>
+        <tr>
+            <th><?php echo $translate('Titre'); ?></th>
+            <th><?php echo $sortLink('Date', 'created'); ?></th>
+            <th><?php echo $sortLink('Status', 'curation:status'); ?></th>
+            <th><?php echo $translate('Type'); ?></th>
+            <th><?php echo $translate('Description'); ?></th>
+            <th><?php echo $translate('Transcription'); ?></th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($references as $reference): ?>
+        <?php $source = $reference->value('dcterms:source'); ?>
+        <tr>
+            <td><a href="<?php echo $escape($this->url('admin/reference/id', ['id' => $reference->id()])); ?>"><?php echo $escape($reference->displayTitle()); ?></a></td>
+            <td><?php echo $this->i18n()->dateFormat($reference->created()); ?></td>
+            <td><?php echo $escape((string) $reference->value('curation:status')); ?></td>
+            <td><?php echo $escape((string) $reference->value('dcterms:type')); ?></td>
+            <td><?php echo $escape((string) $reference->value('dcterms:description')); ?></td>
+            <td><?php if ($source && $source->valueResource()):
+                $target = $source->valueResource();
+                $shortTitle = mb_substr($target->displayTitle(), 0, 60) . (mb_strlen($target->displayTitle()) > 60 ? '…' : '');
+                ?>
+                <a href="<?php echo $escape($target->url()); ?>" title="<?php echo $escape($target->displayTitle()); ?>">#<?php echo $target->id(); ?> — <?php echo $escape($shortTitle); ?></a>
+            <?php endif; ?></td>
+        </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
+<?php endif; ?>

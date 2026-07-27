@@ -1,0 +1,41 @@
+<?php
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+
+$this->htmlElement('body')->appendAttribute('class', 'chaoticum-seminario-correction run-all');
+?>
+
+<?php echo $this->pageTitle($translate('Bilan des corrections')); ?>
+
+<div id="page-actions">
+    <?php echo $this->hyperlink($translate('Retour à la correction'), $this->url('admin/correction/id', ['id' => $correction->id(), 'action' => 'show'])); ?>
+    <?php echo $this->hyperlink($translate('Retour à la liste'), $this->url('admin/correction')); ?>
+</div>
+
+<p><?php echo sprintf($translate('%d transcription(s) traitée(s).'), count($bilans)); ?></p>
+
+<?php foreach ($bilans as $bilan): ?>
+<hr>
+<h3><?php echo $translate('Transcription'); ?> #<?php echo $escape($bilan['transcription']['id']); ?></h3>
+
+<?php if (!empty($bilan['errors'])): ?>
+<div class="messages">
+    <ul class="error">
+        <?php foreach ($bilan['errors'] as $err): ?>
+        <li><?php echo $escape($err); ?></li>
+        <?php endforeach; ?>
+    </ul>
+</div>
+<?php endif; ?>
+
+<ul>
+    <li><?php echo $translate('Titre'); ?> : <?php echo $bilan['title']['changed'] ? $translate('modifié') : $translate('inchangé'); ?></li>
+    <li><?php echo sprintf($translate('Segmentation : %d segment(s) modifié(s)'), count($bilan['segmentation'])); ?></li>
+    <li><?php echo sprintf($translate('Concepts-mots : %d suite(s) modifiée(s)'), count($bilan['data'])); ?></li>
+    <li><?php echo $translate('Annexes SQL'); ?> : <?php echo $bilan['annexe_updated'] ? $translate('mises à jour') : $translate('non mises à jour'); ?></li>
+</ul>
+
+<?php if ($bilan['title']['changed']): ?>
+<p><em><?php echo $translate('Après'); ?> :</em> <?php echo $escape($bilan['title']['after']); ?></p>
+<?php endif; ?>
+<?php endforeach; ?>

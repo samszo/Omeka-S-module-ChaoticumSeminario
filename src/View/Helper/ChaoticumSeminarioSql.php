@@ -31,7 +31,10 @@ class ChaoticumSeminarioSql extends AbstractHelper
                 break;                                                        
             case 'corrections':
                 $result = $this->corrections($params);
-                break;                                                        
+                break;
+            case 'updateTranscriptionAnnexe':
+                $result = $this->updateTranscriptionAnnexe($params);
+                break;
             case 'timelineConcept':
                 $result = $this->timelineConcept($params);
                 break;    
@@ -904,6 +907,37 @@ WHERE
 
         echo "executer le script modules/ChaoticumSeminario/data/scripts/createTranscriptionAnnexe.sql";
 
+    }
+
+    /**
+     * Met à jour les annexes (transcriptions, timeline_concept) d'UNE SEULE
+     * transcription, après une correction (cf. TranscriptionCorrection::run()).
+     * S'inspire de createTranscriptionAnnexe.sql mais limité à un idTrans donné,
+     * sans reconstruire concepts/conferences/disques (non affectés par une correction).
+     *
+     * @param array $params ['idTrans' => int]
+     * @return array le nombre de lignes affectées par chaque instruction du script
+     */
+    function updateTranscriptionAnnexe($params){
+        $idTrans = (int) $params['idTrans'];
+        $sqlFile = dirname(__DIR__, 3) . '/data/scripts/updateTranscriptionAnnexe.sql';
+
+        $lines = file($sqlFile, FILE_IGNORE_NEW_LINES);
+        $cleaned = [];
+        foreach ($lines as $line) {
+            if (preg_match('/^\s*--/', $line)) {
+                continue;
+            }
+            $cleaned[] = $line;
+        }
+        $statements = array_filter(array_map('trim', explode(';', implode("\n", $cleaned))));
+
+        $result = [];
+        foreach ($statements as $statement) {
+            $paramCount = substr_count($statement, '?');
+            $result[] = $this->conn->fetchAll($statement, array_fill(0, $paramCount, $idTrans));
+        }
+        return $result;
     }
 
    /**

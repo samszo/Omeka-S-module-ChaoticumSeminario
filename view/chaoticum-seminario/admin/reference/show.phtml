@@ -1,0 +1,175 @@
+<?php
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+
+$this->htmlElement('body')->appendAttribute('class', 'chaoticum-seminario-reference show');
+
+$transcription = $preview['transcription'];
+$description = $preview['description'];
+
+/**
+ * Échappe $text puis entoure les occurrences (insensibles à la casse) de
+ * $needle avec un <mark> coloré, pour repérer visuellement la description recherchée.
+ */
+$highlight = function ($text, $needle) use ($escape) {
+    $escaped = $escape((string) $text);
+    $needle = trim((string) $needle);
+    if ($needle === '') {
+        return $escaped;
+    }
+    $escapedNeedle = $escape($needle);
+    return preg_replace('/' . preg_quote($escapedNeedle, '/') . '/ui', '<mark class="cs-highlight">$0</mark>', $escaped);
+};
+
+/**
+ * Extrait un court passage du texte autour de la première occurrence de $needle.
+ */
+$excerpt = function ($text, $needle, $context = 60) {
+    $text = (string) $text;
+    $needle = trim((string) $needle);
+    $pos = $needle !== '' ? mb_stripos($text, $needle) : false;
+    if ($pos === false) {
+        $snippet = mb_substr($text, 0, $context * 2);
+        return $snippet . (mb_strlen($text) > $context * 2 ? '…' : '');
+    }
+    $start = max(0, $pos - $context);
+    $len = mb_strlen($needle) + $context * 2;
+    $snippet = mb_substr($text, $start, $len);
+    return ($start > 0 ? '…' : '') . $snippet . (($start + $len) < mb_strlen($text) ? '…' : '');
+};
+
+/**
+ * Lecteur audio du fragment source (oa:hasSource) d'une transcription, s'il existe.
+ */
+$audioPlayer = function ($item) use ($escape) {
+    if (!$item) {
+        return '';
+    }
+    $source = $item->value('oa:hasSource');
+    $media = $source ? $source->valueResource() : null;
+    if (!$media) {
+        return '';
+    }
+    return '<audio controls preload="none" style="max-width:360px;width:100%;display:block;margin-top:0.25em;">'
+        . '<source src="' . $escape($media->originalUrl()) . '" type="' . $escape($media->mediaType()) . '">'
+        . '</audio>';
+};
+?>
+<style>
+.cs-highlight { background: #fff2a8; color: #7a4a00; font-weight: 600; padding: 0 2px; border-radius: 2px; }
+</style>
+
+<?php echo $this->pageTitle($reference->displayTitle()); ?>
+
+<div id="page-actions">
+    <?php echo $this->hyperlink($translate('Retour à la liste'), $this->url('admin/reference')); ?>
+</div>
+
+<table class="tablesaw" data-tablesaw-mode="stack">
+    <tbody>
+        <tr><th><?php echo $translate('Status'); ?></th><td><?php echo $escape((string) $reference->value('curation:status')); ?></td></tr>
+        <tr><th><?php echo $translate('Type'); ?></th><td><?php echo $escape($preview['type']); ?></td></tr>
+        <tr><th><?php echo $translate('Description'); ?></th><td><?php echo $escape($description); ?></td></tr>
+        <tr><th><?php echo $translate('Sur tout'); ?></th><td><?php echo $preview['surTout'] ? $translate('Oui') : $translate('Non'); ?></td></tr>
+        <tr><th><?php echo $translate('Transcription visée'); ?></th><td>
+            <?php if ($transcription): ?>
+                <?php echo $highlight($transcription->displayTitle(), $description); ?> (#<?php echo $transcription->id(); ?>)
+                <?php echo $audioPlayer($transcription); ?>
+            <?php else: ?>
+                <em><?php echo $translate('Aucune transcription trouvée (dcterms:source manquant ou invalide).'); ?></em>
+            <?php endif; ?>
+        </td></tr>
+    </tbody>
+</table>
+
+<?php if (!$preview['supportsCreation']): ?>
+<p class="messages"><em><?php echo sprintf($translate('Le type "%s" n\'est pas encore pris en charge pour l\'ajout automatique de référence (seul le type "personne" l\'est) ; les résultats Wikidata sont affichés à titre indicatif.'), $preview['type']); ?></em></p>
+<?php endif; ?>
+
+<h3><?php echo $translate('Résultats Wikidata'); ?><?php if ($preview['searchQuery'] !== ''): ?> — <?php echo sprintf($translate('pour « %s »'), $escape($preview['searchQuery'])); ?><?php endif; ?></h3>
+
+<?php
+$searchForm = function () use ($translate, $escape, $reference, $preview) {
+    echo '<form method="get" action="' . $escape($this->url('admin/reference/id', ['id' => $reference->id(), 'action' => 'show'])) . '">';
+    echo '<label for="q">' . $translate('Recherche libre sur Wikidata') . '</label> ';
+    echo '<input type="text" id="q" name="q" value="' . $escape($preview['searchQuery']) . '">';
+    echo ' <button type="submit" class="button">' . $translate('Rechercher') . '</button>';
+    echo '</form>';
+};
+?>
+
+<?php if ($preview['searchQuery'] === ''): ?>
+<p><?php echo $translate('La description de la référence est vide, impossible de lancer une recherche automatique.'); ?></p>
+<?php $searchForm(); ?>
+<?php elseif ($preview['searchError']): ?>
+<p class="messages"><ul class="error"><li><?php echo $escape($preview['searchError']); ?></li></ul></p>
+<?php $searchForm(); ?>
+<?php elseif (!$preview['candidates']): ?>
+<p><?php echo $translate('Aucun résultat Wikidata pour cette recherche.'); ?></p>
+<?php $searchForm(); ?>
+<?php else: ?>
+<table class="tablesaw" data-tablesaw-mode="stack">
+    <thead>
+        <tr>
+            <th><?php echo $translate('Wikidata'); ?></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($preview['candidates'] as $candidate): ?>
+        <tr>
+            <td>
+                <a href="https://www.wikidata.org/wiki/<?php echo $escape($candidate['qid']); ?>" target="_blank" rel="noopener noreferrer">
+                    <strong><?php echo $escape($candidate['label']); ?></strong> (<?php echo $escape($candidate['qid']); ?>)
+                </a>
+                <?php if ($candidate['description'] !== ''): ?>
+                <br><em><?php echo $escape($candidate['description']); ?></em>
+                <?php endif; ?>
+            </td>
+            <td>
+                <?php if ($preview['supportsCreation'] && $transcription): ?>
+                <form method="post" action="<?php echo $escape($this->url('admin/reference/id', ['id' => $reference->id(), 'action' => 'run'])); ?>">
+                    <input type="hidden" name="qid" value="<?php echo $escape($candidate['qid']); ?>">
+                    <button type="submit" class="button"><?php echo $translate('Ajouter à la transcription visée'); ?></button>
+                </form>
+                <?php endif; ?>
+
+                <?php if ($preview['supportsCreation'] && $preview['surTout'] && $preview['siblings']): ?>
+                <form method="post" action="<?php echo $escape($this->url('admin/reference/id', ['id' => $reference->id(), 'action' => 'run-all'])); ?>">
+                    <input type="hidden" name="qid" value="<?php echo $escape($candidate['qid']); ?>">
+                    <button type="submit" class="button"><?php echo sprintf($translate('Ajouter à toutes les transcriptions sœurs (%d)'), count($preview['siblings'])); ?></button>
+                </form>
+                <details>
+                    <summary><?php echo $translate('Lancer individuellement sur chaque transcription sœur'); ?></summary>
+                    <table class="tablesaw" data-tablesaw-mode="stack">
+                        <thead>
+                            <tr>
+                                <th><?php echo $translate('Transcription'); ?></th>
+                                <th><?php echo $translate('Audio'); ?></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($preview['siblings'] as $sibling): ?>
+                            <tr>
+                                <td><a href="<?php echo $escape($sibling->url()); ?>">#<?php echo $sibling->id(); ?></a> — <?php echo $highlight($excerpt($sibling->displayTitle(), $description), $description); ?></td>
+                                <td><?php echo $audioPlayer($sibling); ?></td>
+                                <td>
+                                    <form method="post" action="<?php echo $escape($this->url('admin/reference/id', ['id' => $reference->id(), 'action' => 'run'])); ?>">
+                                        <input type="hidden" name="qid" value="<?php echo $escape($candidate['qid']); ?>">
+                                        <input type="hidden" name="transcription_id" value="<?php echo $escape($sibling->id()); ?>">
+                                        <button type="submit" class="button"><?php echo $translate('Lancer'); ?></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </details>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
+<?php endif; ?>

@@ -29,7 +29,9 @@ return [
             'chaoticumSeminarioCredentials' => Service\ViewHelper\ChaoticumSeminarioCredentialsFactory::class,
             'pdfToMarkdown' => Service\ViewHelper\PdfToMarkdownFactory::class,  
             'semaforCredentials' => Service\ViewHelper\SemaforCredentialsFactory::class,
-            'semafor' => Service\ViewHelper\SemaforFactory::class
+            'semafor' => Service\ViewHelper\SemaforFactory::class,
+            'transcriptionCorrection' => Service\ViewHelper\TranscriptionCorrectionFactory::class,
+            'wikidataReference' => Service\ViewHelper\WikidataReferenceFactory::class,
         ],
         'invokables' => [
             'formBatchEditSemafor' => View\Helper\BatchEditSemafor::class,
@@ -49,10 +51,70 @@ return [
     'controllers' => [
         'factories' => [
             Controller\Site\ApiController::class => Service\Controller\Site\ApiControllerFactory::class,
+            Controller\Admin\CorrectionController::class => Service\Controller\Admin\CorrectionControllerFactory::class,
+            Controller\Admin\ReferenceController::class => Service\Controller\Admin\ReferenceControllerFactory::class,
         ],
     ],
     'router' => [
         'routes' => [
+            'admin' => [
+                'child_routes' => [
+                    'correction' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/correction',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'ChaoticumSeminario\Controller\Admin',
+                                'controller' => Controller\Admin\CorrectionController::class,
+                                'action' => 'browse',
+                            ],
+                        ],
+                        'may_terminate' => true,
+                        'child_routes' => [
+                            'id' => [
+                                'type' => \Laminas\Router\Http\Segment::class,
+                                'options' => [
+                                    'route' => '/:id[/:action]',
+                                    'constraints' => [
+                                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                        'id' => '\d+',
+                                    ],
+                                    'defaults' => [
+                                        'action' => 'show',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'reference' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/reference',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'ChaoticumSeminario\Controller\Admin',
+                                'controller' => Controller\Admin\ReferenceController::class,
+                                'action' => 'browse',
+                            ],
+                        ],
+                        'may_terminate' => true,
+                        'child_routes' => [
+                            'id' => [
+                                'type' => \Laminas\Router\Http\Segment::class,
+                                'options' => [
+                                    'route' => '/:id[/:action]',
+                                    'constraints' => [
+                                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                        'id' => '\d+',
+                                    ],
+                                    'defaults' => [
+                                        'action' => 'show',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
             'site' => [
                 'child_routes' => [
                     'chaoticum-seminario-api' => [
@@ -82,6 +144,34 @@ return [
                                 ],
                             ],
                         ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+    'navigation' => [
+        'AdminModule' => [
+            [
+                'label' => 'Corrections de transcription', // @translate
+                'route' => 'admin/correction',
+                'resource' => Controller\Admin\CorrectionController::class,
+                'privilege' => 'browse',
+                'pages' => [
+                    [
+                        'route' => 'admin/correction/id',
+                        'visible' => false,
+                    ],
+                ],
+            ],
+            [
+                'label' => 'Références de transcription', // @translate
+                'route' => 'admin/reference',
+                'resource' => Controller\Admin\ReferenceController::class,
+                'privilege' => 'browse',
+                'pages' => [
+                    [
+                        'route' => 'admin/reference/id',
+                        'visible' => false,
                     ],
                 ],
             ],

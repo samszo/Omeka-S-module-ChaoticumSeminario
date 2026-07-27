@@ -241,8 +241,8 @@ class ApiController extends AbstractActionController
 
         $typesLabels = [
             'correction' => ["title"=>'Correction de transcription',"rt"=>"Correction transcription","status"=>"A faire"],
-            'personne' => ["title"=>'Référence à une personne',"rt"=>"","status"=>"A référencer"],
-            'oeuvre' => ["title"=>'Référence à une œuvre',"rt"=>"","status"=>"A référencer"],
+            'personne' => ["title"=>'Référence à une personne',"rt"=>"Reference transcription","status"=>"A référencer"],
+            'oeuvre' => ["title"=>'Référence à une œuvre',"rt"=>"Reference transcription","status"=>"A référencer"],
             'date' => ["title"=>'Référence à une date ou une période',"rt"=>"","status"=>"A vérifier"],
             'lieu' => ["title"=>'Référence à un lieu',"rt"=>"","status"=>"A référencer"],
         ];
@@ -261,7 +261,7 @@ class ApiController extends AbstractActionController
 
         try {
             $data = [];
-            if(isset($typesLabels[$type]["rt"])){
+            if(!empty($typesLabels[$type]["rt"])){
                 $rt = $this->cs->getResourceTemplate($typesLabels[$type]["rt"]);
                 $data['o:resource_template'] = ['o:id' => $rt->id()];
                 $data['o:resource_class'] = ['o:id' => $rt->resourceClass()->id()];
