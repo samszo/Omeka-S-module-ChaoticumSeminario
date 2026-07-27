@@ -244,7 +244,7 @@ class ApiController extends AbstractActionController
             'personne' => ["title"=>'Référence à une personne',"rt"=>"Reference transcription","status"=>"A référencer"],
             'oeuvre' => ["title"=>'Référence à une œuvre',"rt"=>"Reference transcription","status"=>"A référencer"],
             'date' => ["title"=>'Référence à une date ou une période',"rt"=>"","status"=>"A vérifier"],
-            'lieu' => ["title"=>'Référence à un lieu',"rt"=>"","status"=>"A référencer"],
+            'lieu' => ["title"=>'Référence à un lieu',"rt"=>"Reference transcription","status"=>"A référencer"],
         ];
 
         if (!$idConf || !$idTrans || !isset($typesLabels[$type]) || !$texte) {
@@ -318,12 +318,12 @@ class ApiController extends AbstractActionController
                         'type' => 'literal',
                     ];
                 }
-                $data['jdc:surTout'][] = [
-                    'property_id' => $this->cs->getProperty('jdc:surTout')->id(),
-                    '@value' => filter_var($surTout, FILTER_VALIDATE_BOOLEAN) ? 'oui' : 'non',
-                    'type' => 'literal',
-                ];
             }
+            $data['jdc:surTout'][] = [
+                'property_id' => $this->cs->getProperty('jdc:surTout')->id(),
+                '@value' => filter_var($surTout, FILTER_VALIDATE_BOOLEAN) ? 'oui' : 'non',
+                'type' => 'literal',
+            ];
             if ($lien) {
                 $data['dcterms:references'][] = [
                     'property_id' => $this->cs->getProperty('dcterms:references')->id(),

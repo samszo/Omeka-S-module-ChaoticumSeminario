@@ -237,3 +237,18 @@ jdc:ragRef a rdf:Property ;
     rdfs:label "Référence dans le RAG" ;
     rdfs:domain o:Resource ;
     vs:term_status "experimental" .
+
+jdc:surTout a rdf:Property ;
+    rdfs:label "Applique la transformation sur tout" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+jdc:remplacer a rdf:Property ;
+    rdfs:label "Le texte à remplacer" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .
+
+jdc:par a rdf:Property ;
+    rdfs:label "Le texte de remplacement" ;
+    rdfs:domain o:Resource ;
+    vs:term_status "experimental" .

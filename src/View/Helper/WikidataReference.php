@@ -26,6 +26,7 @@ class WikidataReference extends AbstractHelper
 
     const TYPE_TEMPLATES = [
         'personne' => 'ref Personne',
+        'lieu' => 'ref Lieu',
     ];
 
     /**
@@ -129,6 +130,7 @@ class WikidataReference extends AbstractHelper
             'transcription' => ['id' => $transcription->id(), 'title' => $transcription->displayTitle()],
             'qid' => $qid,
             'person' => null,
+            'lieu' => null,
             'errors' => [],
             'status_updated' => false,
         ];
