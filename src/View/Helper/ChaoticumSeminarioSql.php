@@ -429,7 +429,7 @@ WHERE
      * @return array
      */
     function getConferences($params){
-        $query="SELECT 
+        $query="SELECT
             c.*,
             COUNT(DISTINCT (d.id)) nbDisque,
             COUNT(DISTINCT (t.agent)) nbAgent,
@@ -445,9 +445,49 @@ WHERE
                 INNER JOIN
             timeline_concept tc ON tc.idTrans = t.id
         GROUP BY c.id";
-        $rs = $this->conn->fetchAll($query);                
-        return $rs;      
-    } 
+        $rs = $this->conn->fetchAll($query);
+
+        // extrait textuel de l'aperçu : fusionné ici pour que le champ soit déjà
+        // présent dans /listconferences sans requête supplémentaire côté client.
+        $extraits = $this->getExtraits();
+        foreach ($rs as &$conf) {
+            $conf['extrait'] = $extraits[$conf['id']] ?? '';
+        }
+        return $rs;
+    }
+
+    /**
+     * pour chaque conférence, un extrait textuel représentatif construit à
+     * partir de 3 fragments répartis sur la totalité de la séance (début,
+     * milieu, fin) plutôt que juste les premiers mots : donne un aperçu de
+     * l'ensemble des fragments, pas seulement de l'ouverture du cours.
+     * Les fragments d'un même cours sont répartis sur plusieurs disques
+     * (face/plage), d'où le tri par d.face, d.plage, t.start plutôt que sur le
+     * seul t.start (qui repart de 0 à chaque nouveau disque).
+     *
+     * @return array [idConf => "texte1\x01texte2\x01texte3"] (les 3 textes
+     *   bruts, non tronqués, séparés par un caractère de contrôle ; le
+     *   découpage/troncature lisible se fait côté contrôleur)
+     */
+    function getExtraits(){
+        $sep = "\x01";
+        $query = "SELECT idConf, GROUP_CONCAT(texte ORDER BY rn SEPARATOR '".$sep."') extraitBrut
+            FROM (
+                SELECT t.idConf, t.texte,
+                    ROW_NUMBER() OVER (PARTITION BY t.idConf ORDER BY d.face, d.plage, t.start) rn,
+                    COUNT(*) OVER (PARTITION BY t.idConf) total
+                FROM transcriptions t
+                    INNER JOIN disques d ON d.id = t.idDisque
+            ) x
+            WHERE rn = 1 OR rn = FLOOR(total / 2) + 1 OR rn = total
+            GROUP BY idConf";
+        $rs = $this->conn->fetchAll($query);
+        $extraits = [];
+        foreach ($rs as $row) {
+            $extraits[$row['idConf']] = $row['extraitBrut'];
+        }
+        return $extraits;
+    }
 
     /**
      * ajoute un concept

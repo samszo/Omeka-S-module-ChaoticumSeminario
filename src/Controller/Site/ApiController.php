@@ -55,7 +55,36 @@ class ApiController extends AbstractActionController
         $rows = ($this->chaoticumSeminarioSql)([
             'action' => 'getConferences',
         ]);
+        foreach ($rows as &$row) {
+            $row['extrait'] = $this->formatExtrait($row['extrait'] ?? '');
+        }
         return new JsonModel(array_values($rows));
+    }
+
+    /**
+     * Met en forme l'extrait brut d'une conférence (3 fragments répartis sur
+     * la totalité de la séance, séparés par \x01 — voir
+     * ChaoticumSeminarioSql::getExtraits) en un texte lisible pour l'aperçu :
+     * chaque fragment tronqué sur un mot entier, joints par une ellipse.
+     */
+    private function formatExtrait(string $extraitBrut, int $maxLenParFragment = 90): string
+    {
+        if ($extraitBrut === '') {
+            return '';
+        }
+        $fragments = array_map(function ($texte) use ($maxLenParFragment) {
+            $texte = trim($texte);
+            if (mb_strlen($texte) <= $maxLenParFragment) {
+                return $texte;
+            }
+            $coupe = mb_substr($texte, 0, $maxLenParFragment);
+            $dernierEspace = mb_strrpos($coupe, ' ');
+            if ($dernierEspace !== false) {
+                $coupe = mb_substr($coupe, 0, $dernierEspace);
+            }
+            return rtrim($coupe) . '…';
+        }, explode("\x01", $extraitBrut));
+        return implode(' […] ', $fragments);
     }
 
     /**
