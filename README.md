@@ -102,7 +102,7 @@ Montée sous `/s/{slug}/chaoticum-seminario-api/{action}` (route `chaoticum-semi
 
 | Action | Auth | Description |
 |---|---|---|
-| `listconferences` | publique | Liste des cours + statistiques (`getConferences`) |
+| `listconferences` | publique | Liste des cours + statistiques (`getConferences`), avec un `extrait` textuel représentatif (début/milieu/fin de la séance, voir ci-dessous) |
 | `transcriptions?idConf=` | publique | Transcriptions d'un cours, texte complet + concepts horodatés |
 | `cherche?trouve=` | publique | Recherche plein texte (`MATCH…AGAINST`) sur `transcriptions.texte` |
 | `relancer?idFrag=&modele=` | **requise** | Dispatch un job Whisper/Google pour re-transcrire un fragment |
@@ -130,12 +130,18 @@ sequenceDiagram
     Ctrl-->>C: {id} ou {error}
 ```
 
+### Extrait textuel des cours (`ChaoticumSeminarioSql::getExtraits`)
+
+`listconferencesAction` fusionne à chaque cours un `extrait` : trois fragments répartis sur la totalité de la séance (début, milieu, fin — `ROW_NUMBER() OVER (PARTITION BY idConf ORDER BY d.face, d.plage, t.start)`, en une seule requête fenêtrée plutôt qu'une requête par cours), tronqués sur un mot entier côté contrôleur (`formatExtrait`) et joints par une ellipse. Le tri par `face`/`plage` plutôt que par le seul `start` est nécessaire : un cours s'étale sur plusieurs disques BnF, et `start` repart de 0 à chaque nouveau disque. Objectif : donner, dans la liste des cours du client mobile, un aperçu représentatif de l'ensemble des fragments plutôt que la seule ouverture de la séance.
+
 ## Signalement collaboratif et curation
 
 Le client mobile crée des items **légers** (`signalerAction`), destinés à être triés plus tard par un éditeur — il ne crée jamais lui-même de correction ou de référence "définitive". Deux `resource_template` structurent ces signalements :
 
 - **Correction transcription** (`type=correction`) : propriétés `jdc:remplacer` / `jdc:par` / `jdc:surTout`, `dcterms:source` (pointe vers la transcription), `curation:status`.
 - **Reference transcription** (`type=personne|oeuvre|date|lieu`) : `dcterms:description` (texte libre décrivant la référence), `dcterms:temporal` (horodatage), `curation:status`.
+
+Dans les deux cas, `dcterms:isPartOf` relie en plus le signalement à l'item de la conférence (`idConf`) — sans passer par le fragment source, ce qui permet à un client de retrouver le cours d'un signalement (écran "Mes annotations" de l'appli mobile) sans avoir à résoudre `dcterms:source`.
 
 ```mermaid
 stateDiagram-v2

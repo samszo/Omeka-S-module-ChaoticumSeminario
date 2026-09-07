@@ -318,7 +318,14 @@ class ApiController extends AbstractActionController
             $data['dcterms:source'][] = [
                 'property_id' => $this->cs->getProperty('dcterms:source')->id(),
                 'value_resource_id' => $idTrans,
-                'type' => 'resource',                
+                'type' => 'resource',
+            ];
+            // lien vers la conférence, pour retrouver le cours depuis la page
+            // "Mes annotations" sans avoir à résoudre le fragment source.
+            $data['dcterms:isPartOf'][] = [
+                'property_id' => $this->cs->getProperty('dcterms:isPartOf')->id(),
+                'value_resource_id' => $idConf,
+                'type' => 'resource',
             ];
             $data['dcterms:description'][] = [
                 'property_id' => $this->cs->getProperty('dcterms:description')->id(),
